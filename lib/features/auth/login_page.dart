@@ -16,6 +16,7 @@ import '../merchant/notifications_page.dart' as merchant_notif;
 import '../merchant/useful_links_page.dart';
 import '../merchant/merchant_home_page.dart';
 import '../merchant/store_settings_page.dart';
+import '../merchant/merchant_bank_account_page.dart';
 import '../merchant/products_page.dart';
 import '../merchant/review_reels_page.dart';
 import '../merchant/reviews_page.dart';
@@ -93,6 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                     NavItem('أوقات العمل', Icons.schedule, MerchantAvailabilityPage()),
                     NavItem('الإشعارات', Icons.notifications, merchant_notif.NotificationsPage()),
                     NavItem('إعدادات المتجر', Icons.settings, StoreSettingsPage()),
+                    NavItem('الحساب البنكي', Icons.account_balance, MerchantBankAccountPage()),
                     NavItem('روابط مفيدة', Icons.link, UsefulLinksPage()),
                   ]
                 : const [
