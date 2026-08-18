@@ -3,6 +3,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 import '../../shell/dashboard_shell.dart';
 import '../admin/categories_page.dart';
+import '../admin/admin_settings_screen.dart';
+import '../admin/admin_notifications_screen.dart';
+import '../admin/discount_codes_screen.dart';
+import '../admin/maintenance_screen.dart';
+import '../admin/admin_analytics_customer_screen.dart';
+import '../admin/admin_analytics_merchant_categories_screen.dart';
+import '../admin/admin_analytics_product_categories_screen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -49,6 +56,12 @@ class _LoginPageState extends State<LoginPage> {
             role: role!,
             items: const [
               NavItem('التصنيفات', Icons.category, AdminCategoriesScreen()),
+              NavItem('العملاء', Icons.people, AdminAnalyticsUsersScreen()),
+              NavItem('تصنيفات المتاجر', Icons.storefront, AdminAnalyticsMerchantCategoriesScreen()),
+              NavItem('تصنيفات المنتجات', Icons.inventory_2, AdminAnalyticsProductCategoriesScreen()),
+              NavItem('الإشعارات', Icons.notifications, AdminNotificationsScreen()),
+              NavItem('أكواد الخصم', Icons.local_offer, DiscountCodesScreen()),
+              NavItem('الإعدادات', Icons.settings, AdminSettingsScreen()),
             ],
           ),
         ));
