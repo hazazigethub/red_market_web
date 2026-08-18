@@ -7,6 +7,7 @@ import '../admin/admin_home_page.dart';
 import '../admin/admin_banners_screen.dart';
 import '../admin/admin_announcements_screen.dart';
 import '../merchant/merchant_home_page.dart';
+import '../merchant/manage_reels_page.dart';
 import '../merchant/products_page.dart';
 import '../merchant/review_reels_page.dart';
 import '../merchant/reviews_page.dart';
@@ -90,6 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                 ? const [
                     NavItem('الرئيسية', Icons.dashboard, MerchantHomePage()),
                     NavItem('منتجاتي', Icons.inventory_2, ProductsPage()),
+                    NavItem('الريلز', Icons.video_library, ManageReelsPage()),
                     NavItem('التقييمات', Icons.star, ReviewsPage()),
                     NavItem('التقارير', Icons.bar_chart, MerchantReportsPage()),
                     NavItem('الاشتراكات', Icons.card_membership, MerchantSubscriptionsPage()),

@@ -23,6 +23,7 @@ class MerchantHomePage extends StatelessWidget {
     final nav = DashboardNav.of(context);
     final tiles = <Map<String, dynamic>>[
       {'label': 'منتجاتي', 'icon': Icons.inventory_2_outlined},
+      {'label': 'الريلز', 'icon': Icons.video_library_outlined},
       {'label': 'التقييمات', 'icon': Icons.star_outline},
       {'label': 'التقارير', 'icon': Icons.bar_chart_outlined},
       {'label': 'الاشتراكات', 'icon': Icons.card_membership_outlined},
