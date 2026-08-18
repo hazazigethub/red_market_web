@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 import '../../shell/dashboard_shell.dart';
 import '../admin/categories_page.dart';
+import '../admin/admin_analytics_visits_screen.dart';
 import '../admin/admin_customer_screen.dart';
 import '../admin/admin_products_screen.dart';
 import '../admin/admin_merchants_screen.dart';
@@ -73,6 +74,7 @@ class _LoginPageState extends State<LoginPage> {
               NavItem('التجار', Icons.store, AdminAnalyticsMerchantsScreen()),
               NavItem('المنتجات', Icons.shopping_bag, AdminAnalyticsProductsScreen()),
               NavItem('البلاغات', Icons.flag, AdminReportsScreen()),
+              NavItem('الزيارات', Icons.trending_up, AdminAnalyticsVisitsScreen()),
               NavItem('الإعدادات', Icons.settings, AdminSettingsScreen()),
             ],
           ),
