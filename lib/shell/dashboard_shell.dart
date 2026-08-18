@@ -21,6 +21,11 @@ class DashboardShell extends StatefulWidget {
 class _DashboardShellState extends State<DashboardShell> {
   int _index = 0;
 
+  void goTo(String label) {
+    final i = widget.items.indexWhere((e) => e.label == label);
+    if (i >= 0) setState(() => _index = i);
+  }
+
   Future<void> _logout() async {
     await Supabase.instance.client.auth.signOut();
   }
@@ -32,7 +37,6 @@ class _DashboardShellState extends State<DashboardShell> {
       backgroundColor: const Color(0xFFF4F5F7),
       body: Row(
         children: [
-          if (wide) _sidebar(),
           Expanded(
             child: Column(
               children: [
@@ -41,7 +45,10 @@ class _DashboardShellState extends State<DashboardShell> {
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 1200),
-                      child: widget.items[_index].page,
+                      child: DashboardNav(
+                        goTo: goTo,
+                        child: widget.items[_index].page,
+                      ),
                     ),
                   ),
                 ),
@@ -50,7 +57,7 @@ class _DashboardShellState extends State<DashboardShell> {
           ),
         ],
       ),
-      drawer: wide ? null : Drawer(child: _sidebarContent()),
+
     );
   }
 
@@ -109,13 +116,14 @@ class _DashboardShellState extends State<DashboardShell> {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Row(
           children: [
-            if (!wide)
-              Builder(
-                builder: (c) => IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () => Scaffold.of(c).openDrawer(),
-                ),
+            if (_index != 0)
+              TextButton.icon(
+                onPressed: () => setState(() => _index = 0),
+                icon: const Icon(Icons.home, size: 18),
+                label: const Text('الرئيسية'),
+                style: TextButton.styleFrom(foregroundColor: AppColors.brand),
               ),
+            const SizedBox(width: 12),
             Text(widget.items[_index].label,
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const Spacer(),
@@ -127,4 +135,16 @@ class _DashboardShellState extends State<DashboardShell> {
           ],
         ),
       );
+}
+
+
+class DashboardNav extends InheritedWidget {
+  final void Function(String label) goTo;
+  const DashboardNav({super.key, required this.goTo, required super.child});
+
+  static DashboardNav? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<DashboardNav>();
+
+  @override
+  bool updateShouldNotify(DashboardNav oldWidget) => false;
 }

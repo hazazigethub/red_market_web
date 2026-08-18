@@ -32,7 +32,11 @@ class RedMarketWebApp extends StatelessWidget {
       ),
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.brand),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.brand,
+          surface: Colors.white,
+        ),
+        scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Cairo',
       ),
       home: const LoginPage(),
