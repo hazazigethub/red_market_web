@@ -3,6 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 import '../../shell/dashboard_shell.dart';
 import '../admin/categories_page.dart';
+import '../admin/admin_customer_screen.dart';
+import '../admin/admin_products_screen.dart';
+import '../admin/admin_merchants_screen.dart';
 import '../admin/admin_analytics_merchants_screen.dart';
 import '../admin/admin_analytics_products_screen.dart';
 import '../admin/admin_reports_screen.dart';
@@ -59,7 +62,10 @@ class _LoginPageState extends State<LoginPage> {
             role: role!,
             items: const [
               NavItem('التصنيفات', Icons.category, AdminCategoriesScreen()),
-              NavItem('العملاء', Icons.people, AdminAnalyticsUsersScreen()),
+              NavItem('إدارة العملاء', Icons.people, AdminUsersScreen()),
+              NavItem('إدارة التجار', Icons.storefront, AdminMerchantsScreen()),
+              NavItem('إدارة المنتجات', Icons.inventory, AdminProductsScreen()),
+              NavItem('تحليلات العملاء', Icons.analytics, AdminAnalyticsUsersScreen()),
               NavItem('تصنيفات المتاجر', Icons.storefront, AdminAnalyticsMerchantCategoriesScreen()),
               NavItem('تصنيفات المنتجات', Icons.inventory_2, AdminAnalyticsProductCategoriesScreen()),
               NavItem('الإشعارات', Icons.notifications, AdminNotificationsScreen()),
