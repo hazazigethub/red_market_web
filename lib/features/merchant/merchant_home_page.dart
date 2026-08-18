@@ -28,6 +28,7 @@ class MerchantHomePage extends StatelessWidget {
       {'label': 'الاشتراكات', 'icon': Icons.card_membership_outlined},
       {'label': 'أوقات العمل', 'icon': Icons.schedule_outlined},
       {'label': 'الإشعارات', 'icon': Icons.notifications_outlined},
+      {'label': 'إعدادات المتجر', 'icon': Icons.settings_outlined},
       {'label': 'روابط مفيدة', 'icon': Icons.link_outlined},
     ];
 
