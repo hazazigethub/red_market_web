@@ -4,6 +4,8 @@ import 'package:red_market_core/red_market_core.dart';
 import '../../shell/dashboard_shell.dart';
 import '../admin/categories_page.dart';
 import '../admin/admin_home_page.dart';
+import '../admin/admin_banners_screen.dart';
+import '../admin/admin_announcements_screen.dart';
 import '../merchant/merchant_home_page.dart';
 import '../merchant/products_page.dart';
 import '../merchant/review_reels_page.dart';
@@ -112,6 +114,8 @@ class _LoginPageState extends State<LoginPage> {
               NavItem('المنتجات', Icons.shopping_bag, AdminAnalyticsProductsScreen()),
               NavItem('البلاغات', Icons.flag, AdminReportsScreen()),
               NavItem('الزيارات', Icons.trending_up, AdminAnalyticsVisitsScreen()),
+              NavItem('البنرات', Icons.ad_units, AdminBannersScreen()),
+              NavItem('الإعلانات', Icons.campaign, AdminAnnouncementsScreen()),
               NavItem('الإعدادات', Icons.settings, AdminSettingsScreen()),
             ],
           ),
