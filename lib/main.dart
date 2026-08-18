@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
+import 'features/auth/login_page.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -33,7 +34,7 @@ class RedMarketWebApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.brand),
         fontFamily: 'Cairo',
       ),
-      home: const ConnectionTestPage(),
+      home: const LoginPage(),
     );
   }
 }
