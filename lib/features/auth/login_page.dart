@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
+import '../../shell/dashboard_shell.dart';
+import '../admin/categories_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -41,7 +43,16 @@ class _LoginPageState extends State<LoginPage> {
         await supabase.auth.signOut();
         throw 'هذه اللوحة مخصصة للتجار والإدارة فقط';
       }
-      if (mounted) setState(() => _error = 'تم الدخول بنجاح — الدور: $role');
+      if (mounted) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (_) => DashboardShell(
+            role: role!,
+            items: const [
+              NavItem('التصنيفات', Icons.category, AdminCategoriesScreen()),
+            ],
+          ),
+        ));
+      }
     } catch (e) {
       if (mounted) setState(() => _error = e.toString().replaceAll('Exception: ', ''));
     } finally {

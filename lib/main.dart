@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 import 'features/auth/login_page.dart';
+import 'features/admin/categories_page.dart';
 
 final supabase = Supabase.instance.client;
 
