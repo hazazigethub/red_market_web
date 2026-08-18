@@ -4,6 +4,26 @@ import 'package:red_market_core/red_market_core.dart';
 import '../../shell/dashboard_shell.dart';
 import '../admin/categories_page.dart';
 import '../admin/admin_home_page.dart';
+import '../merchant/merchant_home_page.dart';
+import '../merchant/products_page.dart';
+import '../merchant/review_reels_page.dart';
+import '../merchant/reviews_page.dart';
+import '../merchant/merchant_reports_page.dart';
+import '../merchant/merchant_subscriptions_page.dart';
+import '../merchant/store_preview_page.dart';
+import '../merchant/merchant_availability_page.dart';
+import '../merchant/notifications_page.dart' as merchant_notif;
+import '../merchant/useful_links_page.dart';
+import '../merchant/merchant_home_page.dart';
+import '../merchant/products_page.dart';
+import '../merchant/review_reels_page.dart';
+import '../merchant/reviews_page.dart';
+import '../merchant/merchant_reports_page.dart';
+import '../merchant/merchant_subscriptions_page.dart';
+import '../merchant/store_preview_page.dart';
+import '../merchant/merchant_availability_page.dart';
+import '../merchant/notifications_page.dart' as merchant_notif;
+import '../merchant/useful_links_page.dart';
 import '../admin/admin_analytics_visits_screen.dart';
 import '../admin/admin_customer_screen.dart';
 import '../admin/admin_products_screen.dart';
@@ -62,7 +82,18 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (_) => DashboardShell(
             role: role!,
-            items: const [
+            items: role == 'merchant'
+                ? const [
+                    NavItem('الرئيسية', Icons.dashboard, MerchantHomePage()),
+                    NavItem('منتجاتي', Icons.inventory_2, ProductsPage()),
+                    NavItem('التقييمات', Icons.star, ReviewsPage()),
+                    NavItem('التقارير', Icons.bar_chart, MerchantReportsPage()),
+                    NavItem('الاشتراكات', Icons.card_membership, MerchantSubscriptionsPage()),
+                    NavItem('أوقات العمل', Icons.schedule, MerchantAvailabilityPage()),
+                    NavItem('الإشعارات', Icons.notifications, merchant_notif.NotificationsPage()),
+                    NavItem('روابط مفيدة', Icons.link, UsefulLinksPage()),
+                  ]
+                : const [
               NavItem('الرئيسية', Icons.dashboard, AdminHomePage()),
               NavItem('التصنيفات', Icons.category, AdminCategoriesScreen()),
               NavItem('إدارة العملاء', Icons.people, AdminUsersScreen()),
