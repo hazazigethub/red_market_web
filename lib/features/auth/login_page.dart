@@ -2,6 +2,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 import '../../shell/dashboard_shell.dart';
+import 'merchant_register_page.dart';
 import '../admin/categories_page.dart';
 import '../admin/admin_home_page.dart';
 import '../admin/admin_banners_screen.dart';
@@ -178,6 +179,11 @@ class _LoginPageState extends State<LoginPage> {
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Text('دخول', style: TextStyle(fontSize: 16)),
                   ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const MerchantRegisterPage())),
+                  child: const Text('تسجيل متجر جديد'),
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 16),
