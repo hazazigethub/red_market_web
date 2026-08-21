@@ -829,134 +829,212 @@ class _ProductsPageState extends State<ProductsPage> {
         ),
       );
     }
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 100),
-      itemCount: filteredProducts.length,
-      itemBuilder: (context, index) =>
-          _buildProductItem(filteredProducts[index], isDark),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // عدد الأعمدة يتناسب مع عرض الشاشة، بحد أقصى 6
+        final int cols = (constraints.maxWidth / 190).floor().clamp(2, 6);
+        return GridView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: cols,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.62,
+          ),
+          itemCount: filteredProducts.length,
+          itemBuilder: (context, index) =>
+              _buildProductItem(filteredProducts[index], isDark),
+        );
+      },
     );
   }
 
   Widget _buildProductItem(ProductItem product, bool isDark) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                product.imageUrl,
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.broken_image,
-                    size: 40,
-                    color: Colors.grey),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: const TextStyle(
-                        fontFamily: 'Cairo',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+    final bool hasOld =
+        product.oldPrice != null && product.oldPrice! > product.price;
+    final int percent = hasOld
+        ? (((product.oldPrice! - product.price) / product.oldPrice!) * 100)
+            .round()
+        : 0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border:
+            Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 1,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  color: isDark ? Colors.white10 : Colors.grey.shade50,
+                  child: Image.network(
+                    product.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.broken_image,
+                        size: 32,
+                        color: Colors.grey),
                   ),
-                  Row(
+                ),
+                Positioned(
+                  top: 6,
+                  left: 6,
+                  child: Row(
                     children: [
-                      PriceWidget(
-                        price: product.price,
-                        fontSize: 15,
-                        color: const Color(0xFF4CAF50),
+                      _cardIconButton(
+                        icon: Icons.edit,
+                        color: Colors.blue,
+                        onTap: () =>
+                            _showAddProductForm(isDark, productToEdit: product),
                       ),
-                      if (product.oldPrice != null) ...[
-                        const SizedBox(width: 8),
-                        PriceWidget(
-                          price: product.price,
-                          fontSize: 15,
-                          color: const Color(0xFF4CAF50),
-                        ),
-                      ],
+                      const SizedBox(width: 4),
+                      _cardIconButton(
+                        icon: Icons.delete_outline,
+                        color: brandRed,
+                        onTap: () => _confirmDelete(product),
+                      ),
                     ],
                   ),
-                  if (product.storeCategory.isNotEmpty)
-                    Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Text(
-                        product.storeCategory,
-                        style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.blue,
-                            fontFamily: 'Cairo'),
-                      ),
+                ),
+                Positioned(
+                  top: 4,
+                  right: 2,
+                  child: Transform.scale(
+                    scale: 0.7,
+                    child: Switch(
+                      value: product.isAvailable,
+                      activeColor: brandRed,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      onChanged: (val) async {
+                        await supabase
+                            .from('products')
+                            .update({'is_available': val}).eq('id', product.id);
+                        _fetchProducts();
+                      },
                     ),
-                  if (product.isFlashSale)
-                    Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                  ),
+                ),
+                if (product.isFlashSale)
+                  Positioned(
+                    bottom: 6,
+                    right: 6,
+                    child: Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: brandRed.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(5),
+                        color: brandRed,
+                        borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Text(
-                        "عروض 24 ساعة 🔥",
+                        "عرض سريع",
                         style: TextStyle(
-                            fontSize: 10,
-                            color: brandRed,
+                            fontSize: 9,
+                            color: Colors.white,
                             fontFamily: 'Cairo',
                             fontWeight: FontWeight.bold),
                       ),
                     ),
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (product.storeCategory.isNotEmpty)
+                    Text(
+                      product.storeCategory,
+                      style: const TextStyle(
+                          fontSize: 9, color: Colors.grey, fontFamily: 'Cairo'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  const SizedBox(height: 2),
+                  Expanded(
+                    child: Text(
+                      product.name,
+                      style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          height: 1.4),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (hasOld)
+                    Row(
+                      children: [
+                        Text(
+                          product.oldPrice!.toStringAsFixed(0),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                            fontFamily: 'Cairo',
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE53935),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            "$percent%",
+                            style: const TextStyle(
+                                fontSize: 9,
+                                color: Colors.white,
+                                fontFamily: 'Cairo',
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 2),
+                  PriceWidget(
+                    price: product.price,
+                    fontSize: 14,
+                    color: brandRed,
+                  ),
                 ],
               ),
             ),
-            Column(
-              children: [
-                Switch(
-                  value: product.isAvailable,
-                  activeColor: brandRed,
-                  onChanged: (val) async {
-                    await supabase
-                        .from('products')
-                        .update({'is_available': val}).eq('id', product.id);
-                    _fetchProducts();
-                  },
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                        icon: const Icon(Icons.edit,
-                            color: Colors.blue, size: 20),
-                        onPressed: () => _showAddProductForm(isDark,
-                            productToEdit: product)),
-                    IconButton(
-                        icon: const Icon(Icons.delete_outline,
-                            color: brandRed, size: 20),
-                        onPressed: () => _confirmDelete(product)),
-                  ],
-                ),
-              ],
-            ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// زر أيقونة صغير يوضع فوق صورة المنتج
+  Widget _cardIconButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.9),
+          shape: BoxShape.circle,
         ),
+        child: Icon(icon, color: color, size: 15),
       ),
     );
   }

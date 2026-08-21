@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'admin_merchants_screen.dart';
 
 class AdminReportsScreen extends StatelessWidget {
   const AdminReportsScreen({super.key});
@@ -186,6 +187,30 @@ class AdminReportsScreen extends StatelessWidget {
 }
 
 class ReportsDetailsPage extends StatelessWidget {
+  /// يفتح شاشة إدارة التاجر المُبلَّغ عنه بعد جلب بياناته
+  Future<void> _openMerchant(BuildContext context, dynamic merchantId) async {
+    if (merchantId == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    try {
+      final data = await Supabase.instance.client
+          .from('merchants')
+          .select()
+          .eq('id', merchantId.toString())
+          .maybeSingle();
+      if (data == null) {
+        messenger.showSnackBar(
+            const SnackBar(content: Text('لم يُعثر على بيانات المتجر')));
+        return;
+      }
+      navigator.push(MaterialPageRoute(
+          builder: (_) => MerchantControlScreen(merchant: data)));
+    } catch (e) {
+      messenger.showSnackBar(
+          SnackBar(content: Text('تعذر فتح المتجر: ' + e.toString())));
+    }
+  }
+
   final String filterValue;
   final String title;
   final String tableName;
@@ -590,7 +615,8 @@ class ReportsDetailsPage extends StatelessWidget {
                                           fontWeight: FontWeight.bold,
                                           color: Colors.indigo)),
                                   onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('معرف المتجر: ' + item['target_id'].toString())));
+                                    _openMerchant(
+                                        context, item['target_id']);
                                   },
                                 ),
                               ),

@@ -623,12 +623,10 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
               ),
               const SizedBox(height: 20),
               _buildAdminButton(
-                label: "داشبورد التاجر",
+                label: "إحصائيات المتجر",
                 icon: Icons.dashboard_customize_rounded,
                 primaryColor: Colors.teal.shade700,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لوحة التاجر ستتوفر قريباً')));
-                },
+                onTap: _showMerchantStats,
               ),
             ],
           ),
@@ -636,6 +634,65 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
       ),
     );
   }
+
+  /// يعرض إحصائيات المتجر المحدد (منتجات · ريلز · زيارات)
+  Future<void> _showMerchantStats() async {
+    final id = widget.merchant['id']?.toString();
+    if (id == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final products =
+          await supabase.from('products').select('id').eq('merchant_id', id);
+      final reels =
+          await supabase.from('reels').select('id').eq('merchant_id', id);
+      final visits = await supabase
+          .from('analytics_visits')
+          .select('id')
+          .eq('merchant_id', id);
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text('إحصائيات المتجر',
+                style: TextStyle(fontFamily: 'Cairo')),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _statRow('المنتجات', (products as List).length),
+                _statRow('الريلز', (reels as List).length),
+                _statRow('الزيارات', (visits as List).length),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('إغلاق'),
+              )
+            ],
+          ),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('تعذر جلب الإحصائيات: $e')));
+    }
+  }
+
+  Widget _statRow(String label, int value) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontFamily: 'Cairo')),
+            Text('$value',
+                style: const TextStyle(
+                    fontFamily: 'Cairo',
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFC21815))),
+          ],
+        ),
+      );
 
   Widget _buildAdminButton(
       {required String label,

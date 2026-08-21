@@ -22,6 +22,7 @@ class AdminHomePage extends StatelessWidget {
     final tiles = <Map<String, dynamic>>[
       {'label': 'إدارة العملاء', 'icon': Icons.person_search_outlined},
       {'label': 'إدارة التجار', 'icon': Icons.manage_accounts_outlined},
+      {'label': 'التجار الجدد', 'icon': Icons.fiber_new_outlined},
       {'label': 'التصنيفات', 'icon': Icons.category_outlined},
       {'label': 'إدارة المنتجات', 'icon': Icons.inventory_2_outlined},
       {'label': 'البلاغات', 'icon': Icons.report_problem_outlined},
@@ -45,6 +46,8 @@ class AdminHomePage extends StatelessWidget {
             _stat('المنتجات', _count('products')),
             const SizedBox(width: 16),
             _stat('البلاغات', _count('reports', 'status', 'pending')),
+            const SizedBox(width: 16),
+            _stat('بانتظار الفحص', _count('merchants', 'is_verified', false)),
           ]),
           const SizedBox(height: 32),
           const Text('الأقسام',

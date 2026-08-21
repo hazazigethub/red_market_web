@@ -5,6 +5,7 @@ import '../../shell/dashboard_shell.dart';
 import 'merchant_register_page.dart';
 import '../admin/categories_page.dart';
 import '../admin/admin_home_page.dart';
+import '../admin/new_merchants_screen.dart';
 import '../admin/admin_banners_screen.dart';
 import '../admin/admin_announcements_screen.dart';
 import '../merchant/merchant_home_page.dart';
@@ -18,18 +19,8 @@ import '../merchant/store_preview_page.dart';
 import '../merchant/merchant_availability_page.dart';
 import '../merchant/notifications_page.dart' as merchant_notif;
 import '../merchant/useful_links_page.dart';
-import '../merchant/merchant_home_page.dart';
 import '../merchant/store_settings_page.dart';
 import '../merchant/merchant_bank_account_page.dart';
-import '../merchant/products_page.dart';
-import '../merchant/review_reels_page.dart';
-import '../merchant/reviews_page.dart';
-import '../merchant/merchant_reports_page.dart';
-import '../merchant/merchant_subscriptions_page.dart';
-import '../merchant/store_preview_page.dart';
-import '../merchant/merchant_availability_page.dart';
-import '../merchant/notifications_page.dart' as merchant_notif;
-import '../merchant/useful_links_page.dart';
 import '../admin/admin_analytics_visits_screen.dart';
 import '../admin/admin_customer_screen.dart';
 import '../admin/admin_products_screen.dart';
@@ -107,6 +98,7 @@ class _LoginPageState extends State<LoginPage> {
               NavItem('التصنيفات', Icons.category, AdminCategoriesScreen()),
               NavItem('إدارة العملاء', Icons.people, AdminUsersScreen()),
               NavItem('إدارة التجار', Icons.storefront, AdminMerchantsScreen()),
+              NavItem('التجار الجدد', Icons.fiber_new_outlined, NewMerchantsScreen()),
               NavItem('إدارة المنتجات', Icons.inventory, AdminProductsScreen()),
               NavItem('تحليلات العملاء', Icons.analytics, AdminAnalyticsUsersScreen()),
               NavItem('تصنيفات المتاجر', Icons.storefront, AdminAnalyticsMerchantCategoriesScreen()),
