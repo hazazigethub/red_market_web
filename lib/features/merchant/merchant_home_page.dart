@@ -6,6 +6,22 @@ import '../../shell/dashboard_shell.dart';
 class MerchantHomePage extends StatelessWidget {
   const MerchantHomePage({super.key});
 
+  /// يجلب عدد متابعي المتجر من عمود followers_count
+  Future<int> _followers() async {
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) return 0;
+      final res = await Supabase.instance.client
+          .from('merchants')
+          .select('followers_count')
+          .eq('id', uid)
+          .maybeSingle();
+      return (res?['followers_count'] as int?) ?? 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   Future<int> _count(String table, String col) async {
     try {
       final uid = Supabase.instance.client.auth.currentUser?.id;
@@ -45,6 +61,8 @@ class MerchantHomePage extends StatelessWidget {
             _stat('الريلز', _count('reels', 'merchant_id')),
             const SizedBox(width: 16),
             _stat('زيارات متجري', _count('analytics_visits', 'merchant_id')),
+            const SizedBox(width: 16),
+            _stat('المتابعون', _followers()),
           ]),
           const SizedBox(height: 32),
           const Text('الأقسام',

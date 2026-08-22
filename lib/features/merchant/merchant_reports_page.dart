@@ -22,6 +22,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
 
   // إحصائيات المتجر
   int _storeVisits = 0;
+  int _followersCount = 0;
 
   // إحصائيات المنتجات
   int _productViews = 0;
@@ -82,6 +83,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
     try {
       await Future.wait([
         _fetchStoreVisits(merchantId),
+        _fetchFollowers(merchantId),
         _fetchProductStats(merchantId),
         _fetchReelStats(merchantId),
         _fetchTopProducts(merchantId),
@@ -119,6 +121,20 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
       }
     } catch (e) {
       debugPrint("plan permissions error: $e");
+    }
+  }
+
+  /// يجلب عدد متابعي المتجر
+  Future<void> _fetchFollowers(String merchantId) async {
+    try {
+      final res = await supabase
+          .from('merchants')
+          .select('followers_count')
+          .eq('id', merchantId)
+          .maybeSingle();
+      _followersCount = (res?['followers_count'] as int?) ?? 0;
+    } catch (e) {
+      debugPrint("followers error: $e");
     }
   }
 
@@ -765,6 +781,16 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                                   label: "تفاعلات الريلز",
                                   value: _totalReelInteractions,
                                   color: Colors.redAccent,
+                                  isDark: isDark,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildSummaryCard(
+                                  icon: Icons.group_rounded,
+                                  label: "المتابعون",
+                                  value: _followersCount,
+                                  color: Colors.teal,
                                   isDark: isDark,
                                 ),
                               ),
