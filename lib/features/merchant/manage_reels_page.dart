@@ -22,13 +22,41 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
 
   final List<String> _deletedIds = [];
 
+  static const Color brandRed = Color(0xFFC21815);
+
   String get _merchantId => supabase.auth.currentUser?.id ?? "";
+
+  /// أسماء منتجات التاجر: المعرّف -> الاسم
+  final Map<String, String> _productNames = {};
 
   @override
   void initState() {
     super.initState();
     _reelsFuture = _loadReels();
     _fetchReelsLimit();
+    _loadProductNames();
+  }
+
+  /// يجلب أسماء المنتجات لعرضها على البطاقات وفي نافذة التعديل
+  Future<void> _loadProductNames() async {
+    try {
+      final res = await supabase
+          .from('products')
+          .select('id, name')
+          .eq('merchant_id', _merchantId)
+          .order('name');
+
+      final map = <String, String>{};
+      for (final p in List<Map<String, dynamic>>.from(res as List)) {
+        final id = p['id']?.toString();
+        final name = p['name']?.toString();
+        if (id != null && name != null) map[id] = name;
+      }
+
+      if (mounted) setState(() => _productNames.addAll(map));
+    } catch (e) {
+      debugPrint('Load product names error: $e');
+    }
   }
 
   late Future<List<Map<String, dynamic>>> _reelsFuture;
@@ -210,7 +238,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                   style: TextStyle(
                       fontFamily: 'Cairo',
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF4CAF50))),
+                      color: brandRed)),
             ),
           )
         ],
@@ -238,16 +266,6 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
       child: Scaffold(
         backgroundColor:
             isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          title: const Text("إدارة مقاطع الريلز",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18)),
-          centerTitle: true,
-          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          elevation: 0,
-        ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _isUploading
               ? null
@@ -266,7 +284,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                   }
                   _showReelForm();
                 },
-          backgroundColor: const Color(0xFF4CAF50),
+          backgroundColor: brandRed,
           icon: const Icon(Icons.video_call_rounded, color: Colors.white),
           label: const Text("إضافة رييل",
               style: TextStyle(
@@ -279,7 +297,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF4CAF50)));
+                  child: CircularProgressIndicator(color: brandRed));
             }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -308,12 +326,12 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                   decoration: BoxDecoration(
                     color: _currentReelsCount >= _reelsLimit
                         ? Colors.red.withOpacity(0.08)
-                        : const Color(0xFF4CAF50).withOpacity(0.05),
+                        : brandRed.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _currentReelsCount >= _reelsLimit
                           ? Colors.red.withOpacity(0.3)
-                          : const Color(0xFF4CAF50).withOpacity(0.3),
+                          : brandRed.withOpacity(0.3),
                     ),
                   ),
                   child: Row(
@@ -322,7 +340,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                         Icons.videocam_rounded,
                         color: _currentReelsCount >= _reelsLimit
                             ? Colors.red
-                            : const Color(0xFF4CAF50),
+                            : brandRed,
                         size: 18,
                       ),
                       const SizedBox(width: 8),
@@ -334,7 +352,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                           fontWeight: FontWeight.bold,
                           color: _currentReelsCount >= _reelsLimit
                               ? Colors.red
-                              : const Color(0xFF4CAF50),
+                              : brandRed,
                         ),
                       ),
                       if (_currentReelsCount >= _reelsLimit) ...[
@@ -352,14 +370,21 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                   ),
                 ),
                 Expanded(
-                  child: ListView.builder(
+                  child: GridView.builder(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 14,
+                      crossAxisSpacing: 14,
+                      childAspectRatio: 9 / 16,
+                    ),
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
                       final reel = ReelModel.fromMap(snapshot.data![index]);
-                      if (_deletedIds.contains(reel.id))
+                      if (_deletedIds.contains(reel.id)) {
                         return const SizedBox.shrink();
-
+                      }
                       return _buildReelCard(reel, isDark);
                     },
                   ),
@@ -373,79 +398,278 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
   }
 
   Widget _buildReelCard(ReelModel reel, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 15,
-              offset: const Offset(0, 5))
-        ],
+    final linked = reel.productId != null && reel.productId!.isNotEmpty;
+    final productName = linked ? _productNames[reel.productId!] : null;
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ReviewReelsPage(reel: reel)),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => ReviewReelsPage(reel: reel))),
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(15),
-          child: Image.network(reel.thumbnailUrl,
-              width: 65,
-              height: 85,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.black,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(
+              reel.thumbnailUrl,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(
-                  color: Colors.grey.shade200,
-                  width: 65,
-                  height: 85,
-                  child: const Icon(Icons.play_circle))),
-        ),
-        title: Text(reel.title ?? "بدون عنوان",
-            style: const TextStyle(
-                fontFamily: 'Cairo',
-                fontWeight: FontWeight.bold,
-                fontSize: 14)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(reel.description ?? "",
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    fontFamily: 'Cairo', fontSize: 11, color: Colors.grey)),
-            // ✅ مضاف: بادج المنتج المرتبط
-            if (reel.productId != null && reel.productId!.isNotEmpty)
-              Container(
-                margin: const EdgeInsets.only(top: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                color: Colors.grey.shade300,
+                child: const Icon(Icons.play_circle,
+                    size: 40, color: Colors.white70),
+              ),
+            ),
+
+            // تدرّج أسفل البطاقة لإبراز النص
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(8, 24, 8, 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFC21815).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.85),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.shopping_bag_rounded,
-                        size: 11, color: Color(0xFFC21815)),
-                    SizedBox(width: 4),
-                    Text("مرتبط بمنتج",
-                        style: TextStyle(
-                            fontFamily: 'Cairo',
-                            fontSize: 10,
-                            color: Color(0xFFC21815),
-                            fontWeight: FontWeight.bold)),
+                  children: [
+                    Text(
+                      reel.title ?? "بدون عنوان",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (linked) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: brandRed,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.shopping_bag_rounded,
+                                size: 10, color: Colors.white),
+                            const SizedBox(width: 3),
+                            Flexible(
+                              child: Text(
+                                productName ?? "مرتبط بمنتج",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 10,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
+            ),
+
+            // زر التعديل
+            Positioned(
+              top: 6,
+              left: 6,
+              child: GestureDetector(
+                onTap: () => _showReelOptions(reel),
+                child: Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.edit, size: 15, color: brandRed),
+                ),
+              ),
+            ),
           ],
         ),
-        trailing: IconButton(
-          icon:
-              const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-          onPressed: () => _confirmDelete(reel.id),
+      ),
+    );
+  }
+
+  /// خيارات تعديل أو حذف الريلز
+  void _showReelOptions(ReelModel reel) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Text(
+            reel.title ?? "الريلز",
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                fontFamily: 'Cairo', fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit_outlined, color: brandRed),
+                title: const Text("تعديل التفاصيل",
+                    style: TextStyle(fontFamily: 'Cairo')),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showEditReelDialog(reel);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text("حذف الريلز",
+                    style: TextStyle(fontFamily: 'Cairo', color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _confirmDelete(reel.id);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// تعديل عنوان ووصف الريلز والمنتج المرتبط
+  void _showEditReelDialog(ReelModel reel) {
+    final titleCtrl = TextEditingController(text: reel.title ?? '');
+    final descCtrl = TextEditingController(text: reel.description ?? '');
+    String? productId = reel.productId;
+    bool saving = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            backgroundColor: Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            title: const Text("تعديل تفاصيل الريلز",
+                style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16)),
+            content: SizedBox(
+              width: 380,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleCtrl,
+                    style: const TextStyle(fontFamily: 'Cairo'),
+                    decoration: const InputDecoration(
+                      labelText: "العنوان",
+                      labelStyle: TextStyle(fontFamily: 'Cairo'),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descCtrl,
+                    maxLines: 3,
+                    style: const TextStyle(fontFamily: 'Cairo'),
+                    decoration: const InputDecoration(
+                      labelText: "الوصف",
+                      labelStyle: TextStyle(fontFamily: 'Cairo'),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String?>(
+                    initialValue: productId,
+                    isExpanded: true,
+                    style: const TextStyle(
+                        fontFamily: 'Cairo', color: Colors.black87),
+                    decoration: const InputDecoration(
+                      labelText: "المنتج المرتبط",
+                      labelStyle: TextStyle(fontFamily: 'Cairo'),
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text("بدون منتج",
+                            style: TextStyle(fontFamily: 'Cairo')),
+                      ),
+                      ..._productNames.entries.map(
+                        (e) => DropdownMenuItem<String?>(
+                          value: e.key,
+                          child: Text(e.value,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontFamily: 'Cairo')),
+                        ),
+                      ),
+                    ],
+                    onChanged: (v) => setDialogState(() => productId = v),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: saving ? null : () => Navigator.pop(ctx),
+                child: const Text("إلغاء",
+                    style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: brandRed),
+                onPressed: saving
+                    ? null
+                    : () async {
+                        setDialogState(() => saving = true);
+                        try {
+                          await supabase.from('reels').update({
+                            'title': titleCtrl.text.trim(),
+                            'description': descCtrl.text.trim(),
+                            'product_id': productId,
+                          }).eq('id', reel.id);
+
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          if (mounted) setState(() {});
+                        } catch (e) {
+                          debugPrint('Update reel error: $e');
+                          setDialogState(() => saving = false);
+                        }
+                      },
+                child: Text(saving ? "جاري الحفظ..." : "حفظ",
+                    style: const TextStyle(
+                        fontFamily: 'Cairo', color: Colors.white)),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -480,7 +704,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
               if (_isUploading)
                 const Column(
                   children: [
-                    LinearProgressIndicator(color: Color(0xFF4CAF50)),
+                    LinearProgressIndicator(color: brandRed),
                     SizedBox(height: 8),
                     Text("جاري معالجة الفيديو... (يرجى الانتظار)",
                         style: TextStyle(fontFamily: 'Cairo', fontSize: 12)),
@@ -601,7 +825,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                           }
                         },
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4CAF50),
+                      backgroundColor: brandRed,
                       padding: const EdgeInsets.symmetric(vertical: 12)),
                   child: Text(
                       _isUploading ? "جاري الرفع..." : "نشر الرييل الآن",
@@ -621,20 +845,36 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
   void _confirmDelete(String id) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("حذف الرييل", style: TextStyle(fontFamily: 'Cairo')),
-        content: const Text("هل أنت متأكد من حذف هذا المقطع نهائياً؟"),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("تراجع")),
-          TextButton(
-              onPressed: () {
-                _deleteReel(id);
-                Navigator.pop(context);
-              },
-              child: const Text("حذف", style: TextStyle(color: Colors.red))),
-        ],
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: const Text("حذف الريلز",
+              style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16)),
+          content: const Text("هل أنت متأكد من حذف هذا المقطع نهائياً؟",
+              style: TextStyle(fontFamily: 'Cairo', fontSize: 13)),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("تراجع",
+                    style:
+                        TextStyle(fontFamily: 'Cairo', color: Colors.grey))),
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  _deleteReel(id);
+                  Navigator.pop(context);
+                },
+                child: const Text("حذف",
+                    style:
+                        TextStyle(fontFamily: 'Cairo', color: Colors.white))),
+          ],
+        ),
       ),
     );
   }
