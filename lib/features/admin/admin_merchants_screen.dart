@@ -428,11 +428,96 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
     {"label": "شهر", "days": 30},
   ];
 
+  // ===== الاشتراك =====
+  List<Map<String, dynamic>> _plans = [];
+  int? _selectedPlanId;
+  String? _currentPlanName;
+  DateTime? _subEnd;
+  bool _subActive = false;
+  bool _savingPlan = false;
+
   @override
   void initState() {
     super.initState();
     isVerified = widget.merchant['is_verified'] ?? false;
     isBanned = widget.merchant['is_banned'] ?? false;
+    _loadSubscription();
+  }
+
+  /// يجلب الباقات المتاحة واشتراك التاجر الحالي
+  Future<void> _loadSubscription() async {
+    try {
+      final plans = await supabase
+          .from('subscription_plans')
+          .select('id, name, price, duration_days')
+          .eq('is_active', true)
+          .order('price');
+
+      final profile = await supabase
+          .from('profiles')
+          .select(
+              'package_name, subscription_end_date, is_subscription_active')
+          .eq('id', widget.merchant['id'])
+          .maybeSingle();
+
+      if (!mounted) return;
+      setState(() {
+        _plans = List<Map<String, dynamic>>.from(plans);
+        _currentPlanName = profile?['package_name']?.toString();
+        _subActive = profile?['is_subscription_active'] ?? false;
+        final end = profile?['subscription_end_date'];
+        _subEnd = end == null ? null : DateTime.tryParse(end.toString());
+      });
+    } catch (e) {
+      debugPrint('Load subscription error: $e');
+    }
+  }
+
+  /// يُسند الباقة المختارة للتاجر
+  Future<void> _assignPlan() async {
+    if (_selectedPlanId == null || _savingPlan) return;
+    setState(() => _savingPlan = true);
+
+    try {
+      await supabase.rpc('assign_plan', params: {
+        'p_merchant': widget.merchant['id'],
+        'p_plan_id': _selectedPlanId,
+      });
+
+      await _loadSubscription();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("تم إسناد الباقة",
+              style: TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.green,
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("تعذر إسناد الباقة: $e",
+              style: const TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _savingPlan = false);
+    }
+  }
+
+  /// تفعيل أو تعطيل ظهور المتجر للعملاء
+  Future<void> _toggleSubscription() async {
+    try {
+      await supabase.rpc('admin_update_merchant', params: {
+        'p_merchant': widget.merchant['id'],
+        'p_field': 'is_subscription_active',
+        'p_value': !_subActive,
+      });
+      await _loadSubscription();
+    } catch (e) {
+      debugPrint('Toggle subscription error: $e');
+    }
   }
 
   Future<void> _toggleStatus(String column, bool currentValue) async {
@@ -457,14 +542,14 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
         }
       }
 
-      await supabase
-          .from('profiles')
-          .update(updateData)
-          .eq('id', widget.merchant['id']);
-      await supabase
-          .from('merchants')
-          .update(updateData)
-          .eq('id', widget.merchant['id']);
+      // التحديث عبر دالة الأدمن لتجاوز حماية الأعمدة
+      for (final entry in updateData.entries) {
+        await supabase.rpc('admin_update_merchant', params: {
+          'p_merchant': widget.merchant['id'],
+          'p_field': entry.key,
+          'p_value': entry.value,
+        });
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("تم التحديث", style: TextStyle(fontFamily: 'Cairo')),
@@ -531,7 +616,152 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
+
+              // ===== الاشتراك =====
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.card_membership_rounded,
+                            color: brandRed, size: 20),
+                        const SizedBox(width: 8),
+                        const Text("الاشتراك",
+                            style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16)),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _subActive
+                                ? Colors.green.shade50
+                                : Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _subActive ? "ظاهر للعملاء" : "مخفي",
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: _subActive
+                                  ? Colors.green.shade700
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    Text(
+                      _currentPlanName == null
+                          ? "لا توجد باقة"
+                          : "الباقة الحالية: $_currentPlanName",
+                      style: const TextStyle(
+                          fontFamily: 'Cairo', fontSize: 13),
+                    ),
+                    if (_subEnd != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        "تنتهي في ${_subEnd!.year}/${_subEnd!.month}/${_subEnd!.day}",
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 12,
+                            color: _subEnd!.isBefore(DateTime.now())
+                                ? Colors.red
+                                : Colors.grey.shade600),
+                      ),
+                    ],
+
+                    const SizedBox(height: 16),
+
+                    DropdownButtonFormField<int>(
+                      initialValue: _selectedPlanId,
+                      isExpanded: true,
+                      style: const TextStyle(
+                          fontFamily: 'Cairo', color: Colors.black87),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none),
+                        hintText: "اختر باقة",
+                        hintStyle: const TextStyle(fontFamily: 'Cairo'),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                      ),
+                      items: _plans
+                          .map((p) => DropdownMenuItem<int>(
+                                value: (p['id'] as num).toInt(),
+                                child: Text(
+                                  "${p['name']} — ${p['price']} ر.س / ${p['duration_days']} يوم",
+                                  style: const TextStyle(
+                                      fontFamily: 'Cairo', fontSize: 13),
+                                ),
+                              ))
+                          .toList(),
+                      onChanged: (v) => setState(() => _selectedPlanId = v),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed:
+                                _savingPlan ? null : _assignPlan,
+                            icon: const Icon(Icons.check_rounded, size: 18),
+                            label: Text(
+                                _savingPlan ? "جاري الحفظ..." : "إسناد الباقة",
+                                style: const TextStyle(
+                                    fontFamily: 'Cairo',
+                                    fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: brandRed,
+                              foregroundColor: Colors.white,
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        OutlinedButton(
+                          onPressed: _toggleSubscription,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            side: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          child: Text(_subActive ? "إخفاء" : "إظهار",
+                              style: const TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
               _buildAdminButton(
                 label: isVerified ? "تعطيل حساب المتجر" : "تفعيل المتجر الآن",
                 icon: isVerified
