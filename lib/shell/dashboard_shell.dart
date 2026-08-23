@@ -123,15 +123,7 @@ class _DashboardShellState extends State<DashboardShell> {
                 label: const Text('الرئيسية'),
                 style: TextButton.styleFrom(foregroundColor: AppColors.brand),
               ),
-            const SizedBox(width: 12),
-            Text(widget.items[_index].label,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const Spacer(),
-            Chip(
-              label: Text(widget.role == 'super_admin' ? 'إدارة' : 'تاجر',
-                  style: const TextStyle(color: Colors.white, fontSize: 12)),
-              backgroundColor: AppColors.brand,
-            ),
           ],
         ),
       );
