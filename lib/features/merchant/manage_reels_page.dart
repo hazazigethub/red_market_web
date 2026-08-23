@@ -373,8 +373,8 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                   child: GridView.builder(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
                     gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 200,
                       mainAxisSpacing: 14,
                       crossAxisSpacing: 14,
                       childAspectRatio: 9 / 16,

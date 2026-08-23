@@ -68,10 +68,10 @@ class MerchantHomePage extends StatelessWidget {
           const Text('الأقسام',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-          GridView.count(
+          GridView.extent(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 4,
+            maxCrossAxisExtent: 240,
             mainAxisSpacing: 16,
             crossAxisSpacing: 16,
             childAspectRatio: 1.3,

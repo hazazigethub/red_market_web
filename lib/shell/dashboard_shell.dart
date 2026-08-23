@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 
@@ -19,116 +19,230 @@ class DashboardShell extends StatefulWidget {
 }
 
 class _DashboardShellState extends State<DashboardShell> {
+  final supabase = Supabase.instance.client;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   int _index = 0;
+  String _storeName = '';
+  int _unread = 0;
+
+  bool get _isMerchant => widget.role == 'merchant';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStoreName();
+    if (_isMerchant) _loadUnread();
+  }
 
   void goTo(String label) {
     final i = widget.items.indexWhere((e) => e.label == label);
     if (i >= 0) setState(() => _index = i);
   }
 
+  Future<void> _loadStoreName() async {
+    try {
+      final uid = supabase.auth.currentUser?.id;
+      if (uid == null) return;
+
+      if (_isMerchant) {
+        final m = await supabase
+            .from('merchants')
+            .select('store_name')
+            .eq('id', uid)
+            .maybeSingle();
+        if (mounted) {
+          setState(() => _storeName = (m?['store_name'] ?? 'متجري').toString());
+        }
+      } else {
+        if (mounted) setState(() => _storeName = 'الإدارة');
+      }
+    } catch (e) {
+      debugPrint('Store name error: $e');
+    }
+  }
+
+  /// عدد إشعارات التاجر غير المقروءة
+  Future<void> _loadUnread() async {
+    try {
+      final uid = supabase.auth.currentUser?.id;
+      if (uid == null) return;
+
+      final notifs = await supabase
+          .from('notifications_log')
+          .select('id, target_type, target_id, segment_filter')
+          .eq('status', 'sent')
+          .limit(200);
+
+      final reads = await supabase
+          .from('notification_reads')
+          .select('notification_id')
+          .eq('user_id', uid);
+
+      final readIds = List<Map<String, dynamic>>.from(reads)
+          .map((r) => r['notification_id']?.toString())
+          .whereType<String>()
+          .toSet();
+
+      final mine = List<Map<String, dynamic>>.from(notifs).where((n) {
+        final type = n['target_type'];
+        final targetId = n['target_id'];
+        final segment = n['segment_filter'];
+        if (type == 'all') return true;
+        if (type == 'specific' && targetId == uid) return true;
+        if (type == 'segment' && segment != null) {
+          return segment.toString().contains('merchant');
+        }
+        return false;
+      });
+
+      final count =
+          mine.where((n) => !readIds.contains(n['id']?.toString())).length;
+
+      if (mounted) setState(() => _unread = count);
+    } catch (e) {
+      debugPrint('Unread error: $e');
+    }
+  }
+
   Future<void> _logout() async {
-    await Supabase.instance.client.auth.signOut();
+    await supabase.auth.signOut();
   }
 
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.of(context).size.width >= 1100;
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F5F7),
-      body: Row(
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                _topBar(wide),
-                Expanded(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1200),
-                      child: DashboardNav(
-                        goTo: goTo,
-                        child: widget.items[_index].page,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
 
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: const Color(0xFFF7F8FA),
+        body: Column(
+          children: [
+            _topBar(wide),
+            Expanded(
+              child: DashboardNav(
+                goTo: goTo,
+                child: widget.items[_index].page,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _sidebar() => Container(
-        width: 250,
-        color: Colors.white,
-        child: _sidebarContent(),
-      );
-
-  Widget _sidebarContent() => Column(
-        children: [
-          Container(
-            height: 70,
-            alignment: Alignment.center,
-            color: AppColors.brand,
-            child: const Text('رد ماركت',
-                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: widget.items.length,
-              itemBuilder: (context, i) {
-                final selected = i == _index;
-                return ListTile(
-                  leading: Icon(widget.items[i].icon,
-                      color: selected ? AppColors.brand : Colors.grey[600], size: 22),
-                  title: Text(widget.items[i].label,
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: selected ? AppColors.brand : Colors.grey[800],
-                          fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
-                  selected: selected,
-                  selectedTileColor: AppColors.brand.withValues(alpha: 0.08),
-                  onTap: () {
-                    setState(() => _index = i);
-                    if (Scaffold.of(context).isDrawerOpen) Navigator.pop(context);
-                  },
-                );
-              },
-            ),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red, size: 22),
-            title: const Text('تسجيل الخروج',
-                style: TextStyle(fontSize: 14, color: Colors.red)),
-            onTap: _logout,
-          ),
-        ],
-      );
+  // ===================== الترويسة =====================
 
   Widget _topBar(bool wide) => Container(
-        height: 70,
-        color: Colors.white,
+        height: 68,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Row(
           children: [
             if (_index != 0)
               TextButton.icon(
                 onPressed: () => setState(() => _index = 0),
-                icon: const Icon(Icons.home, size: 18),
+                icon: const Icon(Icons.home_rounded, size: 18),
                 label: const Text('الرئيسية'),
                 style: TextButton.styleFrom(foregroundColor: AppColors.brand),
               ),
+
             const Spacer(),
+
+            // جرس الإشعارات — للتاجر فقط
+            if (_isMerchant) ...[
+              _bellButton(),
+              const SizedBox(width: 16),
+            ],
+
+            // اسم المتجر
+            if (_storeName.isNotEmpty)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.storefront_outlined,
+                        size: 17, color: AppColors.brand),
+                    const SizedBox(width: 8),
+                    Text(
+                      _storeName,
+                      style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1F2937)),
+                    ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(width: 10),
+
+            // زر الخروج
+            IconButton(
+              tooltip: 'تسجيل الخروج',
+              onPressed: _logout,
+              icon: const Icon(Icons.logout_rounded,
+                  size: 20, color: Colors.red),
+            ),
           ],
         ),
       );
-}
 
+  Widget _bellButton() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          tooltip: 'الإشعارات',
+          onPressed: () {
+            goTo('الإشعارات');
+            _loadUnread();
+          },
+          icon: const Icon(Icons.notifications_none_rounded,
+              size: 24, color: Color(0xFF4A5468)),
+        ),
+        if (_unread > 0)
+          Positioned(
+            top: 6,
+            left: 6,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              constraints: const BoxConstraints(minWidth: 16),
+              decoration: BoxDecoration(
+                color: AppColors.brand,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                _unread > 99 ? '99+' : '$_unread',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 class DashboardNav extends InheritedWidget {
   final void Function(String label) goTo;
