@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:ui' as ui;
 
@@ -22,6 +23,8 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
 
   // إحصائيات المتجر
   int _storeVisits = 0;
+  /// زيارات آخر 30 يوماً: التاريخ -> العدد
+  final Map<int, int> _dailyVisits = {};
   int _followersCount = 0;
 
   // إحصائيات المنتجات
@@ -142,10 +145,30 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
     try {
       final res = await supabase
           .from('analytics_visits')
-          .select('id')
+          .select('id, visited_at')
           .eq('merchant_id', merchantId)
           .eq('page_name', 'store');
-      _storeVisits = (res as List).length;
+
+      final list = List<Map<String, dynamic>>.from(res as List);
+      _storeVisits = list.length;
+
+      // توزيع الزيارات على آخر 30 يوماً
+      _dailyVisits.clear();
+      final now = DateTime.now();
+      for (var i = 0; i < 30; i++) {
+        _dailyVisits[i] = 0;
+      }
+
+      for (final row in list) {
+        final raw = row['visited_at'];
+        if (raw == null) continue;
+        final d = DateTime.tryParse(raw.toString());
+        if (d == null) continue;
+        final diff = now.difference(d).inDays;
+        if (diff >= 0 && diff < 30) {
+          _dailyVisits[29 - diff] = (_dailyVisits[29 - diff] ?? 0) + 1;
+        }
+      }
     } catch (e) {
       debugPrint("store visits error: $e");
     }
@@ -492,32 +515,25 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
   void _showDetailSheet(
       String title, List<Map<String, dynamic>> items, Color color) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => Directionality(
         textDirection: ui.TextDirection.rtl,
-        child: DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.92,
-          expand: false,
-          builder: (_, scrollController) => Container(
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560, maxHeight: 620),
+            child: Container(
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: BorderRadius.circular(16),
             ),
+            clipBehavior: Clip.antiAlias,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 12),
-                Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10))),
                 const SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -573,7 +589,6 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                           ),
                         )
                       : ListView.separated(
-                          controller: scrollController,
                           padding: const EdgeInsets.all(16),
                           itemCount: items.length,
                           separatorBuilder: (_, __) =>
@@ -680,6 +695,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                 ),
               ],
             ),
+            ),
           ),
         ),
       ),
@@ -723,21 +739,6 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
       child: Scaffold(
         backgroundColor:
             isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          elevation: 0,
-          centerTitle: true,
-          title: const Text("تقارير المتجر",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 18)),
-          leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios,
-                  color: Colors.white, size: 20),
-              onPressed: () => Navigator.pop(context)),
-        ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator(color: brandRed))
             // ✅ مضاف: لا باقة → شاشة ترقية
@@ -748,53 +749,125 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                     color: brandRed,
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1400),
+                          child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // الخانات الثلاث العلوية
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildSummaryCard(
+                          // بطاقات الملخص — تتكيّف مع عرض الشاشة
+                          LayoutBuilder(
+                            builder: (context, c) {
+                              final cards = [
+                                _buildSummaryCard(
                                   icon: Icons.storefront_rounded,
                                   label: "زيارات المتجر",
                                   value: _storeVisits,
                                   color: Colors.blue,
                                   isDark: isDark,
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildSummaryCard(
+                                _buildSummaryCard(
                                   icon: Icons.inventory_2_rounded,
                                   label: "تفاعلات المنتجات",
                                   value: _totalProductInteractions,
                                   color: Colors.orange,
                                   isDark: isDark,
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildSummaryCard(
+                                _buildSummaryCard(
                                   icon: Icons.play_circle_fill_rounded,
                                   label: "تفاعلات الريلز",
                                   value: _totalReelInteractions,
                                   color: Colors.redAccent,
                                   isDark: isDark,
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildSummaryCard(
+                                _buildSummaryCard(
                                   icon: Icons.group_rounded,
                                   label: "المتابعون",
                                   value: _followersCount,
                                   color: Colors.teal,
                                   isDark: isDark,
                                 ),
-                              ),
-                            ],
+                              ];
+
+                              const gap = 12.0;
+                              final cols = c.maxWidth >= 1000
+                                  ? 4
+                                  : c.maxWidth >= 640
+                                      ? 2
+                                      : 1;
+                              final w =
+                                  (c.maxWidth - gap * (cols - 1)) / cols;
+
+                              return Wrap(
+                                spacing: gap,
+                                runSpacing: gap,
+                                children: cards
+                                    .map((card) =>
+                                        SizedBox(width: w, child: card))
+                                    .toList(),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 24),
+
+                          // ==================== الرسوم البيانية ====================
+                          _chartCard(
+                            title: "زيارات المتجر — آخر 30 يوماً",
+                            icon: Icons.show_chart_rounded,
+                            color: brandRed,
+                            isDark: isDark,
+                            height: 230,
+                            child: _visitsLineChart(isDark),
+                          ),
+                          const SizedBox(height: 16),
+
+                          LayoutBuilder(
+                            builder: (context, c) {
+                              final twoCols = c.maxWidth >= 820;
+                              final left = _chartCard(
+                                title: "تفاعلات المنتجات",
+                                icon: Icons.bar_chart_rounded,
+                                color: Colors.orange,
+                                isDark: isDark,
+                                height: 210,
+                                child: _productBarChart(isDark),
+                              );
+                              final right = _chartCard(
+                                title: "توزيع تفاعلات الريلز",
+                                icon: Icons.pie_chart_rounded,
+                                color: Colors.redAccent,
+                                isDark: isDark,
+                                height: 210,
+                                child: _reelPieChart(isDark),
+                              );
+
+                              if (!twoCols) {
+                                return Column(children: [
+                                  left,
+                                  const SizedBox(height: 16),
+                                  right,
+                                ]);
+                              }
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(child: left),
+                                  const SizedBox(width: 16),
+                                  Expanded(child: right),
+                                ],
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          _chartCard(
+                            title: "أعلى المنتجات مشاهدة",
+                            icon: Icons.leaderboard_rounded,
+                            color: Colors.blue,
+                            isDark: isDark,
+                            height: 220,
+                            child: _topProductsChart(isDark),
                           ),
                           const SizedBox(height: 24),
 
@@ -803,14 +876,21 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                             _buildSectionTitle("إحصائيات المنتجات",
                                 Icons.inventory_2_rounded, Colors.orange),
                             const SizedBox(height: 12),
-                            GridView.count(
-                              crossAxisCount: 2,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 1.4,
-                              children: [
+                            LayoutBuilder(
+                              builder: (context, c) {
+                                const gap = 12.0;
+                                final cols = c.maxWidth >= 1000
+                                    ? 4
+                                    : c.maxWidth >= 640
+                                        ? 2
+                                        : 1;
+                                final w =
+                                    (c.maxWidth - gap * (cols - 1)) / cols;
+
+                                return Wrap(
+                                  spacing: gap,
+                                  runSpacing: gap,
+                                  children: [
                                 _buildStatCard(
                                     icon: Icons.remove_red_eye_rounded,
                                     label: "مشاهدات المنتجات",
@@ -851,7 +931,12 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                                         "مشاركات المنتجات",
                                         _productDetailMap['shares'] ?? [],
                                         Colors.teal)),
-                              ],
+                                  ]
+                                      .map((card) =>
+                                          SizedBox(width: w, child: card))
+                                      .toList(),
+                                );
+                              },
                             ),
                             const SizedBox(height: 24),
                             if (_topProducts.isNotEmpty) ...[
@@ -874,14 +959,21 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                                 Icons.play_circle_fill_rounded,
                                 Colors.redAccent),
                             const SizedBox(height: 12),
-                            GridView.count(
-                              crossAxisCount: 2,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 1.4,
-                              children: [
+                            LayoutBuilder(
+                              builder: (context, c) {
+                                const gap = 12.0;
+                                final cols = c.maxWidth >= 1000
+                                    ? 4
+                                    : c.maxWidth >= 640
+                                        ? 2
+                                        : 1;
+                                final w =
+                                    (c.maxWidth - gap * (cols - 1)) / cols;
+
+                                return Wrap(
+                                  spacing: gap,
+                                  runSpacing: gap,
+                                  children: [
                                 _buildStatCard(
                                     icon: Icons.play_arrow_rounded,
                                     label: "مشاهدات الريلز",
@@ -922,15 +1014,389 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                                         "تعليقات الريلز",
                                         _reelDetailMap['comments'] ?? [],
                                         Colors.green)),
-                              ],
+                                  ]
+                                      .map((card) =>
+                                          SizedBox(width: w, child: card))
+                                      .toList(),
+                                );
+                              },
                             ),
                           ],
                           const SizedBox(height: 40),
-                        ],
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
       ),
+    );
+  }
+
+  // ==================== الرسوم البيانية ====================
+
+  /// إطار موحّد لكل رسم
+  Widget _chartCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required Widget child,
+    required bool isDark,
+    double height = 260,
+  }) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: isDark ? Colors.white10 : const Color(0xFFEDEFF3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(icon, color: color, size: 17),
+              ),
+              const SizedBox(width: 10),
+              Text(title,
+                  style: const TextStyle(
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15)),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(height: height, child: child),
+        ],
+      ),
+    );
+  }
+
+  /// خط زيارات المتجر خلال آخر 30 يوماً
+  Widget _visitsLineChart(bool isDark) {
+    final spots = <FlSpot>[];
+    for (var i = 0; i < 30; i++) {
+      spots.add(FlSpot(i.toDouble(), (_dailyVisits[i] ?? 0).toDouble()));
+    }
+
+    final maxY = spots.fold<double>(0, (m, s) => s.y > m ? s.y : m);
+
+    return LineChart(
+      LineChartData(
+        minY: 0,
+        maxY: maxY < 4 ? 4 : maxY * 1.25,
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (v) => FlLine(
+            color: isDark ? Colors.white10 : const Color(0xFFEDEFF3),
+            strokeWidth: 1,
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 34,
+              getTitlesWidget: (v, meta) => Text(
+                v.toInt().toString(),
+                style: const TextStyle(
+                    fontFamily: 'Cairo', fontSize: 10, color: Colors.grey),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 7,
+              getTitlesWidget: (v, meta) {
+                final daysAgo = 29 - v.toInt();
+                final label = daysAgo == 0 ? "اليوم" : "-$daysAgo";
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(label,
+                      style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 10,
+                          color: Colors.grey)),
+                );
+              },
+            ),
+          ),
+        ),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (spots) => spots
+                .map((s) => LineTooltipItem(
+                      "${s.y.toInt()} زيارة",
+                      const TextStyle(
+                          fontFamily: 'Cairo',
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
+                    ))
+                .toList(),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            curveSmoothness: 0.3,
+            color: brandRed,
+            barWidth: 2.5,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  brandRed.withValues(alpha: 0.25),
+                  brandRed.withValues(alpha: 0.0),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// أعمدة تقارن تفاعلات المنتجات
+  Widget _productBarChart(bool isDark) {
+    final values = [
+      _productViews.toDouble(),
+      _productLikes.toDouble(),
+      _productSaves.toDouble(),
+      _productShares.toDouble(),
+    ];
+    const labels = ["مشاهدة", "إعجاب", "مفضلة", "مشاركة"];
+    const colors = [
+      Colors.blue,
+      Colors.pink,
+      Colors.amber,
+      Colors.teal,
+    ];
+
+    final maxV = values.fold<double>(0, (m, v) => v > m ? v : m);
+
+    return BarChart(
+      BarChartData(
+        maxY: maxV < 4 ? 4 : maxV * 1.25,
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (v) => FlLine(
+            color: isDark ? Colors.white10 : const Color(0xFFEDEFF3),
+            strokeWidth: 1,
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 34,
+              getTitlesWidget: (v, meta) => Text(
+                v.toInt().toString(),
+                style: const TextStyle(
+                    fontFamily: 'Cairo', fontSize: 10, color: Colors.grey),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (v, meta) {
+                final i = v.toInt();
+                if (i < 0 || i >= labels.length) return const SizedBox();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(labels[i],
+                      style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 11,
+                          color: Colors.grey)),
+                );
+              },
+            ),
+          ),
+        ),
+        barGroups: List.generate(
+          values.length,
+          (i) => BarChartGroupData(
+            x: i,
+            barRods: [
+              BarChartRodData(
+                toY: values[i],
+                color: colors[i],
+                width: 26,
+                borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(6)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// دائرة توزّع تفاعلات الريلز
+  Widget _reelPieChart(bool isDark) {
+    final data = [
+      ("مشاهدة", _reelViews.toDouble(), Colors.blue),
+      ("إعجاب", _reelLikes.toDouble(), Colors.pink),
+      ("مشاركة", _reelShares.toDouble(), Colors.teal),
+      ("تعليق", _reelComments.toDouble(), Colors.purple),
+    ].where((e) => e.$2 > 0).toList();
+
+    if (data.isEmpty) {
+      return const Center(
+        child: Text("لا توجد تفاعلات بعد",
+            style: TextStyle(
+                fontFamily: 'Cairo', color: Colors.grey, fontSize: 13)),
+      );
+    }
+
+    final total = data.fold<double>(0, (sum, e) => sum + e.$2);
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: PieChart(
+            PieChartData(
+              sectionsSpace: 2,
+              centerSpaceRadius: 42,
+              sections: data
+                  .map((e) => PieChartSectionData(
+                        value: e.$2,
+                        color: e.$3,
+                        radius: 46,
+                        title: "${(e.$2 / total * 100).round()}%",
+                        titleStyle: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 2,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: data
+                .map((e) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 11,
+                            height: 11,
+                            decoration: BoxDecoration(
+                                color: e.$3,
+                                borderRadius: BorderRadius.circular(3)),
+                          ),
+                          const SizedBox(width: 8),
+                          Text("${e.$1}  ${e.$2.toInt()}",
+                              style: const TextStyle(
+                                  fontFamily: 'Cairo', fontSize: 12)),
+                        ],
+                      ),
+                    ))
+                .toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// أعمدة أفقية لأعلى المنتجات مشاهدة
+  Widget _topProductsChart(bool isDark) {
+    final items = _topProducts.take(5).toList();
+    if (items.isEmpty) {
+      return const Center(
+        child: Text("لا توجد بيانات بعد",
+            style: TextStyle(
+                fontFamily: 'Cairo', color: Colors.grey, fontSize: 13)),
+      );
+    }
+
+    final maxV = items.fold<double>(
+        0, (m, e) => ((e['count'] ?? 0) as num).toDouble() > m
+            ? ((e['count'] ?? 0) as num).toDouble()
+            : m);
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: items.map((e) {
+        final name = (e['name'] ?? 'منتج').toString();
+        final count = ((e['count'] ?? 0) as num).toDouble();
+        final ratio = maxV == 0 ? 0.0 : count / maxV;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                  Text(count.toInt().toString(),
+                      style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: brandRed)),
+                ],
+              ),
+              const SizedBox(height: 5),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: ratio,
+                  minHeight: 7,
+                  backgroundColor:
+                      isDark ? Colors.white10 : const Color(0xFFF1F2F5),
+                  valueColor: const AlwaysStoppedAnimation(brandRed),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -1034,9 +1500,6 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                       color: color.withOpacity(0.1), shape: BoxShape.circle),
                   child: Icon(icon, color: color, size: 20),
                 ),
-                if (onTap != null)
-                  Icon(Icons.chevron_left_rounded,
-                      color: color.withOpacity(0.5), size: 18),
               ],
             ),
             Column(
