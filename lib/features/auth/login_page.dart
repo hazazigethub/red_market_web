@@ -16,7 +16,6 @@ import '../merchant/reviews_page.dart';
 import '../merchant/merchant_reports_page.dart';
 import '../merchant/merchant_subscriptions_page.dart';
 import '../merchant/store_preview_page.dart';
-import '../merchant/merchant_availability_page.dart';
 import '../merchant/notifications_page.dart' as merchant_notif;
 import '../merchant/useful_links_page.dart';
 import '../merchant/store_settings_page.dart';
@@ -122,7 +121,6 @@ class _LoginPageState extends State<LoginPage> {
                     NavItem('التقييمات', Icons.star, ReviewsPage()),
                     NavItem('التقارير', Icons.bar_chart, MerchantReportsPage()),
                     NavItem('الاشتراكات', Icons.card_membership, MerchantSubscriptionsPage()),
-                    NavItem('أوقات العمل', Icons.schedule, MerchantAvailabilityPage()),
                     NavItem('الإشعارات', Icons.notifications, merchant_notif.NotificationsPage()),
                     NavItem('إعدادات المتجر', Icons.settings, StoreSettingsPage()),
                     NavItem('الحساب البنكي', Icons.account_balance, MerchantBankAccountPage()),

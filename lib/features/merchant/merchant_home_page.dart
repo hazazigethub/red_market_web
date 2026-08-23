@@ -43,7 +43,6 @@ class MerchantHomePage extends StatelessWidget {
       {'label': 'التقييمات', 'icon': Icons.star_outline},
       {'label': 'التقارير', 'icon': Icons.bar_chart_outlined},
       {'label': 'الاشتراكات', 'icon': Icons.card_membership_outlined},
-      {'label': 'أوقات العمل', 'icon': Icons.schedule_outlined},
       {'label': 'الإشعارات', 'icon': Icons.notifications_outlined},
       {'label': 'إعدادات المتجر', 'icon': Icons.settings_outlined},
       {'label': 'الحساب البنكي', 'icon': Icons.account_balance_outlined},
@@ -55,15 +54,33 @@ class MerchantHomePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            _stat('منتجاتي', _count('products', 'merchant_id')),
-            const SizedBox(width: 16),
-            _stat('الريلز', _count('reels', 'merchant_id')),
-            const SizedBox(width: 16),
-            _stat('زيارات متجري', _count('analytics_visits', 'merchant_id')),
-            const SizedBox(width: 16),
-            _stat('المتابعون', _followers()),
-          ]),
+          LayoutBuilder(
+            builder: (context, c) {
+              final stats = [
+                _stat('منتجاتي', _count('products', 'merchant_id')),
+                _stat('الريلز', _count('reels', 'merchant_id')),
+                _stat('زيارات متجري',
+                    _count('analytics_visits', 'merchant_id')),
+                _stat('المتابعون', _followers()),
+              ];
+
+              const gap = 16.0;
+              final cols = c.maxWidth >= 1000
+                  ? 4
+                  : c.maxWidth >= 640
+                      ? 2
+                      : 1;
+              final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: stats
+                    .map((s) => SizedBox(width: w, child: s))
+                    .toList(),
+              );
+            },
+          ),
           const SizedBox(height: 32),
           const Text('الأقسام',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -105,8 +122,7 @@ class MerchantHomePage extends StatelessWidget {
     );
   }
 
-  Widget _stat(String label, Future<int> future) => Expanded(
-        child: Container(
+  Widget _stat(String label, Future<int> future) => Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -131,6 +147,5 @@ class MerchantHomePage extends StatelessWidget {
               ),
             ],
           ),
-        ),
       );
 }
