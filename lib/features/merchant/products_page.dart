@@ -116,7 +116,7 @@ class _ProductsPageState extends State<ProductsPage> {
   List<String> _myStoreCategories = [];
   bool _isLoading = true;
   String _selectedStoreCategory = "الكل";
-  int _productLimit = 5;
+  int _productLimit = 0;
   bool _isSubscriptionActive = false;
 
   @override
@@ -136,47 +136,38 @@ class _ProductsPageState extends State<ProductsPage> {
     try {
       final userId = widget.merchantId ?? supabase.auth.currentUser?.id;
       if (userId == null) return;
-      // ✅ إذا كان الأدمن — أعطه صلاحيات كاملة
+
+      // ✅ إذا كان الأدمن يعاين متجر تاجر — صلاحيات كاملة
       if (widget.merchantId != null &&
           widget.merchantId != supabase.auth.currentUser?.id) {
-        if (mounted)
+        if (mounted) {
           setState(() {
             _isSubscriptionActive = true;
             _productLimit = 9999;
           });
+        }
+        return;
       }
+
+      // الحد محفوظ في profiles عند إسناد الباقة
       final profile = await supabase
           .from('profiles')
-          .select('plan_id, is_subscription_active')
+          .select('max_products, is_subscription_active')
           .eq('id', userId)
           .maybeSingle();
+
       if (profile == null) return;
+
+      final active = profile['is_subscription_active'] ?? false;
+      final limit = (profile['max_products'] as num?)?.toInt() ?? 0;
 
       if (mounted) {
         setState(() {
-          _isSubscriptionActive = profile['is_subscription_active'] ?? false;
+          _isSubscriptionActive = active;
+          // التاجر يواصل الإدارة حتى لو انتهى اشتراكه،
+          // والإخفاء عن العميل يتم عبر is_subscription_active
+          _productLimit = limit;
         });
-      }
-
-      if (profile['plan_id'] == null) return;
-      final plan = await supabase
-          .from('subscription_plans')
-          .select('product_limit')
-          .eq('id', profile['plan_id'])
-          .maybeSingle();
-      if (plan != null && plan['product_limit'] != null) {
-        if (mounted) {
-          setState(() {
-            _productLimit = (plan['product_limit'] as num).toInt();
-          });
-        }
-      }
-      if (plan != null && plan['product_limit'] != null) {
-        if (mounted) {
-          setState(() {
-            _productLimit = (plan['product_limit'] as num).toInt();
-          });
-        }
       }
     } catch (e) {
       debugPrint("خطأ في جلب حد المنتجات: $e");

@@ -17,7 +17,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
   final ImagePicker _picker = ImagePicker();
   final supabase = Supabase.instance.client;
   bool _isUploading = false;
-  int _reelsLimit = 999999;
+  int _reelsLimit = 0;
   int _currentReelsCount = 0;
 
   final List<String> _deletedIds = [];
@@ -79,26 +79,21 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) return;
 
+      // الحد محفوظ في profiles عند إسناد الباقة
       final profile = await supabase
           .from('profiles')
-          .select('plan_id')
+          .select('max_reels')
           .eq('id', userId)
           .maybeSingle();
 
-      if (profile == null || profile['plan_id'] == null) return;
+      if (profile == null) return;
 
-      final plan = await supabase
-          .from('subscription_plans')
-          .select('reels_limit')
-          .eq('id', profile['plan_id'])
-          .maybeSingle();
+      final limit = (profile['max_reels'] as num?)?.toInt() ?? 0;
 
-      if (plan != null && plan['reels_limit'] != null) {
-        if (mounted) {
-          setState(() {
-            _reelsLimit = (plan['reels_limit'] as num).toInt();
-          });
-        }
+      if (mounted) {
+        setState(() {
+          _reelsLimit = limit;
+        });
       }
     } catch (e) {
       debugPrint("خطأ في جلب حد الريلز: $e");
@@ -139,7 +134,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
 
     try {
       // الويب: لا يتوفر ضغط أو فحص مدة قبل الرفع — يُرفع الملف كما هو
-      if (_reelsLimit != 999999 && _currentReelsCount >= _reelsLimit) {
+      if (_currentReelsCount >= _reelsLimit) {
         if (mounted) {
           setState(() => _isUploading = false);
           _showErrorDialog(
