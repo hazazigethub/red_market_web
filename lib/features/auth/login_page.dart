@@ -55,7 +55,42 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  /// يحوّل رسائل الخطأ الإنجليزية إلى العربية
+  String _arabicError(Object e) {
+    if (e is AuthException) {
+      final msg = e.message.toLowerCase();
+      if (msg.contains('invalid login')) {
+        return 'رقم الجوال أو كلمة المرور غير صحيحة';
+      }
+      if (msg.contains('email not confirmed')) {
+        return 'لم يتم تأكيد الحساب بعد';
+      }
+      if (msg.contains('too many') || msg.contains('rate limit')) {
+        return 'محاولات كثيرة، انتظر قليلاً ثم حاول مجدداً';
+      }
+      if (msg.contains('user not found')) {
+        return 'لا يوجد حساب بهذا الرقم';
+      }
+      return 'تعذر تسجيل الدخول، حاول مجدداً';
+    }
+
+    final text = e.toString();
+    if (text.contains('SocketException') ||
+        text.contains('Failed host lookup') ||
+        text.contains('ClientException')) {
+      return 'تعذر الاتصال، تحقق من الشبكة';
+    }
+
+    // رسائلنا العربية تمر كما هي
+    return text.replaceAll('Exception: ', '');
+  }
+
   Future<void> _login() async {
+    if (_phone.text.trim().isEmpty || _password.text.trim().isEmpty) {
+      setState(() => _error = 'يرجى إدخال رقم الجوال وكلمة المرور');
+      return;
+    }
+
     setState(() { _loading = true; _error = null; });
     final supabase = Supabase.instance.client;
     try {
@@ -117,7 +152,7 @@ class _LoginPageState extends State<LoginPage> {
         ));
       }
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString().replaceAll('Exception: ', ''));
+      if (mounted) setState(() => _error = _arabicError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
