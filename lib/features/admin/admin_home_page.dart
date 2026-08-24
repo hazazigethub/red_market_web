@@ -28,6 +28,7 @@ class AdminHomePage extends StatelessWidget {
       {'label': 'البلاغات', 'icon': Icons.report_problem_outlined},
       {'label': 'أكواد الخصم', 'icon': Icons.local_offer_outlined},
       {'label': 'الإشعارات', 'icon': Icons.notifications_outlined},
+      {'label': 'النشرة الأسبوعية', 'icon': Icons.mail_outline_rounded},
       {'label': 'البنرات', 'icon': Icons.ad_units_outlined},
       {'label': 'الإعلانات', 'icon': Icons.campaign_outlined},
       {'label': 'الزيارات', 'icon': Icons.trending_up_outlined},

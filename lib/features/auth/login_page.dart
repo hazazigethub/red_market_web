@@ -30,6 +30,7 @@ import '../admin/admin_analytics_products_screen.dart';
 import '../admin/admin_reports_screen.dart';
 import '../admin/admin_settings_screen.dart';
 import '../admin/admin_notifications_screen.dart';
+import '../admin/admin_newsletter_screen.dart';
 import '../admin/discount_codes_screen.dart';
 import '../admin/maintenance_screen.dart';
 import '../admin/admin_analytics_customer_screen.dart';
@@ -139,6 +140,7 @@ class _LoginPageState extends State<LoginPage> {
               NavItem('تصنيفات المتاجر', Icons.storefront, AdminAnalyticsMerchantCategoriesScreen()),
               NavItem('تصنيفات المنتجات', Icons.inventory_2, AdminAnalyticsProductCategoriesScreen()),
               NavItem('الإشعارات', Icons.notifications, AdminNotificationsScreen()),
+              NavItem('النشرة الأسبوعية', Icons.campaign, AdminNewsletterScreen()),
               NavItem('أكواد الخصم', Icons.local_offer, DiscountCodesScreen()),
               NavItem('التجار', Icons.store, AdminAnalyticsMerchantsScreen()),
               NavItem('المنتجات', Icons.shopping_bag, AdminAnalyticsProductsScreen()),
