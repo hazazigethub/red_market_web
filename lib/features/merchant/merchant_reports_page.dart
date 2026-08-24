@@ -20,6 +20,8 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
   // ✅ مضاف: صلاحيات الباقة
   bool _hasBasicReports = false;
   bool _hasDetailedReports = false;
+  String _planType = '';
+  Map<String, dynamic>? _comparison;
 
   // إحصائيات المتجر
   int _storeVisits = 0;
@@ -91,6 +93,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
         _fetchReelStats(merchantId),
         _fetchTopProducts(merchantId),
         _fetchTopReels(merchantId),
+        _fetchComparison(merchantId),
       ]);
     } catch (e) {
       debugPrint("Error fetching stats: $e");
@@ -112,7 +115,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
 
       final plan = await supabase
           .from('subscription_plans')
-          .select('has_basic_reports, has_detailed_reports')
+          .select('has_basic_reports, has_detailed_reports, plan_type')
           .eq('id', profile['plan_id'])
           .maybeSingle();
 
@@ -120,10 +123,24 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
         setState(() {
           _hasBasicReports = plan['has_basic_reports'] ?? false;
           _hasDetailedReports = plan['has_detailed_reports'] ?? false;
+          _planType = (plan['plan_type'] ?? '').toString();
         });
       }
     } catch (e) {
       debugPrint("plan permissions error: $e");
+    }
+  }
+
+  /// يجلب مقارنة أداء المتجر بمتوسط السوق
+  Future<void> _fetchComparison(String merchantId) async {
+    try {
+      final res = await supabase.rpc('get_market_comparison',
+          params: {'p_merchant': merchantId});
+      _comparison = res == null
+          ? null
+          : Map<String, dynamic>.from(res as Map);
+    } catch (e) {
+      debugPrint("comparison error: $e");
     }
   }
 
@@ -812,6 +829,11 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                           const SizedBox(height: 24),
 
                           // ==================== الرسوم البيانية ====================
+                          if (_planType == 'pro') ...[
+                            _comparisonCard(isDark),
+                            const SizedBox(height: 16),
+                          ],
+
                           _chartCard(
                             title: "زيارات المتجر — آخر 30 يوماً",
                             icon: Icons.show_chart_rounded,
@@ -1034,6 +1056,172 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
   }
 
   // ==================== الرسوم البيانية ====================
+
+  /// بطاقة مقارنة الأداء بمتوسط السوق — للباقة الاحترافية
+  Widget _comparisonCard(bool isDark) {
+    final c = _comparison;
+    if (c == null) return const SizedBox.shrink();
+
+    final ready = c['ready'] == true;
+    final activeDays = (c['active_days'] as num?)?.toInt() ?? 0;
+    final myDaily = (c['my_daily'] as num?)?.toDouble() ?? 0;
+    final marketDaily = (c['market_daily'] as num?)?.toDouble() ?? 0;
+    final monthLabel = (c['month_label'] ?? '').toString();
+
+    final diff = marketDaily == 0
+        ? 0.0
+        : ((myDaily - marketDaily) / marketDaily) * 100;
+    final better = myDaily >= marketDaily;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: isDark ? Colors.white10 : const Color(0xFFEDEFF3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: Colors.indigo.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(Icons.insights_rounded,
+                    color: Colors.indigo, size: 17),
+              ),
+              const SizedBox(width: 10),
+              const Text("مقارنة أدائك بمتوسط السوق",
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15)),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          if (!ready)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.schedule_rounded,
+                      color: Colors.amber, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      "متجرك نشط منذ $activeDays يوماً. يظهر معدلك ضمن المتوسط بعد إكمال 30 يوماً.",
+                      style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 12,
+                          height: 1.6,
+                          color: Colors.black87),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          if (!ready) const SizedBox(height: 14),
+
+          LayoutBuilder(
+            builder: (context, cst) {
+              final wide = cst.maxWidth >= 520;
+              final mine = _compareTile(
+                  "معدل متجرك اليومي", myDaily, brandRed, isDark);
+              final market = _compareTile(
+                  "متوسط السوق ($monthLabel)", marketDaily,
+                  Colors.blueGrey, isDark);
+
+              if (!wide) {
+                return Column(children: [
+                  mine,
+                  const SizedBox(height: 10),
+                  market,
+                ]);
+              }
+              return Row(children: [
+                Expanded(child: mine),
+                const SizedBox(width: 12),
+                Expanded(child: market),
+              ]);
+            },
+          ),
+
+          if (ready && marketDaily > 0) ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Icon(
+                  better
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
+                  color: better ? Colors.green : Colors.orange,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  better
+                      ? "أعلى من المتوسط بـ ${diff.abs().round()}%"
+                      : "أقل من المتوسط بـ ${diff.abs().round()}%",
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: better ? Colors.green : Colors.orange,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _compareTile(
+      String label, double value, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white10 : const Color(0xFFF7F8FA),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontFamily: 'Cairo', fontSize: 11, color: Colors.grey)),
+          const SizedBox(height: 6),
+          Text(
+            value.toStringAsFixed(2),
+            style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: color),
+          ),
+          Text("زيارة / يوم",
+              style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 10,
+                  color: Colors.grey.shade500)),
+        ],
+      ),
+    );
+  }
 
   /// إطار موحّد لكل رسم
   Widget _chartCard({
