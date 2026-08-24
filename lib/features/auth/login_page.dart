@@ -14,6 +14,7 @@ import '../merchant/products_page.dart';
 import '../merchant/review_reels_page.dart';
 import '../merchant/reviews_page.dart';
 import '../merchant/merchant_reports_page.dart';
+import '../merchant/merchant_promo_page.dart';
 import '../merchant/merchant_subscriptions_page.dart';
 import '../merchant/store_preview_page.dart';
 import '../merchant/notifications_page.dart' as merchant_notif;
@@ -120,6 +121,7 @@ class _LoginPageState extends State<LoginPage> {
                     NavItem('الريلز', Icons.video_library, ManageReelsPage()),
                     NavItem('التقييمات', Icons.star, ReviewsPage()),
                     NavItem('التقارير', Icons.bar_chart, MerchantReportsPage()),
+                    NavItem('رسائل المتابعين', Icons.campaign, MerchantPromoPage()),
                     NavItem('الاشتراكات', Icons.card_membership, MerchantSubscriptionsPage()),
                     NavItem('الإشعارات', Icons.notifications, merchant_notif.NotificationsPage()),
                     NavItem('إعدادات المتجر', Icons.settings, StoreSettingsPage()),

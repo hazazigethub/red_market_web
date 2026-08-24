@@ -42,6 +42,7 @@ class MerchantHomePage extends StatelessWidget {
       {'label': 'الريلز', 'icon': Icons.video_library_outlined},
       {'label': 'التقييمات', 'icon': Icons.star_outline},
       {'label': 'التقارير', 'icon': Icons.bar_chart_outlined},
+      {'label': 'رسائل المتابعين', 'icon': Icons.campaign_outlined},
       {'label': 'الاشتراكات', 'icon': Icons.card_membership_outlined},
       {'label': 'الإشعارات', 'icon': Icons.notifications_outlined},
       {'label': 'إعدادات المتجر', 'icon': Icons.settings_outlined},
