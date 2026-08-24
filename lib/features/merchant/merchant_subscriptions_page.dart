@@ -58,6 +58,9 @@ class MerchantSubscriptionsPage extends ConsumerStatefulWidget {
 
 class _MerchantSubscriptionsPageState
     extends ConsumerState<MerchantSubscriptionsPage> {
+  /// دورة الفوترة لكل نوع باقة على حدة
+  final Map<String, bool> _yearlyByType = {};
+
   int _selectedPlanIndex = 0;
   final Color brandRed = const Color(0xFFC21815);
   final Color darkCard = const Color(0xFF1E1E1E);
@@ -100,17 +103,6 @@ class _MerchantSubscriptionsPageState
       child: Scaffold(
         backgroundColor:
             isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          title: const Text("اختر باقتك",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.w900,
-                  fontSize: 22)),
-          centerTitle: true,
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          foregroundColor: isDark ? Colors.white : Colors.black,
-        ),
         body: plansAsync.when(
           data: (plans) {
             if (plans.isEmpty) return _buildEmptyState();
@@ -120,19 +112,83 @@ class _MerchantSubscriptionsPageState
                 ref.refresh(adminPlansProvider);
                 ref.refresh(currentMerchantPlanProvider);
               },
-              child: ListView.builder(
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                itemCount: plans.length,
-                itemBuilder: (context, index) {
-                  return _buildModernPlanCard(
-                    context,
-                    index: index,
-                    plan: plans[index],
-                    isDark: isDark,
-                    currentPlan: currentPlan,
-                  );
-                },
+                    const EdgeInsets.fromLTRB(20, 24, 20, 40),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1400),
+                    child: LayoutBuilder(
+                      builder: (context, c) {
+                        const gap = 16.0;
+                        final cols = c.maxWidth >= 1100
+                            ? 3
+                            : c.maxWidth >= 720
+                                ? 2
+                                : 1;
+                        final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+                        // نجمع الباقات حسب النوع: كل نوع بطاقة واحدة
+                        final grouped = <String, List<Map<String, dynamic>>>{};
+                        for (final p in plans) {
+                          final type = (p['plan_type'] ?? 'other').toString();
+                          grouped.putIfAbsent(type, () => []).add(
+                              Map<String, dynamic>.from(p));
+                        }
+
+                        const order = ['basic', 'growth', 'pro'];
+                        final types = grouped.keys.toList()
+                          ..sort((a, b) {
+                            final ia = order.indexOf(a);
+                            final ib = order.indexOf(b);
+                            return (ia == -1 ? 99 : ia)
+                                .compareTo(ib == -1 ? 99 : ib);
+                          });
+
+                        return Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: List.generate(types.length, (index) {
+                            final type = types[index];
+                            final group = grouped[type]!;
+
+                            // الشهرية والسنوية داخل النوع نفسه
+                            final monthly = group.firstWhere(
+                                (p) =>
+                                    ((p['duration_days'] as num?)?.toInt() ??
+                                        30) < 365,
+                                orElse: () => group.first);
+                            final yearly = group.firstWhere(
+                                (p) =>
+                                    ((p['duration_days'] as num?)?.toInt() ??
+                                        30) >= 365,
+                                orElse: () => <String, dynamic>{});
+
+                            final hasYearly = yearly.isNotEmpty;
+                            final isYearly =
+                                _yearlyByType[type] == true && hasYearly;
+                            final plan = isYearly ? yearly : monthly;
+
+                            return SizedBox(
+                              width: w,
+                              child: _buildModernPlanCard(
+                                context,
+                                index: index,
+                                plan: plan,
+                                isDark: isDark,
+                                currentPlan: currentPlan,
+                                planType: type,
+                                hasYearly: hasYearly,
+                                isYearly: isYearly,
+                              ),
+                            );
+                          }),
+                        );
+                      },
+                    ),
+                  ),
+                ),
               ),
             );
           },
@@ -148,9 +204,13 @@ class _MerchantSubscriptionsPageState
       {required int index,
       required Map<String, dynamic> plan,
       required bool isDark,
-      Map<String, dynamic>? currentPlan}) {
+      Map<String, dynamic>? currentPlan,
+      String planType = '',
+      bool hasYearly = false,
+      bool isYearly = false}) {
     bool isSelected = _selectedPlanIndex == index;
-    String duration = plan['duration_days'] >= 365 ? "سنوي" : "شهري";
+    String duration = isYearly ? "سنوي" : "شهري";
+    if (!hasYearly) duration = "شهري فقط";
 
     double currentPrice = (plan['price'] as num).toDouble();
     int discountPercent = plan['discount_percent'] ?? 0;
@@ -241,7 +301,13 @@ class _MerchantSubscriptionsPageState
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
+
+                    // مفتاح شهري / سنوي داخل الباقة
+                    if (hasYearly) ...[
+                      _cardBillingToggle(planType, isYearly, isDark),
+                      const SizedBox(height: 16),
+                    ],
 
                     // --- القسم المحدث: عرض السعر القديم والجديد والخصم ---
                     Column(
@@ -306,43 +372,15 @@ class _MerchantSubscriptionsPageState
                     const Divider(
                         height: 40, thickness: 1, color: Color(0xFFEEEEEE)),
 
+                    // ميزات الباقة كما حُفظت في قاعدة البيانات
                     Column(
-                      children: [
-                        _buildFeatureRow(
-                            Icons.inventory_2_outlined,
-                            "حد المنتجات: ${plan['product_limit']}",
-                            isDark,
-                            brandRed),
-                        if (plan['reels_limit'] != null &&
-                            plan['reels_limit'] > 0)
-                          _buildFeatureRow(
-                              Icons.videocam_rounded,
-                              "عدد الريلز: ${plan['reels_limit']}",
+                      children: ((plan['features'] as List?) ?? [])
+                          .map((f) => _buildFeatureRow(
+                              Icons.check_circle_rounded,
+                              f.toString(),
                               isDark,
-                              brandRed),
-                        if (plan['is_price_locked'] == true)
-                          _buildFeatureRow(Icons.lock_clock_rounded,
-                              "تثبيت السعر عند التجديد", isDark, brandRed),
-                        if (plan['has_partial_access'] == true)
-                          _buildFeatureRow(Icons.admin_panel_settings_outlined,
-                              "وصول جزئي للوحة التحكم", isDark, brandRed),
-                        if (plan['has_full_access'] == true)
-                          _buildFeatureRow(Icons.verified_user_outlined,
-                              "وصول كامل للوحة التحكم", isDark, brandRed),
-                        if (plan['has_basic_reports'] == true)
-                          _buildFeatureRow(Icons.analytics_outlined,
-                              "تقارير زوار المتجر", isDark, brandRed),
-                        if (plan['has_detailed_reports'] == true)
-                          _buildFeatureRow(Icons.query_stats,
-                              "تقارير نقرات الروابط", isDark, brandRed),
-                        if (plan['referral_bonus'] != null &&
-                            plan['referral_bonus'] > 0)
-                          _buildFeatureRow(
-                              Icons.card_giftcard_rounded,
-                              "مكافأة دعوة تاجر: ${plan['referral_bonus']} ر.س",
-                              isDark,
-                              brandRed),
-                      ],
+                              brandRed))
+                          .toList(),
                     ),
 
                     const SizedBox(height: 30),
@@ -392,6 +430,52 @@ class _MerchantSubscriptionsPageState
           const Text("لا توجد باقات متاحة حالياً",
               style: TextStyle(
                   fontFamily: 'Cairo', fontSize: 18, color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  /// مفتاح شهري / سنوي داخل بطاقة الباقة
+  Widget _cardBillingToggle(String type, bool isYearly, bool isDark) {
+    Widget tab(String label, bool yearly) {
+      final on = isYearly == yearly;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => setState(() => _yearlyByType[type] = yearly),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(vertical: 9),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: on ? brandRed : Colors.transparent,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 12.5,
+                fontWeight: on ? FontWeight.bold : FontWeight.normal,
+                color: on
+                    ? Colors.white
+                    : (isDark ? Colors.white70 : Colors.grey.shade700),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white10 : const Color(0xFFF1F2F5),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Row(
+        children: [
+          tab('شهري', false),
+          tab('سنوي', true),
         ],
       ),
     );
