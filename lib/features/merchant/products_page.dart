@@ -1520,6 +1520,38 @@ class _ProductsPageState extends State<ProductsPage> {
                                 );
                                 return;
                               }
+
+                              // ✅ المنصة للعروض فقط — لا منتج بلا تخفيض
+                              final oldP =
+                                  double.tryParse(oldPriceController.text);
+                              final newP =
+                                  double.tryParse(priceController.text);
+
+                              if (oldP == null || oldP <= 0) {
+                                setModalState(() => showError = true);
+                                ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        "يرجى إدخال السعر الأصلي قبل التخفيض",
+                                        style: TextStyle(fontFamily: 'Cairo')),
+                                    backgroundColor: brandRed,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              if (newP == null || newP <= 0 || newP >= oldP) {
+                                setModalState(() => showError = true);
+                                ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        "السعر بعد التخفيض يجب أن يكون أقل من السعر الأصلي",
+                                        style: TextStyle(fontFamily: 'Cairo')),
+                                    backgroundColor: brandRed,
+                                  ),
+                                );
+                                return;
+                              }
                               setModalState(() => isSaving = true);
                               String finalUrl = productToEdit?.imageUrl ?? "";
                               if (pickedImage != null) {
