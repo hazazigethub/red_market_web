@@ -16,6 +16,15 @@ class _AdminNewsletterScreenState extends State<AdminNewsletterScreen> {
   bool _loading = true;
   bool _busy = false;
 
+  /// النوع المعروض: weekly | mega | hot
+  String _kind = 'weekly';
+
+  static const _kinds = <Map<String, String>>[
+    {'key': 'weekly', 'label': 'الأسبوعية'},
+    {'key': 'mega', 'label': 'تخفيضات 90%+'},
+    {'key': 'hot', 'label': 'تخفيضات 70%+'},
+  ];
+
   Map<String, dynamic>? _draft;
   List<Map<String, dynamic>> _draftItems = [];
   List<Map<String, dynamic>> _history = [];
@@ -30,8 +39,12 @@ class _AdminNewsletterScreenState extends State<AdminNewsletterScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      // توليد تلقائي إن مضى أسبوع
-      final gen = await supabase.rpc('generate_weekly_newsletter');
+      // توليد تلقائي حسب النوع
+      final gen = _kind == 'weekly'
+          ? await supabase.rpc('generate_weekly_newsletter')
+          : await supabase.rpc('generate_discount_newsletter',
+              params: {'p_kind': _kind});
+
       final genMap = Map<String, dynamic>.from(gen as Map);
       _note = genMap['created'] == true
           ? null
@@ -41,6 +54,7 @@ class _AdminNewsletterScreenState extends State<AdminNewsletterScreen> {
           .from('newsletters')
           .select('id, title, created_at, status')
           .eq('status', 'draft')
+          .eq('kind', _kind)
           .order('created_at', ascending: false)
           .limit(1);
 
@@ -75,6 +89,7 @@ class _AdminNewsletterScreenState extends State<AdminNewsletterScreen> {
           .from('newsletters')
           .select('id, title, sent_at, status')
           .eq('status', 'sent')
+          .eq('kind', _kind)
           .order('sent_at', ascending: false)
           .limit(10);
       _history = List<Map<String, dynamic>>.from(hist);
@@ -139,10 +154,6 @@ class _AdminNewsletterScreenState extends State<AdminNewsletterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: brandRed));
-    }
-
     return Directionality(
       textDirection: TextDirection.rtl,
       child: RefreshIndicator(
@@ -157,8 +168,19 @@ class _AdminNewsletterScreenState extends State<AdminNewsletterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (_draft == null) _emptyState() else _draftCard(),
-                  if (_history.isNotEmpty) ...[
+                  _tabs(),
+                  const SizedBox(height: 20),
+                  if (_loading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 60),
+                      child: Center(
+                          child: CircularProgressIndicator(color: brandRed)),
+                    )
+                  else if (_draft == null)
+                    _emptyState()
+                  else
+                    _draftCard(),
+                  if (!_loading && _history.isNotEmpty) ...[
                     const SizedBox(height: 28),
                     const Text("النشرات المرسلة",
                         style: TextStyle(
@@ -203,6 +225,41 @@ class _AdminNewsletterScreenState extends State<AdminNewsletterScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _tabs() {
+    return Wrap(
+      spacing: 10,
+      children: _kinds.map((k) {
+        final on = _kind == k['key'];
+        return GestureDetector(
+          onTap: () {
+            if (_kind == k['key']) return;
+            setState(() => _kind = k['key']!);
+            _load();
+          },
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            decoration: BoxDecoration(
+              color: on ? brandRed : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                  color: on ? brandRed : const Color(0xFFEDEFF3)),
+            ),
+            child: Text(
+              k['label']!,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 13,
+                fontWeight: on ? FontWeight.bold : FontWeight.normal,
+                color: on ? Colors.white : Colors.grey.shade700,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
