@@ -22,6 +22,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
   bool _hasDetailedReports = false;
   String _planType = '';
   Map<String, dynamic>? _comparison;
+  Map<String, dynamic>? _summary;
 
   // إحصائيات المتجر
   int _storeVisits = 0;
@@ -94,6 +95,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
         _fetchTopProducts(merchantId),
         _fetchTopReels(merchantId),
         _fetchComparison(merchantId),
+        _fetchSummary(merchantId),
       ]);
     } catch (e) {
       debugPrint("Error fetching stats: $e");
@@ -128,6 +130,17 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
       }
     } catch (e) {
       debugPrint("plan permissions error: $e");
+    }
+  }
+
+  /// يجلب ملخّص الشهر الماضي
+  Future<void> _fetchSummary(String merchantId) async {
+    try {
+      final res = await supabase.rpc('get_monthly_summary',
+          params: {'p_merchant': merchantId});
+      _summary = res == null ? null : Map<String, dynamic>.from(res as Map);
+    } catch (e) {
+      debugPrint("summary error: $e");
     }
   }
 
@@ -829,6 +842,9 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                           const SizedBox(height: 24),
 
                           // ==================== الرسوم البيانية ====================
+                          _summaryCard(isDark),
+                          const SizedBox(height: 16),
+
                           if (_planType == 'pro') ...[
                             _comparisonCard(isDark),
                             const SizedBox(height: 16),
@@ -1056,6 +1072,215 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
   }
 
   // ==================== الرسوم البيانية ====================
+
+  /// ملخّص الشهر الماضي — لكل الباقات
+  Widget _summaryCard(bool isDark) {
+    final data = _summary;
+    if (data == null) return const SizedBox.shrink();
+
+    final cur = Map<String, dynamic>.from(data['current'] ?? {});
+    final prev = Map<String, dynamic>.from(data['previous'] ?? {});
+    final month = (data['month'] ?? '').toString();
+    final topProduct = cur['top_product']?.toString();
+
+    int v(Map m, String k) => (m[k] as num?)?.toInt() ?? 0;
+
+    final rows = [
+      ('زيارات المتجر', v(cur, 'visits'), v(prev, 'visits'), Colors.blue),
+      ('مشاهدات المنتجات', v(cur, 'product_views'),
+          v(prev, 'product_views'), Colors.orange),
+      ('متابعون جدد', v(cur, 'new_followers'),
+          v(prev, 'new_followers'), Colors.teal),
+    ];
+
+    final extras = [
+      ('الإعجاب', v(cur, 'likes'), Icons.favorite_rounded, Colors.pink),
+      ('المفضلة', v(cur, 'saves'), Icons.bookmark_rounded, Colors.amber),
+      ('المشاركات', v(cur, 'shares'), Icons.share_rounded, Colors.teal),
+      ('مشاهدات الريلز', v(cur, 'reel_views'),
+          Icons.play_circle_fill_rounded, Colors.redAccent),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: isDark ? Colors.white10 : const Color(0xFFEDEFF3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: brandRed.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(Icons.calendar_month_rounded,
+                    color: brandRed, size: 17),
+              ),
+              const SizedBox(width: 10),
+              const Text("ملخّص الشهر الماضي",
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15)),
+              const Spacer(),
+              Text(month,
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 12,
+                      color: Colors.grey.shade500)),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // المؤشرات الرئيسية مع المقارنة
+          LayoutBuilder(
+            builder: (context, c) {
+              const gap = 12.0;
+              final cols = c.maxWidth >= 700 ? 3 : 1;
+              final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: rows
+                    .map((r) => SizedBox(
+                          width: w,
+                          child: _summaryRow(
+                              r.$1, r.$2, r.$3, r.$4, isDark),
+                        ))
+                    .toList(),
+              );
+            },
+          ),
+
+          const SizedBox(height: 14),
+          Divider(color: isDark ? Colors.white10 : const Color(0xFFEDEFF3)),
+          const SizedBox(height: 12),
+
+          // تفاعلات إضافية
+          Wrap(
+            spacing: 20,
+            runSpacing: 12,
+            children: extras
+                .map((e) => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(e.$3, size: 15, color: e.$4),
+                        const SizedBox(width: 6),
+                        Text("${e.$1}: ${e.$2}",
+                            style: const TextStyle(
+                                fontFamily: 'Cairo', fontSize: 12)),
+                      ],
+                    ))
+                .toList(),
+          ),
+
+          if (topProduct != null && topProduct.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white10 : const Color(0xFFF7F8FA),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.emoji_events_rounded,
+                      size: 16, color: Colors.amber),
+                  const SizedBox(width: 8),
+                  const Text("الأعلى تفاعلاً: ",
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 12,
+                          color: Colors.grey)),
+                  Expanded(
+                    child: Text(topProduct,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryRow(
+      String label, int current, int previous, Color color, bool isDark) {
+    final diff = current - previous;
+    final up = diff >= 0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white10 : const Color(0xFFF7F8FA),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontFamily: 'Cairo', fontSize: 11, color: Colors.grey)),
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text("$current",
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: color)),
+              const SizedBox(width: 8),
+              if (previous > 0 || current > 0)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        up
+                            ? Icons.arrow_upward_rounded
+                            : Icons.arrow_downward_rounded,
+                        size: 13,
+                        color: up ? Colors.green : Colors.orange,
+                      ),
+                      Text("${diff.abs()}",
+                          style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: up ? Colors.green : Colors.orange)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          Text("مقارنة بالشهر السابق",
+              style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 10,
+                  color: Colors.grey.shade500)),
+        ],
+      ),
+    );
+  }
 
   /// بطاقة مقارنة الأداء بمتوسط السوق — للباقة الاحترافية
   Widget _comparisonCard(bool isDark) {
