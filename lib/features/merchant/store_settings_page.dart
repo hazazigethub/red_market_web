@@ -15,6 +15,7 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
   final supabase = Supabase.instance.client;
   final ImagePicker _picker = ImagePicker();
 
+  final _ownerNameController = TextEditingController();
   final _storeNameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -26,6 +27,8 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
   String? _logoUrl;
   String? _crImageUrl;
   String? _categoryName;
+  String? _vatNumber;
+  String? _freelanceNumber;
   bool _isLoading = true;
   bool _isEditing = false;
 
@@ -104,6 +107,10 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
               _formatImageUrl(merchantData['cr_image_url'], 'merchants_docs');
           _phoneController.text = merchantData['phone_number'] ?? "";
           _crNumberController.text = merchantData['cr_number'] ?? "";
+          _ownerNameController.text = merchantData['owner_name'] ?? "";
+          _vatNumber = merchantData['vat_number']?.toString();
+          _freelanceNumber =
+              merchantData['freelance_license_number']?.toString();
           _storeUrlController.text = merchantData['store_url'] ?? "";
           _categoryName = categoryName;
           _emailController.text = merchantData['email_contact'] ?? "";
@@ -234,25 +241,6 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
       child: Scaffold(
         backgroundColor:
             isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          title: const Text("إعدادات المتجر",
-              style:
-                  TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
-          centerTitle: true,
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          foregroundColor: isDark ? Colors.white : Colors.black,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                Navigator.of(context).popUntil((r) => r.isFirst);
-              }
-            },
-          ),
-        ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator(color: brandColor))
             : RefreshIndicator(
@@ -260,27 +248,42 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
                 onRefresh: _loadStoreData,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1000),
+                      child: Column(
                     children: [
                       _buildHeader(),
                       const SizedBox(height: 24),
 
-                      GridView.count(
+                      GridView.extent(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
+                        maxCrossAxisExtent: 260,
+                        crossAxisSpacing: 14,
+                        mainAxisSpacing: 14,
                         childAspectRatio: 1,
                         children: [
                           _buildSquareTile(isDark, Icons.storefront_outlined,
                               "الاسم", _storeNameController),
+                          _buildSquareTile(isDark, Icons.person_outline,
+                              "اسم المالك", _ownerNameController),
                           _buildSquareTile(isDark, Icons.phone_android_outlined,
                               "الهاتف", _phoneController,
                               keyboard: TextInputType.phone),
-                          _buildSquareTile(isDark, Icons.badge_outlined,
-                              "السجل", _crNumberController),
+                          if (_freelanceNumber != null &&
+                              _freelanceNumber!.isNotEmpty)
+                            _readOnlyTile(
+                                isDark,
+                                Icons.workspace_premium_outlined,
+                                "وثيقة العمل الحر",
+                                _freelanceNumber!)
+                          else
+                            _readOnlyTile(isDark, Icons.badge_outlined,
+                                "السجل التجاري", _crNumberController.text),
+                          _readOnlyTile(isDark, Icons.receipt_long_outlined,
+                              "الرقم الضريبي", _vatNumber ?? "—"),
                           _buildSquareTile(isDark, Icons.lock_open_outlined,
                               "الرمز", _passwordController,
                               isPass: true),
@@ -364,6 +367,8 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
                       ),
                       const SizedBox(height: 32),
                     ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -404,6 +409,55 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
           ),
         ),
       ],
+    );
+  }
+
+  /// حقل للقراءة فقط — لا يُعدَّل إلا عبر الدعم
+  Widget _readOnlyTile(
+      bool isDark, IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF7F8FA),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.grey.shade400, size: 26),
+          const SizedBox(height: 8),
+          Text(label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontFamily: 'Cairo', fontSize: 11, color: Colors.grey)),
+          const SizedBox(height: 4),
+          Text(
+            value.isEmpty ? "—" : value,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white70 : Colors.grey.shade700),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.lock_outline,
+                  size: 11, color: Colors.grey.shade400),
+              const SizedBox(width: 3),
+              Text("عبر الدعم",
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 9.5,
+                      color: Colors.grey.shade400)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -547,6 +601,7 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
                 'phone_number': _phoneController.text.trim(),
               }).eq('id', userId),
               supabase.from('merchants').upsert({
+                'owner_name': _ownerNameController.text.trim(),
                 'id': userId,
                 'store_name': _storeNameController.text.trim(),
                 'store_description': _descriptionController.text.trim(),
