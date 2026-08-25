@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
+import 'package:url_launcher/url_launcher.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -10,286 +11,370 @@ class NotificationsPage extends StatefulWidget {
 }
 
 class _NotificationsPageState extends State<NotificationsPage> {
-  bool showAll = true;
+  static const Color brandRed = Color(0xFFC21815);
+
   final supabase = Supabase.instance.client;
 
-  /// اختيار الأيقونة بناءً على النوع المخزن في العمود الجديد أو محتوى العنوان
-  IconData _getIconData(String? iconType, String title) {
+  List<Map<String, dynamic>> _items = [];
+  bool _loading = true;
+
+  String get _uid => supabase.auth.currentUser?.id ?? '';
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  /// يطلق الإشعارات المجدولة ثم يجلب ما يخص التاجر
+  Future<List<Map<String, dynamic>>> _load() async {
+    // الجلسة قد لا تكون جاهزة عند أول بناء
+    var uid = _uid;
+    if (uid.isEmpty) {
+      await Future.delayed(const Duration(milliseconds: 400));
+      uid = _uid;
+      if (uid.isEmpty) return [];
+    }
+
+    try {
+      await supabase.rpc('release_due_notifications');
+    } catch (e) {
+      debugPrint('Release error: $e');
+    }
+
+    final data = await supabase
+        .from('notifications_log')
+        .select()
+        .eq('status', 'sent')
+        .order('created_at', ascending: false)
+        .limit(100);
+
+    // الإشعارات التي قرأها هذا التاجر
+    final reads = await supabase
+        .from('notification_reads')
+        .select('notification_id')
+        .eq('user_id', uid);
+
+    final readIds = List<Map<String, dynamic>>.from(reads)
+        .map((r) => r['notification_id']?.toString())
+        .whereType<String>()
+        .toSet();
+
+    return List<Map<String, dynamic>>.from(data)
+        .where((n) {
+          final type = n['target_type'];
+          final targetId = n['target_id'];
+          final segment = n['segment_filter'];
+          if (type == 'all') return true;
+          if (type == 'specific' && targetId == uid) return true;
+          if (type == 'segment' && segment != null) {
+            return segment.toString().contains('merchant');
+          }
+          return false;
+        })
+        .map((n) => {
+              ...n,
+              'is_read': readIds.contains(n['id']?.toString()),
+            })
+        .toList();
+  }
+
+  Future<void> _refresh() async {
+    try {
+      final list = await _load();
+      if (mounted) {
+        setState(() {
+          _items = list;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Load notifications error: $e');
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _markAsRead(String id) async {
+    if (_uid.isEmpty) return;
+
+    setState(() {
+      final i = _items.indexWhere((n) => n['id']?.toString() == id);
+      if (i != -1) _items[i] = {..._items[i], 'is_read': true};
+    });
+
+    try {
+      await supabase.from('notification_reads').upsert({
+        'user_id': _uid,
+        'notification_id': id,
+      }, onConflict: 'user_id,notification_id');
+    } catch (e) {
+      debugPrint('Mark read error: $e');
+    }
+  }
+
+  Future<void> _delete(String id) async {
+    try {
+      setState(() => _items.removeWhere((n) => n['id']?.toString() == id));
+      await supabase.from('notifications_log').delete().eq('id', id);
+    } catch (e) {
+      debugPrint('Delete error: $e');
+    }
+  }
+
+  IconData _iconFor(String? iconType, String title) {
     switch (iconType) {
-      case 'order':
-        return Icons.shopping_basket_outlined;
-      case 'offer':
+      case 'promo':
         return Icons.campaign_outlined;
-      case 'reservation':
-        return Icons.event_available_outlined;
+      case 'product':
+        return Icons.shopping_bag_outlined;
+      case 'newsletter':
+        return Icons.mail_outline_rounded;
       default:
-        // محاولة الاستنتاج من العنوان إذا كان النوع افتراضي
-        if (title.contains('طلب')) return Icons.shopping_basket_outlined;
-        if (title.contains('حجز')) return Icons.event_available_outlined;
         return Icons.notifications_none_outlined;
     }
   }
 
-  String _formatTime(String createdAt) {
-    DateTime dateTime = DateTime.parse(createdAt).toLocal();
-    Duration diff = DateTime.now().difference(dateTime);
+  String _formatTime(dynamic raw) {
+    if (raw == null) return '';
+    final d = DateTime.tryParse(raw.toString());
+    if (d == null) return '';
+    final local = d.toLocal();
+    final diff = DateTime.now().difference(local);
     if (diff.inMinutes < 60) return 'منذ ${diff.inMinutes} د';
     if (diff.inHours < 24) return 'منذ ${diff.inHours} س';
-    return DateFormat('MM-dd').format(dateTime);
+    return DateFormat('MM-dd').format(local);
   }
 
-  /// تحديث حالة القراءة في العمود الجديد is_read
-  Future<void> _markAsRead(String id) async {
-    try {
-      await supabase
-          .from('notifications_log')
-          .update({'is_read': true}).eq('id', id);
-    } catch (e) {
-      debugPrint("Error marking as read: $e");
-    }
-  }
+  void _showDialog(Map<String, dynamic> item) {
+    final nlId = item['newsletter_id'];
+    final pId = item['product_id'];
+    final rId = item['reel_id'];
 
-  Future<void> _deleteNotification(String id) async {
-    await supabase.from('notifications_log').delete().eq('id', id);
-  }
-
-  void _showNotificationDialog(Map<String, dynamic> item) {
     showDialog(
       context: context,
-      barrierDismissible: true,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1E1E1E)
-            : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titlePadding: EdgeInsets.zero,
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Align(
-              alignment: Alignment.topLeft,
-              child: IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          contentPadding: const EdgeInsets.fromLTRB(22, 26, 22, 10),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: SingleChildScrollView(
+              child: Text(
+                (item['body'] ?? '').toString(),
+                style: const TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 14.5,
+                    height: 1.9,
+                    color: Color(0xFF1F2937)),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(item['title'] ?? '',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18)),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Text(
-            item['body'] ?? '',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontFamily: 'Cairo', fontSize: 15),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("إغلاق",
+                  style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
+            ),
+            if (nlId != null)
+              _dialogAction(ctx, Icons.open_in_new_rounded, "تصفّح النشرة",
+                  'https://redmarket.sa/newsletter/$nlId')
+            else if (pId != null)
+              _dialogAction(ctx, Icons.shopping_bag_rounded, "عرض المنتج",
+                  'https://redmarket.sa/product/$pId')
+            else if (rId != null)
+              _dialogAction(ctx, Icons.play_circle_fill_rounded,
+                  "مشاهدة الريلز", 'https://redmarket.sa/reels'),
+          ],
         ),
       ),
     );
   }
 
-  Stream<List<Map<String, dynamic>>> _notificationsStream() {
-    return supabase
-        .from('notifications_log')
-        .stream(primaryKey: ['id'])
-        .eq('status', 'sent')
-        .order('created_at', ascending: false);
-  }
-
-  /// فلترة الإشعارات (العامة + الخاصة بالتاجر + قسم التجار)
-  List<Map<String, dynamic>> _filterForMerchant(
-      List<Map<String, dynamic>> rows, String userId) {
-    return rows.where((r) {
-      final type = r['target_type'];
-      final targetId = r['target_id'];
-      final segment = r['segment_filter'];
-
-      if (type == 'all') return true;
-      if (type == 'specific' && targetId == userId) return true;
-      if (type == 'segment' && segment != null && segment.contains('merchants'))
-        return true;
-      return false;
-    }).toList();
+  Widget _dialogAction(
+      BuildContext ctx, IconData icon, String label, String url) {
+    return ElevatedButton.icon(
+      onPressed: () async {
+        Navigator.pop(ctx);
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      icon: Icon(icon, size: 17),
+      label: Text(label,
+          style: const TextStyle(
+              fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: brandRed,
+        foregroundColor: Colors.white,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final userId = supabase.auth.currentUser?.id;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
-      appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: Text("الإشعارات",
-            style: TextStyle(
-                color: isDark ? Colors.white : Colors.black,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Cairo')),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios,
-              color: isDark ? Colors.white : Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: userId == null
-          ? const Center(
-              child: Text("سجّل دخول أولاً",
-                  style: TextStyle(fontFamily: 'Cairo')))
-          : StreamBuilder<List<Map<String, dynamic>>>(
-              stream: _notificationsStream(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting &&
-                    !snapshot.hasData) {
-                  return const Center(
-                      child:
-                          CircularProgressIndicator(color: Color(0xFF4CAF50)));
-                }
+    if (_uid.isEmpty && !_loading) {
+      return const Center(
+        child: Text("سجّل دخول أولاً",
+            style: TextStyle(fontFamily: 'Cairo')),
+      );
+    }
 
-                final allRows = snapshot.data ?? [];
-                final myRows = _filterForMerchant(allRows, userId);
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: RefreshIndicator(
+        onRefresh: _refresh,
+        color: brandRed,
+        child: _loading
+            ? const Center(
+                child: CircularProgressIndicator(color: brandRed))
+            : _items.isEmpty
+                ? _emptyState(isDark)
+                : SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1500),
+                        child: LayoutBuilder(
+                          builder: (context, c) {
+                            const gap = 14.0;
+                            // خمس بطاقات في الصف، وتقل مع ضيق الشاشة
+                            final cols = (c.maxWidth / 280).floor().clamp(1, 5);
+                            final w = (c.maxWidth - gap * (cols - 1)) / cols;
 
-                if (myRows.isEmpty) return _buildEmptyState(isDark);
-
-                return ListView.builder(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  itemCount: myRows.length,
-                  itemBuilder: (context, index) {
-                    final item = myRows[index];
-                    final bool isRead = item['is_read'] ?? false;
-
-                    return Dismissible(
-                      key: Key(item['id'].toString()),
-                      direction: DismissDirection.startToEnd,
-                      onDismissed: (direction) =>
-                          _deleteNotification(item['id'].toString()),
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(12)),
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      child: InkWell(
-                        splashColor: Colors.transparent,
-                        highlightColor: Colors.transparent,
-                        onTap: () {
-                          _markAsRead(item['id'].toString());
-                          _showNotificationDialog(item);
-                        },
-                        child: _buildNotificationItem(
-                          isDark: isDark,
-                          title: item['title'] ?? '',
-                          subtitle: item['body'] ?? '',
-                          time: _formatTime(item['created_at']),
-                          icon: _getIconData(
-                              item['icon_type'], item['title'] ?? ''),
-                          isUnread: !isRead,
+                            return Wrap(
+                              spacing: gap,
+                              runSpacing: gap,
+                              children: _items
+                                  .map((n) => SizedBox(
+                                        width: w,
+                                        child: _item(
+                                            n,
+                                            n['is_read'] ?? false,
+                                            isDark),
+                                      ))
+                                  .toList(),
+                            );
+                          },
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
+                    ),
+                  ),
+      ),
     );
   }
 
-  Widget _buildNotificationItem({
-    required bool isDark,
-    required String title,
-    required String subtitle,
-    required String time,
-    required IconData icon,
-    bool isUnread = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // الوقت جهة اليسار
-          Text(time,
-              style: TextStyle(
-                  color: isDark ? Colors.white24 : Colors.grey.shade400,
-                  fontSize: 10)),
-          const Spacer(),
-          // المحتوى في المنتصف
-          Expanded(
-            flex: 12,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+  Widget _item(Map<String, dynamic> n, bool isRead, bool isDark) {
+    return InkWell(
+      onTap: () {
+        _markAsRead(n['id'].toString());
+        _showDialog(n);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+        decoration: BoxDecoration(
+          color: isDark
+              ? const Color(0xFF1E1E1E)
+              : (isRead ? Colors.white : const Color(0xFFFDF3F3)),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: isRead
+                  ? const Color(0xFFEDEFF3)
+                  : brandRed.withValues(alpha: 0.35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if (isUnread)
-                      Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                            color: Color(0xFF4CAF50), shape: BoxShape.circle),
-                      ),
-                    Text(title,
-                        style: TextStyle(
-                            fontWeight:
-                                isUnread ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 14,
-                            fontFamily: 'Cairo',
-                            color: isDark ? Colors.white : Colors.black)),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: brandRed.withValues(alpha: isRead ? 0.06 : 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _iconFor(n['icon_type']?.toString(),
+                        (n['title'] ?? '').toString()),
+                    color: isRead ? Colors.grey : brandRed,
+                    size: 17,
+                  ),
                 ),
-                const SizedBox(height: 2),
-                Text(subtitle,
-                    style: TextStyle(
-                        color: isDark ? Colors.white60 : Colors.grey.shade600,
-                        fontFamily: 'Cairo',
-                        fontSize: 12),
-                    textAlign: TextAlign.right,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    (n['title'] ?? 'إشعار').toString(),
                     maxLines: 2,
-                    overflow: TextOverflow.ellipsis),
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 13,
+                      height: 1.5,
+                      fontWeight:
+                          isRead ? FontWeight.w500 : FontWeight.bold,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => _delete(n['id'].toString()),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(Icons.close,
+                        size: 15, color: Colors.grey.shade400),
+                  ),
+                ),
               ],
             ),
-          ),
-          const SizedBox(width: 15),
-          // الأيقونة جهة اليمين
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-                color:
-                    const Color(0xFF4CAF50).withOpacity(isDark ? 0.15 : 0.05),
-                shape: BoxShape.circle),
-            child: Icon(icon, color: const Color(0xFF4CAF50), size: 22),
-          ),
-        ],
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                if (!isRead) ...[
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                        color: brandRed, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  _formatTime(n['scheduled_at'] ?? n['created_at']),
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 10.5,
+                      color: Colors.grey.shade500),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildEmptyState(bool isDark) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.notifications_off_outlined,
-              size: 50, color: isDark ? Colors.white12 : Colors.grey.shade300),
-          const SizedBox(height: 10),
-          const Text("لا توجد إشعارات حالياً",
+  Widget _emptyState(bool isDark) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+        Icon(Icons.notifications_off_outlined,
+            size: 60, color: isDark ? Colors.white12 : Colors.grey.shade300),
+        const SizedBox(height: 14),
+        const Center(
+          child: Text("لا توجد إشعارات حالياً",
               style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
