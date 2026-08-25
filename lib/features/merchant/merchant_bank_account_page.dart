@@ -17,6 +17,8 @@ class MerchantBankAccountPage extends ConsumerStatefulWidget {
 
 class _MerchantBankAccountPageState
     extends ConsumerState<MerchantBankAccountPage> {
+  static const Color brandRed = Color(0xFFC21815);
+
   final _formKey = GlobalKey<FormState>();
 
   // وحدات التحكم في النصوص
@@ -49,7 +51,7 @@ class _MerchantBankAccountPageState
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'Cairo')),
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Color(0xFF4CAF50)),
+            backgroundColor: brandRed),
       );
     }
   }
@@ -65,38 +67,40 @@ class _MerchantBankAccountPageState
       child: Scaffold(
         backgroundColor:
             isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          elevation: 0,
-          title: Text("الإدارة المالية",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: isDark ? Colors.white : const Color(0xFF2D3436))),
-          centerTitle: true,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded,
-                color: isDark ? Colors.white : Colors.black, size: 20),
-            onPressed: () => context.pop(), // ✅ استخدام GoRouter
-          ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(1),
-            child: Divider(
-                height: 1, color: isDark ? Colors.white10 : Colors.black12),
-          ),
-        ),
         body: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildStatusCard(isDark, currentBalance),
-              const SizedBox(height: 35),
-              _buildBankForm(isDark),
-              const SizedBox(height: 40),
-            ],
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1100),
+              child: LayoutBuilder(
+                builder: (context, c) {
+                  final wide = c.maxWidth >= 900;
+                  final card = _buildStatusCard(isDark, currentBalance);
+                  final form = _buildBankForm(isDark);
+
+                  if (!wide) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        card,
+                        const SizedBox(height: 28),
+                        form,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 5, child: card),
+                      const SizedBox(width: 24),
+                      Expanded(flex: 6, child: form),
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ),
@@ -111,20 +115,20 @@ class _MerchantBankAccountPageState
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: _isLinked
-              ? [const Color(0xFF2E7D32), const Color(0xFF1B5E20)]
+              ? [brandRed, const Color(0xFF8E1010)]
               : (isDark
-                  ? [const Color(0xFF37474F), const Color(0xFF263238)]
-                  : [const Color(0xFF455A64), const Color(0xFF263238)]),
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+                  ? [const Color(0xFF2A2A2A), const Color(0xFF1A1A1A)]
+                  : [const Color(0xFF3A3F47), const Color(0xFF23272D)]),
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
         ),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: (_isLinked ? Colors.green : Colors.black)
-                  .withOpacity(isDark ? 0.3 : 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10))
+              color: (_isLinked ? brandRed : Colors.black)
+                  .withValues(alpha: isDark ? 0.25 : 0.12),
+              blurRadius: 18,
+              offset: const Offset(0, 8))
         ],
       ),
       child: Column(
@@ -153,12 +157,12 @@ class _MerchantBankAccountPageState
               _buildStatusBadge(),
             ],
           ),
-          const SizedBox(height: 35),
+          const SizedBox(height: 28),
           Container(
-            padding: const EdgeInsets.all(15),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -236,7 +240,7 @@ class _MerchantBankAccountPageState
           Row(
             children: [
               const Icon(Icons.security_rounded,
-                  color: Color(0xFF4CAF50), size: 20),
+                  color: brandRed, size: 20),
               const SizedBox(width: 10),
               Text("بيانات التحويل البنكي",
                   style: TextStyle(
@@ -251,7 +255,7 @@ class _MerchantBankAccountPageState
           DropdownButtonFormField<String>(
             dropdownColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                color: Color(0xFF4CAF50)),
+                color: brandRed),
             style: TextStyle(
                 color: isDark ? Colors.white : Colors.black,
                 fontFamily: 'Cairo',
@@ -314,10 +318,10 @@ class _MerchantBankAccountPageState
             child: ElevatedButton(
               onPressed: _linkAccount,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4CAF50),
+                backgroundColor: brandRed,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18)),
+                    borderRadius: BorderRadius.circular(12)),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -367,19 +371,19 @@ class _MerchantBankAccountPageState
           color: isDark ? Colors.white24 : Colors.grey,
           fontSize: 13,
           fontFamily: 'Cairo'),
-      prefixIcon: Icon(icon, color: const Color(0xFF4CAF50), size: 22),
+      prefixIcon: Icon(icon, color: brandRed, size: 22),
       filled: true,
       fillColor: isDark ? Colors.white.withOpacity(0.03) : Colors.grey.shade50,
       contentPadding: const EdgeInsets.all(18),
       border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
+          borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
               color: isDark ? Colors.white10 : Colors.grey.shade200)),
       focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 1.5)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: brandRed, width: 1.5)),
       errorStyle: const TextStyle(fontFamily: 'Cairo', fontSize: 11),
     );
   }

@@ -1,10 +1,78 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
-import '../../shell/dashboard_shell.dart';
 
-class AdminHomePage extends StatelessWidget {
+import 'admin_customer_screen.dart';
+import 'admin_merchants_screen.dart';
+import 'new_merchants_screen.dart';
+import 'categories_page.dart';
+import 'admin_products_screen.dart';
+import 'admin_reports_screen.dart';
+import 'discount_codes_screen.dart';
+import 'admin_notifications_screen.dart';
+import 'admin_newsletter_screen.dart';
+import 'admin_banners_screen.dart';
+import 'admin_announcements_screen.dart';
+import 'admin_analytics_visits_screen.dart';
+
+class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
+
+  @override
+  State<AdminHomePage> createState() => _AdminHomePageState();
+}
+
+class _AdminHomePageState extends State<AdminHomePage> {
+  /// -1 يعني شاشة الترحيب
+  int _index = -1;
+
+  static const _sections = <Map<String, dynamic>>[
+    {'label': 'إدارة العملاء', 'icon': Icons.person_search_outlined},
+    {'label': 'إدارة التجار', 'icon': Icons.manage_accounts_outlined},
+    {'label': 'التجار الجدد', 'icon': Icons.fiber_new_outlined},
+    {'label': 'التصنيفات', 'icon': Icons.category_outlined},
+    {'label': 'إدارة المنتجات', 'icon': Icons.inventory_2_outlined},
+    {'label': 'البلاغات', 'icon': Icons.report_problem_outlined},
+    {'label': 'أكواد الخصم', 'icon': Icons.local_offer_outlined},
+    {'label': 'الإشعارات', 'icon': Icons.notifications_outlined},
+    {'label': 'النشرة الأسبوعية', 'icon': Icons.mail_outline_rounded},
+    {'label': 'البنرات', 'icon': Icons.ad_units_outlined},
+    {'label': 'الإعلانات', 'icon': Icons.campaign_outlined},
+    {'label': 'الزيارات', 'icon': Icons.trending_up_outlined},
+  ];
+
+  Widget _sectionBody(int i) {
+    switch (i) {
+      case 0:
+        return const AdminUsersScreen();
+      case 1:
+        return const AdminMerchantsScreen();
+      case 2:
+        return const NewMerchantsScreen();
+      case 3:
+        return const AdminCategoriesScreen();
+      case 4:
+        return const AdminProductsScreen();
+      case 5:
+        return const AdminReportsScreen();
+      case 6:
+        return const DiscountCodesScreen();
+      case 7:
+        return const AdminNotificationsScreen();
+      case 8:
+        return const AdminNewsletterScreen();
+      case 9:
+        return const AdminBannersScreen();
+      case 10:
+        return const AdminAnnouncementsScreen();
+      case 11:
+        return const AdminAnalyticsVisitsScreen();
+      default:
+        return _welcome();
+    }
+  }
+
+  // ===================== الإحصاءات =====================
 
   Future<int> _count(String table, [String? col, dynamic val]) async {
     try {
@@ -16,106 +84,273 @@ class AdminHomePage extends StatelessWidget {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final nav = DashboardNav.of(context);
-    final tiles = <Map<String, dynamic>>[
-      {'label': 'إدارة العملاء', 'icon': Icons.person_search_outlined},
-      {'label': 'إدارة التجار', 'icon': Icons.manage_accounts_outlined},
-      {'label': 'التجار الجدد', 'icon': Icons.fiber_new_outlined},
-      {'label': 'التصنيفات', 'icon': Icons.category_outlined},
-      {'label': 'إدارة المنتجات', 'icon': Icons.inventory_2_outlined},
-      {'label': 'البلاغات', 'icon': Icons.report_problem_outlined},
-      {'label': 'أكواد الخصم', 'icon': Icons.local_offer_outlined},
-      {'label': 'الإشعارات', 'icon': Icons.notifications_outlined},
-      {'label': 'النشرة الأسبوعية', 'icon': Icons.mail_outline_rounded},
-      {'label': 'البنرات', 'icon': Icons.ad_units_outlined},
-      {'label': 'الإعلانات', 'icon': Icons.campaign_outlined},
-      {'label': 'الزيارات', 'icon': Icons.trending_up_outlined},
-    ];
+  /// إجمالي زيارات اليوم
+  Future<int> _todayVisits() async {
+    try {
+      final start = DateTime.now();
+      final midnight =
+          DateTime(start.year, start.month, start.day).toUtc().toIso8601String();
 
+      final res = await Supabase.instance.client
+          .from('analytics_visits')
+          .select('id')
+          .gte('visited_at', midnight);
+
+      return (res as List).length;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  // ===================== شاشة الترحيب =====================
+
+  Widget _welcome() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            _stat('العملاء', _count('profiles', 'role', 'customer')),
-            const SizedBox(width: 16),
-            _stat('التجار', _count('profiles', 'role', 'merchant')),
-            const SizedBox(width: 16),
-            _stat('المنتجات', _count('products')),
-            const SizedBox(width: 16),
-            _stat('البلاغات', _count('reports', 'status', 'pending')),
-            const SizedBox(width: 16),
-            _stat('بانتظار الفحص', _count('merchants', 'is_verified', false)),
-          ]),
-          const SizedBox(height: 32),
-          const Text('الأقسام',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 4,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 1.3,
-            children: tiles.map((t) {
-              return InkWell(
-                onTap: () => nav?.goTo(t['label'] as String),
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(t['icon'] as IconData, size: 36, color: AppColors.brand),
-                      const SizedBox(height: 12),
-                      Text(t['label'] as String,
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600)),
-                    ],
+      padding: const EdgeInsets.fromLTRB(28, 40, 28, 40),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: Column(
+            children: [
+              Text(
+                'مرحباً بك في لوحة الإدارة',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.brand,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'اختر قسماً من القائمة لإدارة المنصة',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              const SizedBox(height: 40),
+              LayoutBuilder(
+                builder: (context, c) {
+                  const gap = 16.0;
+                  final cols = c.maxWidth >= 1000
+                      ? 3
+                      : c.maxWidth >= 620
+                          ? 2
+                          : 1;
+                  final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+                  final stats = [
+                    _stat('العملاء', _count('profiles', 'role', 'customer')),
+                    _stat('التجار', _count('profiles', 'role', 'merchant')),
+                    _stat('المنتجات', _count('products')),
+                    _stat('البلاغات', _count('reports', 'status', 'pending')),
+                    _stat('بانتظار الفحص',
+                        _count('merchants', 'is_verified', false)),
+                    _stat('زيارات اليوم', _todayVisits()),
+                  ];
+
+                  return Wrap(
+                    spacing: gap,
+                    runSpacing: gap,
+                    alignment: WrapAlignment.center,
+                    children: stats
+                        .map((s) => SizedBox(width: w, child: s))
+                        .toList(),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _stat(String label, Future<int> future) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label,
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+            const SizedBox(height: 8),
+            FutureBuilder<int>(
+              future: future,
+              builder: (context, snap) => Text(
+                snap.hasData ? '${snap.data}' : '—',
+                style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.brand),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  // ===================== القائمة الجانبية =====================
+
+  Widget _sideMenu() {
+    return Container(
+      width: 236,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          left: BorderSide(color: Colors.grey.shade200),
+        ),
+      ),
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        itemCount: _sections.length + 1,
+        itemBuilder: (context, i) {
+          if (i == 0) {
+            return _menuItem(
+              label: 'الرئيسية',
+              icon: Icons.dashboard_outlined,
+              selected: _index == -1,
+              onTap: () => setState(() => _index = -1),
+            );
+          }
+
+          final s = _sections[i - 1];
+          return _menuItem(
+            label: s['label'] as String,
+            icon: s['icon'] as IconData,
+            selected: _index == i - 1,
+            onTap: () => setState(() => _index = i - 1),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _menuItem({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Material(
+        color: selected ? AppColors.brand : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            child: Row(
+              children: [
+                Icon(icon,
+                    size: 19,
+                    color:
+                        selected ? Colors.white : const Color(0xFF8A93A6)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      color: selected
+                          ? Colors.white
+                          : const Color(0xFF4A5468),
+                      fontWeight:
+                          selected ? FontWeight.bold : FontWeight.w500,
+                    ),
                   ),
                 ),
-              );
-            }).toList(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ===================== البناء =====================
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.of(context).size.width >= 900;
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Row(
+        children: [
+          if (wide) _sideMenu(),
+          Expanded(
+            child: Container(
+              color: const Color(0xFFF7F8FA),
+              child: Column(
+                children: [
+                  if (!wide)
+                    SizedBox(
+                      height: 54,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        itemCount: _sections.length + 1,
+                        itemBuilder: (context, i) {
+                          final selected =
+                              (i == 0 && _index == -1) || _index == i - 1;
+                          final label = i == 0
+                              ? 'الرئيسية'
+                              : _sections[i - 1]['label'] as String;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: GestureDetector(
+                              onTap: () =>
+                                  setState(() => _index = i == 0 ? -1 : i - 1),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? AppColors.brand
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(9),
+                                  border: Border.all(
+                                      color: selected
+                                          ? AppColors.brand
+                                          : Colors.grey.shade300),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  label,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: selected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: selected
+                                        ? Colors.white
+                                        : Colors.grey.shade700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                  Expanded(child: _sectionBody(_index)),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
-
-  Widget _stat(String label, Future<int> future) => Expanded(
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
-              const SizedBox(height: 8),
-              FutureBuilder<int>(
-                future: future,
-                builder: (context, snap) => Text(
-                  snap.hasData ? '${snap.data}' : '—',
-                  style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.brand),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
 }
