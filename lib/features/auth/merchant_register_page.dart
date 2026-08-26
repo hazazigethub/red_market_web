@@ -223,6 +223,17 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
         'is_permanent_ban': false,
       });
 
+      // ✅ تحقق: لا يُعتبر التسجيل ناجحاً إلا بوجود صف المتجر
+      final check = await supabase
+          .from('merchants')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (check == null) {
+        throw 'تعذر إنشاء المتجر. تواصل مع الدعم الفني قبل محاولة التسجيل مجدداً.';
+      }
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
