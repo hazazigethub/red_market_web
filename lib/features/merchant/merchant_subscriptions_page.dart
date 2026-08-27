@@ -20,6 +20,20 @@ final adminPlansProvider =
   return List<Map<String, dynamic>>.from(data);
 });
 
+/// هل التاجر مؤهل للفترة التجريبية؟ (لا سجلّ اشتراك سابق)
+final trialEligibleProvider = FutureProvider<bool>((ref) async {
+  final userId = Supabase.instance.client.auth.currentUser?.id;
+  if (userId == null) return false;
+
+  final rows = await Supabase.instance.client
+      .from('merchant_subscriptions')
+      .select('id')
+      .eq('merchant_id', userId)
+      .limit(1);
+
+  return (rows as List).isEmpty;
+});
+
 // ✅ مضاف: مزود لجلب الباقة الحالية للتاجر
 final currentMerchantPlanProvider =
     FutureProvider<Map<String, dynamic>?>((ref) async {
@@ -67,6 +81,47 @@ class _MerchantSubscriptionsPageState
 
   /// القسم السفلي المفتوح: -1 يعني لا شيء
   int _openSection = -1;
+
+  bool _startingTrial = false;
+
+  /// يفعّل الفترة التجريبية — 3 شهور على الأساسية
+  Future<void> _startTrial() async {
+    if (_startingTrial) return;
+    setState(() => _startingTrial = true);
+
+    try {
+      final res = await Supabase.instance.client.rpc('start_trial');
+      final map = Map<String, dynamic>.from(res as Map);
+
+      if (map['ok'] == true) {
+        ref.invalidate(trialEligibleProvider);
+        ref.invalidate(currentMerchantPlanProvider);
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('بدأت فترتك التجريبية — 3 شهور مجاناً',
+              style: TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.green,
+        ));
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(map['error']?.toString() ?? 'تعذر التفعيل',
+              style: const TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('تعذر التفعيل، حاول مجدداً',
+            style: TextStyle(fontFamily: 'Cairo')),
+        backgroundColor: Colors.red,
+      ));
+    } finally {
+      if (mounted) setState(() => _startingTrial = false);
+    }
+  }
 
   int _selectedPlanIndex = 0;
   final Color brandRed = const Color(0xFFC21815);
@@ -405,6 +460,37 @@ class _MerchantSubscriptionsPageState
                     ),
 
                     const SizedBox(height: 30),
+
+                    // زر الفترة التجريبية — للأساسية وللمؤهلين فقط
+                    if (planType == 'basic' &&
+                        ref.watch(trialEligibleProvider).value == true) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: OutlinedButton.icon(
+                          onPressed: _startingTrial ? null : _startTrial,
+                          icon: const Icon(Icons.card_giftcard_rounded,
+                              size: 19),
+                          label: Text(
+                            _startingTrial
+                                ? 'جاري التفعيل...'
+                                : 'ابدأ 3 شهور مجاناً',
+                            style: const TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: brandRed,
+                            side: BorderSide(color: brandRed),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+
                     SizedBox(
                       width: double.infinity,
                       height: 55,
