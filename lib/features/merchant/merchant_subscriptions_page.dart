@@ -5,6 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:ui' as ui;
 import 'package:red_market_core/red_market_core.dart';
 import 'merchant_checkout_page.dart';
+import 'merchant_invoices_page.dart';
+import 'merchant_auto_renew_page.dart';
+import 'merchant_cancel_subscription_page.dart';
 
 // 1. مزود البيانات - جلب الباقات النشطة فقط وتصفيتها بدقة حسب السعر
 final adminPlansProvider =
@@ -61,6 +64,9 @@ class _MerchantSubscriptionsPageState
     extends ConsumerState<MerchantSubscriptionsPage> {
   /// دورة الفوترة لكل نوع باقة على حدة
   final Map<String, bool> _yearlyByType = {};
+
+  /// القسم السفلي المفتوح: -1 يعني لا شيء
+  int _openSection = -1;
 
   int _selectedPlanIndex = 0;
   final Color brandRed = const Color(0xFFC21815);
@@ -147,7 +153,10 @@ class _MerchantSubscriptionsPageState
                                 .compareTo(ib == -1 ? 99 : ib);
                           });
 
-                        return Wrap(
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Wrap(
                           spacing: gap,
                           runSpacing: gap,
                           children: List.generate(types.length, (index) {
@@ -183,8 +192,14 @@ class _MerchantSubscriptionsPageState
                                 hasYearly: hasYearly,
                                 isYearly: isYearly,
                               ),
-                            );
-                          }),
+                              );
+                            }),
+                            ),
+                            const SizedBox(height: 26),
+                            _sectionTabs(),
+                            const SizedBox(height: 16),
+                            _sectionBody(),
+                          ],
                         );
                       },
                     ),
@@ -373,15 +388,20 @@ class _MerchantSubscriptionsPageState
                     const Divider(
                         height: 40, thickness: 1, color: Color(0xFFEEEEEE)),
 
-                    // ميزات الباقة كما حُفظت في قاعدة البيانات
-                    Column(
-                      children: ((plan['features'] as List?) ?? [])
-                          .map((f) => _buildFeatureRow(
-                              Icons.check_circle_rounded,
-                              f.toString(),
-                              isDark,
-                              brandRed))
-                          .toList(),
+                    // ميزات الباقة — ارتفاع موحّد مع تمرير داخلي
+                    SizedBox(
+                      height: 250,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: ((plan['features'] as List?) ?? [])
+                              .map((f) => _buildFeatureRow(
+                                  Icons.check_circle_rounded,
+                                  f.toString(),
+                                  isDark,
+                                  brandRed))
+                              .toList(),
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 30),
@@ -439,6 +459,112 @@ class _MerchantSubscriptionsPageState
         ],
       ),
     );
+  }
+
+  /// الكروت الثلاثة السفلية
+  Widget _sectionTabs() {
+    const items = [
+      (icon: Icons.autorenew_rounded, label: 'التجديد التلقائي'),
+      (icon: Icons.cancel_outlined, label: 'إلغاء الاشتراك'),
+      (icon: Icons.receipt_long_outlined, label: 'فواتير المتجر'),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, c) {
+        const gap = 12.0;
+        final cols = c.maxWidth >= 620 ? 3 : 1;
+        final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: List.generate(items.length, (i) {
+            final on = _openSection == i;
+            final danger = i == 1;
+
+            return SizedBox(
+              width: w,
+              child: Material(
+                color: on ? brandRed : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () =>
+                      setState(() => _openSection = on ? -1 : i),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: on
+                              ? brandRed
+                              : const Color(0xFFEDEFF3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: on
+                                ? Colors.white.withValues(alpha: 0.18)
+                                : (danger ? Colors.red : brandRed)
+                                    .withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: Icon(
+                            items[i].icon,
+                            size: 17,
+                            color: on
+                                ? Colors.white
+                                : (danger ? Colors.red : brandRed),
+                          ),
+                        ),
+                        const SizedBox(width: 11),
+                        Expanded(
+                          child: Text(
+                            items[i].label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: on ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          on
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          size: 18,
+                          color: on ? Colors.white70 : Colors.grey.shade400,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  /// محتوى القسم المفتوح
+  Widget _sectionBody() {
+    switch (_openSection) {
+      case 0:
+        return const MerchantAutoRenewPage();
+      case 1:
+        return const MerchantCancelSubscriptionPage();
+      case 2:
+        return const MerchantInvoicesPage();
+      default:
+        return const SizedBox.shrink();
+    }
   }
 
   /// مفتاح شهري / سنوي داخل بطاقة الباقة
