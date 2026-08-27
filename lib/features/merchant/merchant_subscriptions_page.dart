@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:ui' as ui;
 import 'package:red_market_core/red_market_core.dart';
+import 'merchant_checkout_page.dart';
 
 // 1. مزود البيانات - جلب الباقات النشطة فقط وتصفيتها بدقة حسب السعر
 final adminPlansProvider =
@@ -391,7 +392,12 @@ class _MerchantSubscriptionsPageState
                         onPressed: isDisabled
                             ? null
                             : () {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('نظام الدفع قيد التجهيز')));
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => MerchantCheckoutPage(
+                                        plan: Map<String, dynamic>.from(plan)),
+                                  ),
+                                );
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
