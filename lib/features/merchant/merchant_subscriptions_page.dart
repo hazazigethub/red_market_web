@@ -10,8 +10,9 @@ import 'merchant_auto_renew_page.dart';
 import 'merchant_cancel_subscription_page.dart';
 
 // 1. مزود البيانات - جلب الباقات النشطة فقط وتصفيتها بدقة حسب السعر
-final adminPlansProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final adminPlansProvider = FutureProvider<List<Map<String, dynamic>>>((
+  ref,
+) async {
   final data = await Supabase.instance.client
       .from('subscription_plans')
       .select()
@@ -35,8 +36,9 @@ final trialEligibleProvider = FutureProvider<bool>((ref) async {
 });
 
 // ✅ مضاف: مزود لجلب الباقة الحالية للتاجر
-final currentMerchantPlanProvider =
-    FutureProvider<Map<String, dynamic>?>((ref) async {
+final currentMerchantPlanProvider = FutureProvider<Map<String, dynamic>?>((
+  ref,
+) async {
   final userId = Supabase.instance.client.auth.currentUser?.id;
   if (userId == null) return null;
 
@@ -98,26 +100,38 @@ class _MerchantSubscriptionsPageState
         ref.invalidate(currentMerchantPlanProvider);
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('بدأت فترتك التجريبية — 3 شهور مجاناً',
-              style: TextStyle(fontFamily: 'Cairo')),
-          backgroundColor: Colors.green,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'بدأت فترتك التجريبية — 3 شهور مجاناً',
+              style: TextStyle(fontFamily: 'Cairo'),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(map['error']?.toString() ?? 'تعذر التفعيل',
-              style: const TextStyle(fontFamily: 'Cairo')),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              map['error']?.toString() ?? 'تعذر التفعيل',
+              style: const TextStyle(fontFamily: 'Cairo'),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('تعذر التفعيل، حاول مجدداً',
-            style: TextStyle(fontFamily: 'Cairo')),
-        backgroundColor: Colors.red,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تعذر التفعيل، حاول مجدداً',
+            style: TextStyle(fontFamily: 'Cairo'),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _startingTrial = false);
     }
@@ -129,7 +143,9 @@ class _MerchantSubscriptionsPageState
 
   // ✅ مضاف: دالة تحديد حالة الباقة
   _PlanStatus _getPlanStatus(
-      Map<String, dynamic> plan, Map<String, dynamic>? currentPlan) {
+    Map<String, dynamic> plan,
+    Map<String, dynamic>? currentPlan,
+  ) {
     if (currentPlan == null) return _PlanStatus.available;
     final double currentPrice = (currentPlan['price'] as num?)?.toDouble() ?? 0;
     final double planPrice = (plan['price'] as num?)?.toDouble() ?? 0;
@@ -163,8 +179,9 @@ class _MerchantSubscriptionsPageState
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        backgroundColor:
-            isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
+        backgroundColor: isDark
+            ? const Color(0xFF121212)
+            : const Color(0xFFF8F9FA),
         body: plansAsync.when(
           data: (plans) {
             if (plans.isEmpty) return _buildEmptyState();
@@ -176,8 +193,7 @@ class _MerchantSubscriptionsPageState
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding:
-                    const EdgeInsets.fromLTRB(20, 24, 20, 40),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1400),
@@ -187,16 +203,17 @@ class _MerchantSubscriptionsPageState
                         final cols = c.maxWidth >= 1100
                             ? 3
                             : c.maxWidth >= 720
-                                ? 2
-                                : 1;
+                            ? 2
+                            : 1;
                         final w = (c.maxWidth - gap * (cols - 1)) / cols;
 
                         // نجمع الباقات حسب النوع: كل نوع بطاقة واحدة
                         final grouped = <String, List<Map<String, dynamic>>>{};
                         for (final p in plans) {
                           final type = (p['plan_type'] ?? 'other').toString();
-                          grouped.putIfAbsent(type, () => []).add(
-                              Map<String, dynamic>.from(p));
+                          grouped
+                              .putIfAbsent(type, () => [])
+                              .add(Map<String, dynamic>.from(p));
                         }
 
                         const order = ['basic', 'growth', 'pro'];
@@ -204,52 +221,112 @@ class _MerchantSubscriptionsPageState
                           ..sort((a, b) {
                             final ia = order.indexOf(a);
                             final ib = order.indexOf(b);
-                            return (ia == -1 ? 99 : ia)
-                                .compareTo(ib == -1 ? 99 : ib);
+                            return (ia == -1 ? 99 : ia).compareTo(
+                              ib == -1 ? 99 : ib,
+                            );
                           });
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Wrap(
-                          spacing: gap,
-                          runSpacing: gap,
-                          children: List.generate(types.length, (index) {
-                            final type = types[index];
-                            final group = grouped[type]!;
+                            cols >= types.length
+                                ? SizedBox(
+                                    height: 705,
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: _spaced(
+                                        List.generate(types.length, (index) {
+                                          final type = types[index];
+                                          final group = grouped[type]!;
 
-                            // الشهرية والسنوية داخل النوع نفسه
-                            final monthly = group.firstWhere(
-                                (p) =>
-                                    ((p['duration_days'] as num?)?.toInt() ??
-                                        30) < 365,
-                                orElse: () => group.first);
-                            final yearly = group.firstWhere(
-                                (p) =>
-                                    ((p['duration_days'] as num?)?.toInt() ??
-                                        30) >= 365,
-                                orElse: () => <String, dynamic>{});
+                                          // الشهرية والسنوية داخل النوع نفسه
+                                          final monthly = group.firstWhere(
+                                            (p) =>
+                                                ((p['duration_days'] as num?)
+                                                        ?.toInt() ??
+                                                    30) <
+                                                365,
+                                            orElse: () => group.first,
+                                          );
+                                          final yearly = group.firstWhere(
+                                            (p) =>
+                                                ((p['duration_days'] as num?)
+                                                        ?.toInt() ??
+                                                    30) >=
+                                                365,
+                                            orElse: () => <String, dynamic>{},
+                                          );
 
-                            final hasYearly = yearly.isNotEmpty;
-                            final isYearly =
-                                _yearlyByType[type] == true && hasYearly;
-                            final plan = isYearly ? yearly : monthly;
+                                          final hasYearly = yearly.isNotEmpty;
+                                          final isYearly =
+                                              _yearlyByType[type] == true &&
+                                              hasYearly;
+                                          final plan = isYearly
+                                              ? yearly
+                                              : monthly;
 
-                            return SizedBox(
-                              width: w,
-                              child: _buildModernPlanCard(
-                                context,
-                                index: index,
-                                plan: plan,
-                                isDark: isDark,
-                                currentPlan: currentPlan,
-                                planType: type,
-                                hasYearly: hasYearly,
-                                isYearly: isYearly,
-                              ),
-                              );
-                            }),
-                            ),
+                                          return _buildModernPlanCard(
+                                            context,
+                                            index: index,
+                                            plan: plan,
+                                            isDark: isDark,
+                                            currentPlan: currentPlan,
+                                            planType: type,
+                                            hasYearly: hasYearly,
+                                            isYearly: isYearly,
+                                          );
+                                        }),
+                                        gap,
+                                        w,
+                                      ),
+                                    ),
+                                  )
+                                : Wrap(
+                                    spacing: gap,
+                                    runSpacing: gap,
+                                    children: List.generate(types.length, (
+                                      index,
+                                    ) {
+                                      final type = types[index];
+                                      final group = grouped[type]!;
+                                      final monthly = group.firstWhere(
+                                        (p) =>
+                                            ((p['duration_days'] as num?)
+                                                    ?.toInt() ??
+                                                30) <
+                                            365,
+                                        orElse: () => group.first,
+                                      );
+                                      final yearly = group.firstWhere(
+                                        (p) =>
+                                            ((p['duration_days'] as num?)
+                                                    ?.toInt() ??
+                                                30) >=
+                                            365,
+                                        orElse: () => <String, dynamic>{},
+                                      );
+                                      final hasYearly = yearly.isNotEmpty;
+                                      final isYearly =
+                                          _yearlyByType[type] == true &&
+                                          hasYearly;
+                                      final plan = isYearly ? yearly : monthly;
+
+                                      return SizedBox(
+                                        width: w,
+                                        child: _buildModernPlanCard(
+                                          context,
+                                          index: index,
+                                          plan: plan,
+                                          isDark: isDark,
+                                          currentPlan: currentPlan,
+                                          planType: type,
+                                          hasYearly: hasYearly,
+                                          isYearly: isYearly,
+                                        ),
+                                      );
+                                    }),
+                                  ),
                             const SizedBox(height: 26),
                             _sectionTabs(),
                             const SizedBox(height: 16),
@@ -271,14 +348,16 @@ class _MerchantSubscriptionsPageState
     );
   }
 
-  Widget _buildModernPlanCard(BuildContext context,
-      {required int index,
-      required Map<String, dynamic> plan,
-      required bool isDark,
-      Map<String, dynamic>? currentPlan,
-      String planType = '',
-      bool hasYearly = false,
-      bool isYearly = false}) {
+  Widget _buildModernPlanCard(
+    BuildContext context, {
+    required int index,
+    required Map<String, dynamic> plan,
+    required bool isDark,
+    Map<String, dynamic>? currentPlan,
+    String planType = '',
+    bool hasYearly = false,
+    bool isYearly = false,
+  }) {
     bool isSelected = _selectedPlanIndex == index;
     String duration = isYearly ? "سنوي" : "شهري";
     if (!hasYearly) duration = "شهري فقط";
@@ -296,8 +375,9 @@ class _MerchantSubscriptionsPageState
         status == _PlanStatus.current || status == _PlanStatus.downgrade;
 
     return GestureDetector(
-      onTap:
-          isDisabled ? null : () => setState(() => _selectedPlanIndex = index),
+      onTap: isDisabled
+          ? null
+          : () => setState(() => _selectedPlanIndex = index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOutQuart,
@@ -312,14 +392,15 @@ class _MerchantSubscriptionsPageState
                   : Colors.black.withOpacity(0.05),
               blurRadius: 20,
               offset: const Offset(0, 10),
-            )
+            ),
           ],
           border: Border.all(
             color: status == _PlanStatus.current
-                ? Colors.green // ✅ لون أخضر للباقة الحالية
+                ? Colors
+                      .green // ✅ لون أخضر للباقة الحالية
                 : isSelected
-                    ? brandRed
-                    : brandRed.withOpacity(0.3),
+                ? brandRed
+                : brandRed.withOpacity(0.3),
             width: isSelected || status == _PlanStatus.current ? 2.5 : 1.5,
           ),
         ),
@@ -338,12 +419,15 @@ class _MerchantSubscriptionsPageState
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(plan['name'].toString().toUpperCase(),
-                                style: TextStyle(
-                                    fontFamily: 'Cairo',
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
-                                    color: brandRed)),
+                            Text(
+                              plan['name'].toString().toUpperCase(),
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: brandRed,
+                              ),
+                            ),
                             if (status == _PlanStatus.current &&
                                 currentPlan?['subscription_end_date'] != null)
                               Text(
@@ -359,16 +443,22 @@ class _MerchantSubscriptionsPageState
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                              color: brandRed.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8)),
-                          child: Text(duration,
-                              style: TextStyle(
-                                  fontFamily: 'Cairo',
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: brandRed)),
+                            color: brandRed.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            duration,
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: brandRed,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -396,7 +486,9 @@ class _MerchantSubscriptionsPageState
                               const SizedBox(width: 10),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: brandRed.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(6),
@@ -421,7 +513,7 @@ class _MerchantSubscriptionsPageState
                             Text(
                               "$currentPrice",
                               style: TextStyle(
-                                fontSize: 48,
+                                fontSize: 28,
                                 fontWeight: FontWeight.w900,
                                 fontFamily: 'Cairo',
                                 color: brandRed,
@@ -438,22 +530,28 @@ class _MerchantSubscriptionsPageState
                         ),
                       ],
                     ),
-                    // --- نهاية قسم السعر المحدث ---
 
+                    // --- نهاية قسم السعر المحدث ---
                     const Divider(
-                        height: 40, thickness: 1, color: Color(0xFFEEEEEE)),
+                      height: 40,
+                      thickness: 1,
+                      color: Color(0xFFEEEEEE),
+                    ),
 
                     // ميزات الباقة — ارتفاع موحّد مع تمرير داخلي
                     SizedBox(
-                      height: 250,
+                      height: 320,
                       child: SingleChildScrollView(
                         child: Column(
                           children: ((plan['features'] as List?) ?? [])
-                              .map((f) => _buildFeatureRow(
+                              .map(
+                                (f) => _buildFeatureRow(
                                   Icons.check_circle_rounded,
                                   f.toString(),
                                   isDark,
-                                  brandRed))
+                                  brandRed,
+                                ),
+                              )
                               .toList(),
                         ),
                       ),
@@ -469,22 +567,26 @@ class _MerchantSubscriptionsPageState
                         height: 50,
                         child: OutlinedButton.icon(
                           onPressed: _startingTrial ? null : _startTrial,
-                          icon: const Icon(Icons.card_giftcard_rounded,
-                              size: 19),
+                          icon: const Icon(
+                            Icons.card_giftcard_rounded,
+                            size: 19,
+                          ),
                           label: Text(
                             _startingTrial
                                 ? 'جاري التفعيل...'
                                 : 'ابدأ 3 شهور مجاناً',
                             style: const TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold),
+                              fontFamily: 'Cairo',
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: brandRed,
                             side: BorderSide(color: brandRed),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15)),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
                           ),
                         ),
                       ),
@@ -501,24 +603,31 @@ class _MerchantSubscriptionsPageState
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => MerchantCheckoutPage(
-                                        plan: Map<String, dynamic>.from(plan)),
+                                      plan: Map<String, dynamic>.from(plan),
+                                    ),
                                   ),
                                 );
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              isDisabled ? Colors.grey[300] : brandRed,
-                          foregroundColor:
-                              isDisabled ? Colors.grey : Colors.white,
+                          backgroundColor: isDisabled
+                              ? Colors.grey[300]
+                              : brandRed,
+                          foregroundColor: isDisabled
+                              ? Colors.grey
+                              : Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15)),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
                         ),
-                        child: Text(_getButtonLabel(status),
-                            style: const TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold)),
+                        child: Text(
+                          _getButtonLabel(status),
+                          style: const TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -536,15 +645,33 @@ class _MerchantSubscriptionsPageState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inventory_2_outlined,
-              size: 80, color: Colors.grey.withOpacity(0.5)),
+          Icon(
+            Icons.inventory_2_outlined,
+            size: 80,
+            color: Colors.grey.withOpacity(0.5),
+          ),
           const SizedBox(height: 16),
-          const Text("لا توجد باقات متاحة حالياً",
-              style: TextStyle(
-                  fontFamily: 'Cairo', fontSize: 18, color: Colors.grey)),
+          const Text(
+            "لا توجد باقات متاحة حالياً",
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 18,
+              color: Colors.grey,
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  /// يضيف فراغاً بين البطاقات داخل الصف
+  List<Widget> _spaced(List<Widget> items, double gap, double w) {
+    final out = <Widget>[];
+    for (var i = 0; i < items.length; i++) {
+      out.add(Expanded(child: items[i]));
+      if (i != items.length - 1) out.add(SizedBox(width: gap));
+    }
+    return out;
   }
 
   /// الكروت الثلاثة السفلية
@@ -575,17 +702,17 @@ class _MerchantSubscriptionsPageState
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),
-                  onTap: () =>
-                      setState(() => _openSection = on ? -1 : i),
+                  onTap: () => setState(() => _openSection = on ? -1 : i),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                          color: on
-                              ? brandRed
-                              : const Color(0xFFEDEFF3)),
+                        color: on ? brandRed : const Color(0xFFEDEFF3),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -594,8 +721,9 @@ class _MerchantSubscriptionsPageState
                           decoration: BoxDecoration(
                             color: on
                                 ? Colors.white.withValues(alpha: 0.18)
-                                : (danger ? Colors.red : brandRed)
-                                    .withValues(alpha: 0.08),
+                                : (danger ? Colors.red : brandRed).withValues(
+                                    alpha: 0.08,
+                                  ),
                             borderRadius: BorderRadius.circular(9),
                           ),
                           child: Icon(
@@ -690,17 +818,16 @@ class _MerchantSubscriptionsPageState
         color: isDark ? Colors.white10 : const Color(0xFFF1F2F5),
         borderRadius: BorderRadius.circular(11),
       ),
-      child: Row(
-        children: [
-          tab('شهري', false),
-          tab('سنوي', true),
-        ],
-      ),
+      child: Row(children: [tab('شهري', false), tab('سنوي', true)]),
     );
   }
 
   Widget _buildFeatureRow(
-      IconData icon, String text, bool isDark, Color brandRed) {
+    IconData icon,
+    String text,
+    bool isDark,
+    Color brandRed,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -708,12 +835,15 @@ class _MerchantSubscriptionsPageState
           Icon(icon, size: 20, color: brandRed),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(text,
-                style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white70 : Colors.black87)),
+            child: Text(
+              text,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white70 : Colors.black87,
+              ),
+            ),
           ),
         ],
       ),
