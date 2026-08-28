@@ -27,6 +27,11 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
   double _newCost = 0;
   int _daysLeft = 0;
 
+  /// مسار الحساب: new | free_upgrade | paid_upgrade
+  String _mode = 'new';
+  bool _keepExpiry = false;
+  bool _paying = false;
+
   @override
   void initState() {
     super.initState();
@@ -39,12 +44,14 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
           params: {'p_new_plan_id': widget.plan['id']});
       final map = Map<String, dynamic>.from(res as Map);
 
-      if (map['ok'] == true && map['has_credit'] == true) {
+      if (map['ok'] == true) {
         setState(() {
-          _hasCredit = true;
-          _credit = (map['credit'] as num).toDouble();
-          _newCost = (map['new_cost'] as num).toDouble();
-          _daysLeft = (map['days_left'] as num).toInt();
+          _mode = (map['mode'] ?? 'new').toString();
+          _keepExpiry = map['keep_expiry'] == true;
+          _credit = (map['credit'] as num?)?.toDouble() ?? 0;
+          _newCost = (map['new_cost'] as num?)?.toDouble() ?? 0;
+          _daysLeft = (map['days_left'] as num?)?.toInt() ?? 0;
+          _hasCredit = _credit > 0;
         });
       }
     } catch (e) {
@@ -112,6 +119,51 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
       });
     } finally {
       if (mounted) setState(() => _checking = false);
+    }
+  }
+
+  /// يُنفَّذ بعد نجاح الدفع — جاهز للتفعيل عند ربط البوابة
+  Future<void> _completePayment() async {
+    if (_paying) return;
+    setState(() => _paying = true);
+
+    try {
+      final res = await supabase.rpc('apply_upgrade', params: {
+        'p_plan_id': widget.plan['id'],
+        'p_paid': _finalPrice,
+        'p_discount_percent': _discountPercent,
+        'p_promo_code': _appliedCode,
+      });
+
+      final map = Map<String, dynamic>.from(res as Map);
+
+      if (map['ok'] == true) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('تم تفعيل باقتك بنجاح',
+              style: TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.green,
+        ));
+        Navigator.pop(context, true);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(map['error']?.toString() ?? 'تعذر التفعيل',
+              style: const TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } catch (e) {
+      debugPrint('Apply upgrade error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('تعذر التفعيل، حاول مجدداً',
+              style: TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _paying = false);
     }
   }
 
@@ -224,7 +276,7 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
                           const Divider(color: Color(0xFFEDEFF3)),
                           const SizedBox(height: 14),
 
-                          if (_hasCredit) ...[
+                          if (_mode == 'paid_upgrade') ...[
                             _row('سعر الباقة الكامل', _fullPrice,
                                 color: Colors.grey),
                             const SizedBox(height: 10),
@@ -243,7 +295,11 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
 
                           if (_hasCredit) ...[
                             const SizedBox(height: 10),
-                            _row('رصيدك من الباقة الحالية', -_credit,
+                            _row(
+                                _mode == 'free_upgrade'
+                                    ? 'خصم قيمة باقتك الحالية'
+                                    : 'رصيدك من الباقة الحالية',
+                                -_credit,
                                 color: Colors.green),
                           ],
 
@@ -266,7 +322,9 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
                                   const SizedBox(width: 9),
                                   Expanded(
                                     child: Text(
-                                      'احتُسب رصيد $_daysLeft يوماً متبقياً من اشتراكك الحالي',
+                                      _mode == 'free_upgrade'
+                                          ? 'تبدأ مدة اشتراك جديدة كاملة عند الترقية'
+                                          : 'احتُسب رصيد $_daysLeft يوماً متبقياً — ويبقى تاريخ انتهائك كما هو',
                                       style: const TextStyle(
                                           fontFamily: 'Cairo',
                                           fontSize: 11.5,
@@ -416,6 +474,7 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
 
                     // ===== الدفع =====
                     ElevatedButton.icon(
+                      // لتفعيل الدفع: استبدل null بـ _completePayment
                       onPressed: null,
                       icon: const Icon(Icons.lock_outline_rounded, size: 18),
                       label: const Text('إتمام الدفع',
