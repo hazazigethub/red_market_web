@@ -20,12 +20,53 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
   String? _appliedCode;
   String? _codeError;
 
-  double get _basePrice =>
+  /// رصيد الترقية من الاشتراك الحالي
+  bool _loadingProration = true;
+  bool _hasCredit = false;
+  double _credit = 0;
+  double _newCost = 0;
+  int _daysLeft = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProration();
+  }
+
+  Future<void> _loadProration() async {
+    try {
+      final res = await supabase.rpc('calc_proration',
+          params: {'p_new_plan_id': widget.plan['id']});
+      final map = Map<String, dynamic>.from(res as Map);
+
+      if (map['ok'] == true && map['has_credit'] == true) {
+        setState(() {
+          _hasCredit = true;
+          _credit = (map['credit'] as num).toDouble();
+          _newCost = (map['new_cost'] as num).toDouble();
+          _daysLeft = (map['days_left'] as num).toInt();
+        });
+      }
+    } catch (e) {
+      debugPrint('Proration error: $e');
+    } finally {
+      if (mounted) setState(() => _loadingProration = false);
+    }
+  }
+
+  double get _fullPrice =>
       (widget.plan['price'] as num?)?.toDouble() ?? 0;
+
+  /// الأساس المحتسب: تكلفة الأيام المتبقية عند الترقية
+  double get _basePrice => _hasCredit ? _newCost : _fullPrice;
 
   double get _discountValue => _basePrice * (_discountPercent / 100);
 
-  double get _finalPrice => _basePrice - _discountValue;
+  double get _finalPrice {
+    final afterDiscount = _basePrice - _discountValue;
+    final due = _hasCredit ? afterDiscount - _credit : afterDiscount;
+    return due < 0 ? 0 : due;
+  }
 
   @override
   void dispose() {
@@ -87,6 +128,16 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
   Widget build(BuildContext context) {
     final days = (widget.plan['duration_days'] as num?)?.toInt() ?? 30;
     final name = (widget.plan['name'] ?? 'باقة').toString();
+
+    if (_loadingProration) {
+      return const Directionality(
+        textDirection: TextDirection.rtl,
+        child: Scaffold(
+          backgroundColor: Color(0xFFF7F8FA),
+          body: Center(child: CircularProgressIndicator(color: brandRed)),
+        ),
+      );
+    }
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -173,7 +224,14 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
                           const Divider(color: Color(0xFFEDEFF3)),
                           const SizedBox(height: 14),
 
-                          _row('سعر الباقة', _basePrice),
+                          if (_hasCredit) ...[
+                            _row('سعر الباقة الكامل', _fullPrice,
+                                color: Colors.grey),
+                            const SizedBox(height: 10),
+                            _row('تكلفة $_daysLeft يوماً متبقياً', _basePrice),
+                          ] else
+                            _row('سعر الباقة', _basePrice),
+
                           if (_discountPercent > 0) ...[
                             const SizedBox(height: 10),
                             _row(
@@ -183,9 +241,42 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
                             ),
                           ],
 
+                          if (_hasCredit) ...[
+                            const SizedBox(height: 10),
+                            _row('رصيدك من الباقة الحالية', -_credit,
+                                color: Colors.green),
+                          ],
+
                           const SizedBox(height: 14),
                           const Divider(color: Color(0xFFEDEFF3)),
                           const SizedBox(height: 14),
+
+                          if (_hasCredit) ...[
+                            Container(
+                              padding: const EdgeInsets.all(11),
+                              margin: const EdgeInsets.only(bottom: 14),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.info_outline_rounded,
+                                      size: 16, color: Colors.green),
+                                  const SizedBox(width: 9),
+                                  Expanded(
+                                    child: Text(
+                                      'احتُسب رصيد $_daysLeft يوماً متبقياً من اشتراكك الحالي',
+                                      style: const TextStyle(
+                                          fontFamily: 'Cairo',
+                                          fontSize: 11.5,
+                                          height: 1.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
 
                           Row(
                             children: [

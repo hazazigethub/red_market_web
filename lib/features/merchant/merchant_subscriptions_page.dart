@@ -52,7 +52,7 @@ final currentMerchantPlanProvider = FutureProvider<Map<String, dynamic>?>((
 
   final plan = await Supabase.instance.client
       .from('subscription_plans')
-      .select('id, price, name')
+      .select('id, price, name, plan_type, duration_days')
       .eq('id', profile['plan_id'])
       .maybeSingle();
 
@@ -142,18 +142,44 @@ class _MerchantSubscriptionsPageState
   final Color darkCard = const Color(0xFF1E1E1E);
 
   // ✅ مضاف: دالة تحديد حالة الباقة
+  /// ترتيب مستويات الباقات: الأساسية أدنى والاحترافية أعلى
+  int _typeRank(String? type) {
+    switch (type) {
+      case 'basic':
+        return 1;
+      case 'growth':
+        return 2;
+      case 'pro':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
   _PlanStatus _getPlanStatus(
     Map<String, dynamic> plan,
     Map<String, dynamic>? currentPlan,
   ) {
     if (currentPlan == null) return _PlanStatus.available;
-    final double currentPrice = (currentPlan['price'] as num?)?.toDouble() ?? 0;
-    final double planPrice = (plan['price'] as num?)?.toDouble() ?? 0;
+
     final String currentPlanId = currentPlan['id'].toString();
     final String thisPlanId = plan['id'].toString();
     if (currentPlanId == thisPlanId) return _PlanStatus.current;
-    if (planPrice < currentPrice) return _PlanStatus.downgrade;
-    return _PlanStatus.upgrade;
+
+    // المقارنة بمستوى الباقة أولاً، لا بالسعر
+    final int currentRank = _typeRank(currentPlan['plan_type']?.toString());
+    final int planRank = _typeRank(plan['plan_type']?.toString());
+
+    if (planRank < currentRank) return _PlanStatus.downgrade;
+    if (planRank > currentRank) return _PlanStatus.upgrade;
+
+    // نفس المستوى: السنوي ترقية عن الشهري، والعكس تخفيض
+    final int currentDays =
+        (currentPlan['duration_days'] as num?)?.toInt() ?? 30;
+    final int planDays = (plan['duration_days'] as num?)?.toInt() ?? 30;
+
+    if (planDays > currentDays) return _PlanStatus.upgrade;
+    return _PlanStatus.downgrade;
   }
 
   // ✅ مضاف: نص الزر حسب الحالة
