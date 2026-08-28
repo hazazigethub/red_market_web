@@ -388,13 +388,14 @@ class _MerchantSubscriptionsPageState
     String duration = isYearly ? "سنوي" : "شهري";
     if (!hasYearly) duration = "شهري فقط";
 
-    double currentPrice = (plan['price'] as num).toDouble();
-    int discountPercent = plan['discount_percent'] ?? 0;
+    // السعر المكتوب هو الأصلي (المشطوب)
+    final double oldPrice = (plan['price'] as num).toDouble();
+    final int discountPercent = plan['discount_percent'] ?? 0;
 
-    // حساب السعر القديم قبل الخصم للعرض فقط
-    double oldPrice = discountPercent > 0
-        ? currentPrice / (1 - (discountPercent / 100))
-        : currentPrice;
+    // السعر بعد الخصم — بلا كسور
+    final double currentPrice = discountPercent > 0
+        ? (oldPrice * (1 - (discountPercent / 100))).floorToDouble()
+        : oldPrice;
 
     final status = _getPlanStatus(plan, currentPlan);
     final bool isDisabled =
