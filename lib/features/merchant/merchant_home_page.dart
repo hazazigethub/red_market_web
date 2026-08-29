@@ -4,7 +4,6 @@ import 'package:red_market_core/red_market_core.dart';
 
 import 'products_page.dart';
 import 'manage_reels_page.dart';
-import 'reviews_page.dart';
 import 'merchant_reports_page.dart';
 import 'merchant_promo_page.dart';
 import 'merchant_subscriptions_page.dart';
@@ -27,7 +26,6 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
   static const _sections = <Map<String, dynamic>>[
     {'label': 'منتجاتي', 'icon': Icons.inventory_2_outlined},
     {'label': 'الريلز', 'icon': Icons.video_library_outlined},
-    {'label': 'التقييمات', 'icon': Icons.star_outline},
     {'label': 'التقارير', 'icon': Icons.bar_chart_outlined},
     {'label': 'رسائل المتابعين', 'icon': Icons.campaign_outlined},
     {'label': 'الاشتراكات', 'icon': Icons.card_membership_outlined},
@@ -44,20 +42,18 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
       case 1:
         return const ManageReelsPage();
       case 2:
-        return const ReviewsPage();
-      case 3:
         return const MerchantReportsPage();
-      case 4:
+      case 3:
         return const MerchantPromoPage();
-      case 5:
+      case 4:
         return const MerchantSubscriptionsPage();
-      case 6:
+      case 5:
         return const NotificationsPage();
-      case 7:
+      case 6:
         return const StoreSettingsPage();
-      case 8:
+      case 7:
         return const MerchantBankAccountPage();
-      case 9:
+      case 8:
         return const UsefulLinksPage();
       default:
         return _welcome();

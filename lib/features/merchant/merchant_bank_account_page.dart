@@ -275,30 +275,6 @@ class _MerchantBankAccountPageState
             ],
           ),
           const SizedBox(height: 25),
-          _buildLabel("البنك المحلي المعتمد", isDark),
-          DropdownButtonFormField<String>(
-            dropdownColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-            icon: const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: brandRed,
-            ),
-            style: TextStyle(
-              color: isDark ? Colors.white : Colors.black,
-              fontFamily: 'Cairo',
-              fontSize: 14,
-            ),
-            decoration: _inputDecoration(
-              "اختر البنك لاستقبال الأرباح",
-              Icons.account_balance_rounded,
-              isDark,
-            ),
-            items: _saudiBanks
-                .map((bank) => DropdownMenuItem(value: bank, child: Text(bank)))
-                .toList(),
-            onChanged: (val) => setState(() => _selectedBank = val),
-            validator: (val) => val == null ? "يرجى اختيار البنك" : null,
-          ),
-          const SizedBox(height: 20),
           _buildLabel("اسم صاحب الحساب (المستفيد)", isDark),
           TextFormField(
             controller: _ownerNameController,

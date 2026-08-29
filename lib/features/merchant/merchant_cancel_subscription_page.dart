@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/otp_verification_page.dart';
+
 class MerchantCancelSubscriptionPage extends StatefulWidget {
   const MerchantCancelSubscriptionPage({super.key});
 
@@ -18,6 +20,12 @@ class _MerchantCancelSubscriptionPageState
   bool _loading = true;
   bool _saving = false;
   Map<String, dynamic>? _sub;
+
+  /// أهلية الاسترداد
+  bool _refundEligible = false;
+  int _refundWindow = 7;
+  double _refundAmount = 0;
+  String _phone = '';
 
   @override
   void initState() {
@@ -42,9 +50,41 @@ class _MerchantCancelSubscriptionPageState
           .limit(1)
           .maybeSingle();
 
+      // بيانات الجوال لرمز التحقق
+      final profile = await supabase
+          .from('profiles')
+          .select('phone_number')
+          .eq('id', uid)
+          .maybeSingle();
+
+      bool eligible = false;
+      int window = 7;
+      double amount = 0;
+
+      if (row != null) {
+        final sub = Map<String, dynamic>.from(row);
+        final price = (sub['price'] as num?)?.toDouble() ?? 0;
+        final isTrial = sub['is_trial'] == true;
+        final billing = (sub['billing'] ?? 'monthly').toString();
+        final started = DateTime.tryParse(
+            (sub['started_at'] ?? '').toString());
+
+        window = billing == 'yearly' ? 14 : 7;
+        amount = price;
+
+        if (!isTrial && price > 0 && started != null) {
+          final daysUsed = DateTime.now().difference(started).inDays;
+          eligible = daysUsed <= window;
+        }
+      }
+
       if (mounted) {
         setState(() {
           _sub = row == null ? null : Map<String, dynamic>.from(row);
+          _refundEligible = eligible;
+          _refundWindow = window;
+          _refundAmount = amount;
+          _phone = (profile?['phone_number'] ?? '').toString();
           _loading = false;
         });
       }
@@ -116,6 +156,76 @@ class _MerchantCancelSubscriptionPageState
         ),
       ),
     );
+  }
+
+  /// يفتح رمز التحقق ثم ينفّذ الاسترداد
+  void _startRefund() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => OtpVerificationPage(
+        title: 'تأكيد الاسترداد',
+        subtitle: 'أدخل الرمز المرسل لتأكيد إلغاء اشتراكك واسترداد مبلغك',
+        phoneNumber: _phone,
+        onVerified: _doRefund,
+      ),
+    );
+  }
+
+  Future<void> _doRefund() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+
+    try {
+      final res = await supabase.rpc('request_refund');
+      final map = Map<String, dynamic>.from(res as Map);
+
+      if (map['ok'] == true) {
+        await _load();
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          builder: (ctx) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              title: const Row(
+                children: [
+                  Icon(Icons.check_circle_rounded, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text('تم استلام طلبك',
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                ],
+              ),
+              content: Text(
+                'أُلغي اشتراكك واختفت منتجاتك عن العملاء.\n'
+                'ستتم معالجة استرداد مبلغك خلال 48 ساعة.',
+                style: const TextStyle(
+                    fontFamily: 'Cairo', fontSize: 13.5, height: 1.9),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('حسناً',
+                      style: TextStyle(fontFamily: 'Cairo')),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        _snack(map['error']?.toString() ?? 'تعذر تنفيذ الطلب', Colors.red);
+      }
+    } catch (e) {
+      _snack('تعذر تنفيذ الطلب، حاول مجدداً', Colors.red);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   Future<void> _cancel() async {
@@ -284,6 +394,80 @@ class _MerchantCancelSubscriptionPageState
                   )),
 
               const SizedBox(height: 8),
+
+              // بطاقة الاسترداد — داخل المدة فقط
+              if (_refundEligible && !cancelled) ...[
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: Colors.green.withValues(alpha: 0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.replay_circle_filled_rounded,
+                              color: Colors.green, size: 19),
+                          const SizedBox(width: 9),
+                          const Expanded(
+                            child: Text('يمكنك استرداد مبلغك كاملاً',
+                                style: TextStyle(
+                                    fontFamily: 'Cairo',
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                          Text('${_refundAmount.toStringAsFixed(0)} ر.س',
+                              style: const TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'مدة الاسترداد $_refundWindow أيام من تاريخ الاشتراك. '
+                        'عند الاسترداد يُلغى اشتراكك فوراً وتختفي منتجاتك.',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 11.5,
+                            height: 1.8,
+                            color: Colors.grey.shade700),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _saving ? null : _startRefund,
+                          icon: const Icon(
+                              Icons.account_balance_wallet_outlined,
+                              size: 18),
+                          label: Text(
+                              _saving
+                                  ? 'جاري المعالجة...'
+                                  : 'إلغاء واسترداد المبلغ',
+                              style: const TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(11)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               if (cancelled)
                 Container(
