@@ -4,6 +4,7 @@ import 'contact_us_page.dart';
 import 'faq_page.dart';
 import 'privacy_policy_page.dart';
 import 'acceptable_use_page.dart';
+import 'terms_page.dart';
 
 class UsefulLinksPage extends StatelessWidget {
   const UsefulLinksPage({super.key});
@@ -42,7 +43,7 @@ class UsefulLinksPage extends StatelessWidget {
         'title': 'الشروط',
         'icon': Icons.gavel_rounded,
         'color': Colors.brown,
-        'page': const _ComingSoonPage(title: 'الشروط')
+        'page': const TermsPage()
       },
       {
         'title': 'الاستخدام',
