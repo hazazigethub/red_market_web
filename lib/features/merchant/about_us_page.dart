@@ -1,163 +1,199 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class AboutUsPage extends StatelessWidget {
   const AboutUsPage({super.key});
 
+  static const Color brandRed = Color(0xFFC21815);
+
+  static const _sections = <Map<String, dynamic>>[
+    {
+      'icon': Icons.lightbulb_outline_rounded,
+      'title': 'الفكرة',
+      'body':
+          'كل متجر يعرض عروضه في مكانه، والعميل يبحث في عشرة تطبيقات ليجد تخفيضاً يستحق. '
+              'رد ماركت يقلب المعادلة: مكان واحد يجمع عروض المتاجر وتخفيضاتها، '
+              'والعميل يتصفّح ويقارن ثم ينتقل مباشرة إلى المتجر الذي أعجبه.',
+    },
+    {
+      'icon': Icons.storefront_outlined,
+      'title': 'ما نفعله',
+      'body':
+          'نعرض عروض المتاجر وتخفيضاتها ومقاطعها القصيرة في واجهة واحدة منظّمة. '
+              'حين يجد العميل ما يريد، نحيله إلى صفحة العرض في متجره ليُتم الشراء هناك. '
+              'نحن جسر لا وسيط: لا نبيع ولا نشحن ولا نتدخل بين التاجر وعميله.',
+    },
+    {
+      'icon': Icons.trending_up_rounded,
+      'title': 'للتاجر',
+      'body':
+          'واجهة عرض جاهزة بلا تكلفة تطوير، ووصول إلى عملاء يتصفحون يومياً. '
+              'تضيف عروضك من لوحة تحكم بسيطة، وتنشر مقاطع قصيرة تعرّف بها، '
+              'وتتابع زياراتك — ويبقى متجرك وهويتك وأسعارك ملكك وحدك. '
+              'وبلا عمولة على مبيعاتك.',
+    },
+    {
+      'icon': Icons.shopping_bag_outlined,
+      'title': 'للعميل',
+      'body':
+          'تصفّح واسع بلا عناء: تصنيفات مرتّبة، بحث وفلترة بالسعر، مفضلة تحفظ ما أعجبك، '
+              'ومقاطع تريك المنتج قبل أن تقرر. كل ذلك مجاناً، '
+              'ثم يشتري من المتجر مباشرة وفق سياساته.',
+    },
+    {
+      'icon': Icons.favorite_outline_rounded,
+      'title': 'ما نؤمن به',
+      'body':
+          'أن التاجر الصغير يستحق واجهة بجودة الكبار. وأن العميل يستحق أن يرى '
+              'خياراته كاملة قبل أن يقرر. وأن الوضوح — في السعر والمصدر والمسؤولية — '
+              'أفضل من أي وعد.',
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
-    // ✅ اكتشاف وضع الثيم الحالي (داكن أم فاتح)
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        // ✅ تحديث خلفية الصفحة ديناميكياً
         backgroundColor:
-            isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          title: Text("من نحن",
-              style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF2D3436),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  fontFamily: 'Cairo')),
-          centerTitle: true,
-          // ✅ تحديث خلفية الـ AppBar
-          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded,
-                color: isDark ? Colors.white : Colors.black, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(1),
-            child: Divider(
-                height: 1, color: isDark ? Colors.white10 : Colors.black12),
-          ),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _buildLogoSection(isDark),
-              const SizedBox(height: 40),
-              _buildInfoCard(
-                title: "رؤيتنا",
-                content:
-                    "نسعى لأن نكون المنصة الرائدة في تمكين التجار المحليين وتقديم تجربة تسوق رقمية فريدة تخدم المجتمع وتدعم الاقتصاد المحلي وفق رؤية 2030.",
-                icon: Icons.visibility_rounded,
-                isDark: isDark,
+            isDark ? const Color(0xFF121212) : const Color(0xFFF7F8FA),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 820),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 18,
+                            color: isDark ? Colors.white : Colors.black87),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+                    _header(isDark),
+                    const SizedBox(height: 34),
+
+                    ..._sections.map((s) => Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _card(
+                            icon: s['icon'] as IconData,
+                            title: s['title'] as String,
+                            body: s['body'] as String,
+                            isDark: isDark,
+                          ),
+                        )),
+
+                    const SizedBox(height: 20),
+                    _footer(isDark),
+                  ],
+                ),
               ),
-              const SizedBox(height: 20),
-              _buildInfoCard(
-                title: "مهمتنا",
-                content:
-                    "توفير أدوات تقنية متطورة وسهلة الاستخدام للتجار لإدارة أعمالهم بفعالية، وربطهم بالعملاء بطريقة سريعة وآمنة.",
-                icon: Icons.track_changes_rounded,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 40),
-              _buildFooterInfo(isDark),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildLogoSection(bool isDark) {
+  Widget _header(bool isDark) {
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: const Color(0xFF4CAF50).withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(15),
-            decoration: const BoxDecoration(
-              color: Color(0xFF4CAF50),
+        Image.asset(
+          'logo.png',
+          width: 72,
+          height: 72,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: brandRed.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.info_outline_rounded,
-                size: 50, color: Colors.white),
+            child: const Icon(Icons.storefront_rounded,
+                color: brandRed, size: 32),
           ),
         ),
-        const SizedBox(height: 15),
-        Text(
-          "تطبيق 2030",
+        const SizedBox(height: 16),
+        const Text(
+          'رد ماركت',
           style: TextStyle(
-            fontSize: 22,
+            fontFamily: 'Cairo',
+            fontSize: 26,
             fontWeight: FontWeight.bold,
-            fontFamily: 'Cairo',
-            color: isDark ? Colors.white : const Color(0xFF2D3436),
+            color: brandRed,
           ),
         ),
+        const SizedBox(height: 6),
         Text(
-          "المستقبل يبدأ من هنا",
+          'عروض المتاجر في مكان واحد',
           style: TextStyle(
-            fontSize: 14,
             fontFamily: 'Cairo',
-            color: isDark ? Colors.white38 : Colors.grey,
+            fontSize: 14,
+            color: isDark ? Colors.white38 : Colors.grey.shade600,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildInfoCard({
-    required String title,
-    required String content,
+  Widget _card({
     required IconData icon,
+    required String title,
+    required String body,
     required bool isDark,
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            )
-        ],
+            color: isDark ? Colors.white10 : const Color(0xFFEDEFF3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: const Color(0xFF4CAF50), size: 24),
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: brandRed.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: brandRed, size: 19),
+              ),
               const SizedBox(width: 12),
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
                   fontFamily: 'Cairo',
-                  color: Color(0xFF4CAF50),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: brandRed,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 12),
           Text(
-            content,
+            body,
             style: TextStyle(
-              fontSize: 14,
-              height: 1.8,
               fontFamily: 'Cairo',
-              color: isDark ? Colors.white70 : const Color(0xFF2D3436),
+              fontSize: 13.5,
+              height: 1.9,
+              color: isDark ? Colors.white70 : const Color(0xFF4A5468),
             ),
           ),
         ],
@@ -165,17 +201,17 @@ class AboutUsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildFooterInfo(bool isDark) {
+  Widget _footer(bool isDark) {
     return Column(
       children: [
-        Divider(color: isDark ? Colors.white10 : Colors.black12),
-        const SizedBox(height: 20),
+        Divider(color: isDark ? Colors.white10 : const Color(0xFFEDEFF3)),
+        const SizedBox(height: 16),
         Text(
-          "الإصدار 1.0.0",
+          'الإصدار 1.0.0',
           style: TextStyle(
-            fontSize: 12,
             fontFamily: 'Cairo',
-            color: isDark ? Colors.white24 : Colors.grey,
+            fontSize: 11.5,
+            color: isDark ? Colors.white24 : Colors.grey.shade400,
           ),
         ),
       ],

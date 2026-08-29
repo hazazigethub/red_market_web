@@ -1,130 +1,291 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class FaqPage extends StatelessWidget {
   const FaqPage({super.key});
 
+  static const Color brandRed = Color(0xFFC21815);
+
+  static const _groups = <Map<String, dynamic>>[
+    {
+      'title': 'العروض والمنتجات',
+      'icon': Icons.local_offer_outlined,
+      'items': [
+        {
+          'q': 'كيف أضيف عرضاً جديداً؟',
+          'a': 'من قسم "منتجاتي" في لوحة التحكم، اضغط "إضافة منتج"، ثم أدخل '
+              'الاسم والوصف والسعر الأصلي ونسبة التخفيض، وارفع صورة واضحة، '
+              'واختر التصنيف المناسب.',
+        },
+        {
+          'q': 'لماذا لا أستطيع رفع منتج بلا تخفيض؟',
+          'a': 'رد ماركت منصة مخصصة للعروض والتخفيضات. لذلك يجب أن يكون على كل '
+              'منتج تخفيض سعري فعلي، وأن يكون السعر قبل التخفيض أعلى من السعر '
+              'بعده.',
+        },
+        {
+          'q': 'كم عرضاً أستطيع إضافته؟',
+          'a': 'يختلف الحد حسب باقتك. تجد العدد المتاح والمستخدم أعلى صفحة '
+              '"منتجاتي"، وتفاصيل كل باقة في صفحة الاشتراكات.',
+        },
+        {
+          'q': 'كيف أنظّم عروضي؟',
+          'a': 'يمكنك إنشاء تصنيفات خاصة بمتجرك من شريط التصنيفات أعلى صفحة '
+              '"منتجاتي"، ثم إسناد كل عرض للتصنيف المناسب.',
+        },
+      ],
+    },
+    {
+      'title': 'الريلز والتفاعل',
+      'icon': Icons.play_circle_outline_rounded,
+      'items': [
+        {
+          'q': 'ما فائدة الريلز؟',
+          'a': 'مقاطع قصيرة تعرض منتجك بشكل حيّ. يشاهدها العملاء في قسم الريلز، '
+              'ويمكنهم الانتقال لصفحة المنتج مباشرة من المقطع.',
+        },
+        {
+          'q': 'كيف أربط الريلز بمنتج؟',
+          'a': 'عند رفع المقطع، اختر المنتج المرتبط من القائمة. ويمكنك تعديل '
+              'الربط لاحقاً من أيقونة القلم على المقطع.',
+        },
+        {
+          'q': 'ما المتابعون وكيف أستفيد منهم؟',
+          'a': 'العميل الذي يتابع متجرك يصله إشعار عند إضافتك عرضاً أو مقطعاً '
+              'جديداً. وتتيح بعض الباقات إرسال رسائل تسويقية مباشرة لمتابعيك.',
+        },
+      ],
+    },
+    {
+      'title': 'الاشتراك والباقات',
+      'icon': Icons.card_membership_outlined,
+      'items': [
+        {
+          'q': 'كيف أختار الباقة المناسبة؟',
+          'a': 'قارن الباقات في صفحة "الاشتراكات". يحدد الفرق بينها عدد العروض '
+              'والريلز، ونوع التقارير، وميزات الوصول لمتابعيك.',
+        },
+        {
+          'q': 'هل الأسعار شاملة الضريبة؟',
+          'a': 'نعم. جميع الأسعار المعروضة شاملة ضريبة القيمة المضافة بنسبة 15%.',
+        },
+        {
+          'q': 'كيف أرقّي باقتي؟',
+          'a': 'اضغط "ترقية الباقة" على الباقة الأعلى. إن كنت في اشتراك مدفوع، '
+              'يُحتسب رصيد الأيام المتبقية ويُخصم من تكلفة الباقة الجديدة.',
+        },
+        {
+          'q': 'هل أستطيع الانتقال لباقة أقل؟',
+          'a': 'لا يمكن تخفيض الباقة أثناء سريان الاشتراك. ويمكنك اختيار باقة '
+              'أدنى عند التجديد بعد انتهاء المدة الحالية.',
+        },
+        {
+          'q': 'ما الفترة التجريبية؟',
+          'a': 'فترة مجانية تُمنح للحسابات الجديدة لمرة واحدة، تستطيع خلالها '
+              'تجربة المنصة قبل الاشتراك المدفوع.',
+        },
+        {
+          'q': 'كيف أوقف التجديد التلقائي؟',
+          'a': 'من صفحة الاشتراكات، افتح كرت "التجديد التلقائي" وأوقف المفتاح. '
+              'يبقى اشتراكك فعّالاً حتى نهاية المدة المدفوعة.',
+        },
+      ],
+    },
+    {
+      'title': 'الاسترداد والإلغاء',
+      'icon': Icons.replay_circle_filled_outlined,
+      'items': [
+        {
+          'q': 'هل أستطيع استرداد مبلغ اشتراكي؟',
+          'a': 'نعم، خلال 7 أيام للباقات الشهرية و14 يوماً للسنوية من تاريخ '
+              'التفعيل. ويُعاد المبلغ كاملاً إلى وسيلة الدفع الأصلية.',
+        },
+        {
+          'q': 'ماذا يحدث عند الاسترداد؟',
+          'a': 'يُلغى اشتراكك فوراً وتختفي عروضك عن العملاء، مع بقاء بياناتك '
+              'محفوظة في لوحة التحكم. وتتم معالجة الاسترداد خلال 48 ساعة.',
+        },
+        {
+          'q': 'ماذا لو انتهت مدة الاسترداد؟',
+          'a': 'يمكنك إلغاء التجديد التلقائي، وتستمر في الاستفادة من باقتك حتى '
+              'نهاية المدة المدفوعة، ثم تتوقف الخدمة تلقائياً.',
+        },
+      ],
+    },
+    {
+      'title': 'الحساب والتقارير',
+      'icon': Icons.insights_outlined,
+      'items': [
+        {
+          'q': 'ما الذي تعرضه التقارير؟',
+          'a': 'زيارات متجرك، مشاهدات عروضك، والإعجاب والمفضلة والمشاركات. '
+              'وتضيف الباقات الأعلى مخطط الزيارات ومقارنة أدائك بمتوسط السوق.',
+        },
+        {
+          'q': 'كيف أعدّل بيانات متجري؟',
+          'a': 'من "إعدادات المتجر" يمكنك تعديل الاسم والوصف والشعار ورابط '
+              'المتجر. أما السجل التجاري والرقم الضريبي فيُعدَّلان عبر الدعم.',
+        },
+        {
+          'q': 'كيف أحذف حسابي؟',
+          'a': 'من "إعدادات المتجر" اختر "طلب حذف الحساب". يُوقف حسابك فوراً '
+              'ويُحذف نهائياً بعد 30 يوماً، ويمكنك التراجع خلالها.',
+        },
+        {
+          'q': 'كيف أتواصل مع الدعم؟',
+          'a': 'من صفحة "تواصل معنا" في روابط مفيدة. نرد على الطلبات خلال 24 '
+              'ساعة في أيام العمل.',
+        },
+      ],
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
-    // ✅ اكتشاف وضع الثيم الحالي (داكن أم فاتح)
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final List<Map<String, String>> faqs = [
-      {
-        'q': 'كيف يمكنني إضافة منتج جديد؟',
-        'a':
-            'من خلال لوحة التحكم، انتقل إلى قسم المنتجات واضغط على زر إضافة منتج، ثم قم بتعبئة بيانات المنتج وصوره.'
-      },
-      {
-        'q': 'هل يمكنني تغيير معلومات المتجر؟',
-        'a':
-            'نعم، يمكنك تعديل اسم المتجر، الشعار، وصورة الغلاف من خلال صفحة إعدادات المتجر في القائمة الجانبية.'
-      },
-      {
-        'q': 'كيف يتم سحب الأرباح؟',
-        'a':
-            'يتم تحويل الأرباح دورياً إلى حسابك البنكي المسجل في النظام بعد مراجعة الطلبات المكتملة وتجاوز فترة الأمان.'
-      },
-      {
-        'q': 'كيف يمكنني إطلاق حملة ترويجية؟',
-        'a':
-            'انتقل إلى صفحة "إرسال ترويج"، حدد الجمهور المستهدف وميزانية الحملة ثم قم بتأكيد الإرسال.'
-      },
-    ];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        // ✅ تحديث خلفية الصفحة ديناميكياً
         backgroundColor:
-            isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          title: Text("الأسئلة الشائعة",
-              style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF2D3436),
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Cairo',
-                  fontSize: 18)),
-          centerTitle: true,
-          // ✅ تحديث خلفية الـ AppBar
-          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded,
-                color: isDark ? Colors.white : Colors.black, size: 20),
-            onPressed: () => Navigator.pop(context),
+            isDark ? const Color(0xFF121212) : const Color(0xFFF7F8FA),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 860),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 18,
+                            color: isDark ? Colors.white : Colors.black87),
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    Text(
+                      'الأسئلة الشائعة',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'إجابات لأكثر ما يسأل عنه التجار',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 13,
+                        color: isDark ? Colors.white38 : Colors.grey.shade600,
+                      ),
+                    ),
+
+                    const SizedBox(height: 26),
+
+                    ..._groups.map((g) => _group(g, isDark)),
+                  ],
+                ),
+              ),
+            ),
           ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(1),
-            child: Divider(
-                height: 1, color: isDark ? Colors.white10 : Colors.black12),
-          ),
-        ),
-        body: ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-          physics: const BouncingScrollPhysics(),
-          itemCount: faqs.length,
-          itemBuilder: (context, index) {
-            return _buildFaqItem(
-                faqs[index]['q']!, faqs[index]['a']!, isDark, context);
-          },
         ),
       ),
     );
   }
 
-  Widget _buildFaqItem(
-      String question, String answer, bool isDark, BuildContext context) {
+  Widget _group(Map<String, dynamic> g, bool isDark) {
+    final items = (g['items'] as List).cast<Map<String, String>>();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12, top: 6),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: brandRed.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(g['icon'] as IconData,
+                    color: brandRed, size: 17),
+              ),
+              const SizedBox(width: 11),
+              Text(
+                g['title'] as String,
+                style: const TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.bold,
+                  color: brandRed,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        ...items.map((it) => _tile(it['q']!, it['a']!, isDark)),
+
+        const SizedBox(height: 18),
+      ],
+    );
+  }
+
+  Widget _tile(String question, String answer, bool isDark) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            )
-        ],
+            color: isDark ? Colors.white10 : const Color(0xFFEDEFF3)),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Theme(
-        data: Theme.of(context).copyWith(
+        data: ThemeData(
           dividerColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
         ),
         child: ExpansionTile(
-          iconColor: const Color(0xFF4CAF50),
-          collapsedIconColor: isDark ? Colors.white38 : Colors.grey[400],
-          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          iconColor: brandRed,
+          collapsedIconColor: Colors.grey.shade400,
+          tilePadding:
+              const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
           title: Text(
             question,
             style: TextStyle(
-                color: isDark ? Colors.white : const Color(0xFF2D3436),
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Cairo',
-                fontSize: 14),
+              fontFamily: 'Cairo',
+              fontSize: 13.5,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : const Color(0xFF1F2937),
+            ),
           ),
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Container(
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Text(
-                  answer,
-                  style: TextStyle(
-                      fontFamily: 'Cairo',
-                      color: isDark ? Colors.white70 : Colors.black87,
-                      fontSize: 13,
-                      height: 1.6),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                answer,
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 13,
+                  height: 1.9,
+                  color: isDark ? Colors.white70 : const Color(0xFF4A5468),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
