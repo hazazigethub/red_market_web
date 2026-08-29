@@ -1,203 +1,262 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class AcceptableUsePage extends StatelessWidget {
   const AcceptableUsePage({super.key});
 
+  static const Color brandRed = Color(0xFFC21815);
+
+  static const _guidelines = <Map<String, String>>[
+    {
+      'title': 'دقة المعلومات',
+      'desc': 'زوّد المنصة ببيانات صحيحة ومحدّثة عن متجرك ومنتجاتك، '
+          'وحدّثها فور تغيّرها.',
+    },
+    {
+      'title': 'صدق التخفيض',
+      'desc': 'يجب أن يكون السعر قبل التخفيض سعراً حقيقياً كان معمولاً به فعلاً، '
+          'ولا يجوز رفعه صورياً لإظهار تخفيض غير حقيقي.',
+    },
+    {
+      'title': 'مطابقة السعر',
+      'desc': 'يجب أن يطابق السعر المعروض هنا السعر في متجرك الخارجي، '
+          'وأن يكون العرض متاحاً فعلياً للشراء.',
+    },
+    {
+      'title': 'جودة المحتوى',
+      'desc': 'استخدم صوراً واضحة تعبّر عن المنتج فعلاً. ويُمنع المحتوى المضلّل '
+          'أو المسيء للمنافسين أو العملاء.',
+    },
+    {
+      'title': 'النشاط المشروع',
+      'desc': 'يقتصر استخدام المتجر على الأنشطة التجارية المشروعة والمسجّلة '
+          'نظاماً في المملكة العربية السعودية.',
+    },
+    {
+      'title': 'الرسائل التسويقية',
+      'desc': 'استخدم رسائل المتابعين في التعريف بعروضك فقط، ولا تُرسل محتوى '
+          'مخالفاً أو غير متصل بنشاط متجرك.',
+    },
+    {
+      'title': 'حساب واحد',
+      'desc': 'يُمنع إنشاء حسابات متعددة بهدف تكرار الفترة التجريبية '
+          'أو استغلال سياسة الاسترداد.',
+    },
+    {
+      'title': 'أمن المنصة',
+      'desc': 'يُمنع محاولة الوصول غير المصرح به لأي جزء من الأنظمة، '
+          'أو استخدام أدوات آلية للتلاعب بالإحصاءات أو الترتيب.',
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
-    // ✅ اكتشاف وضع الثيم الحالي (داكن أم فاتح)
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        // ✅ تحديث خلفية الصفحة ديناميكياً
         backgroundColor:
-            isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          title: Text(
-            "الاستخدام المقبول",
-            style: TextStyle(
-              color: isDark ? Colors.white : const Color(0xFF2D3436),
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Cairo',
-              fontSize: 18,
+            isDark ? const Color(0xFF121212) : const Color(0xFFF7F8FA),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 820),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 18,
+                            color: isDark ? Colors.white : Colors.black87),
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    // ===== الترويسة =====
+                    Container(
+                      padding: const EdgeInsets.all(22),
+                      decoration: BoxDecoration(
+                        color: brandRed.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: brandRed.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.verified_user_outlined,
+                                color: brandRed, size: 26),
+                          ),
+                          const SizedBox(height: 14),
+                          const Text(
+                            'سياسة الاستخدام المقبول',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: brandRed,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'نلتزم بتوفير بيئة موثوقة للتجار والعملاء. '
+                            'وهذه الضوابط تحفظ جودة المنصة وحقوق الجميع.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 12.5,
+                              height: 1.9,
+                              color: isDark
+                                  ? Colors.white70
+                                  : Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ===== الضوابط =====
+                    Container(
+                      padding: const EdgeInsets.all(22),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: isDark
+                                ? Colors.white10
+                                : const Color(0xFFEDEFF3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: brandRed.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(9),
+                                ),
+                                child: const Icon(Icons.rule_rounded,
+                                    color: brandRed, size: 17),
+                              ),
+                              const SizedBox(width: 11),
+                              const Text(
+                                'ضوابط الاستخدام للمتاجر',
+                                style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 15.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: brandRed,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          ..._guidelines.map((g) => _row(
+                                g['title']!,
+                                g['desc']!,
+                                isDark,
+                              )),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // ===== التحذير =====
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: Colors.orange.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded,
+                              color: Colors.orange, size: 22),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'مخالفة هذه الضوابط قد تؤدي إلى إزالة العروض '
+                              'المخالفة، أو تعليق الحساب مؤقتاً، أو إنهائه '
+                              'نهائياً دون استرداد.',
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 12,
+                                height: 1.8,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? Colors.orange.shade200
+                                    : Colors.orange.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          centerTitle: true,
-          // ✅ تحديث خلفية الـ AppBar
-          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded,
-                color: isDark ? Colors.white : Colors.black, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(1),
-            child: Divider(
-                height: 1, color: isDark ? Colors.white10 : Colors.black12),
           ),
         ),
-        body: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildIntroSection(isDark),
-              const SizedBox(height: 25),
-              _buildGuidelinesCard(isDark),
-              const SizedBox(height: 30),
-              _buildWarningBox(isDark),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
       ),
     );
   }
 
-  Widget _buildIntroSection(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF4CAF50).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.verified_user_outlined,
-              color: Color(0xFF4CAF50), size: 40),
-          const SizedBox(height: 12),
-          Text(
-            "تلتزم منصتنا بتوفير بيئة آمنة وموثوقة لكافة التجار والعملاء. تهدف هذه السياسة لضمان استمرارية الخدمة بأعلى معايير الجودة.",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.6,
-              fontFamily: 'Cairo',
-              color: isDark ? Colors.white70 : Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGuidelinesCard(bool isDark) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            )
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "ضوابط الاستخدام للمتاجر",
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Color(0xFF4CAF50),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildGuidelineRow(
-              Icons.check_circle_outline,
-              "دقة المعلومات",
-              "يجب تزويد التطبيق بمعلومات صحيحة ومحدثة عن المتجر والمنتجات.",
-              isDark),
-          _buildGuidelineRow(
-              Icons.check_circle_outline,
-              "جودة المحتوى",
-              "يمنع استخدام صور مضللة أو نصوص تسيء للمنافسين أو العملاء.",
-              isDark),
-          _buildGuidelineRow(
-              Icons.check_circle_outline,
-              "النشاط القانوني",
-              "يقتصر استخدام المتجر على الأنشطة التجارية المشروعة والمسجلة.",
-              isDark),
-          _buildGuidelineRow(
-              Icons.check_circle_outline,
-              "أمن البيانات",
-              "يمنع محاولة الوصول غير المصرح به لأي جزء من أنظمة المنصة.",
-              isDark),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGuidelineRow(
-      IconData icon, String title, String desc, bool isDark) {
+  Widget _row(String title, String desc, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 18),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: const Color(0xFF4CAF50), size: 18),
-          const SizedBox(width: 12),
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Icon(Icons.check_circle_rounded,
+                color: brandRed, size: 17),
+          ),
+          const SizedBox(width: 11),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Cairo',
-                        fontSize: 14,
-                        color: isDark ? Colors.white : Colors.black87)),
-                Text(desc,
-                    style: TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 12,
-                        color: isDark ? Colors.white38 : Colors.grey[600],
-                        height: 1.4)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  desc,
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 12.5,
+                    height: 1.8,
+                    color: isDark ? Colors.white38 : Colors.grey.shade600,
+                  ),
+                ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWarningBox(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.redAccent.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.redAccent.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.warning_amber_rounded,
-              color: Colors.redAccent, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              "مخالفة سياسة الاستخدام قد تؤدي إلى تعليق حساب المتجر بشكل مؤقت أو دائم.",
-              style: TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isDark
-                    ? Colors.redAccent.withOpacity(0.8)
-                    : Colors.redAccent,
-              ),
             ),
           ),
         ],
