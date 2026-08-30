@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 import 'features/auth/login_page.dart';
@@ -22,22 +23,25 @@ class RedMarketWebApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final base = ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: AppColors.brand,
+        surface: Colors.white,
+      ),
+      scaffoldBackgroundColor: Colors.white,
+    );
+
     return MaterialApp(
       title: 'Red Market',
       debugShowCheckedModeBanner: false,
       locale: const Locale('ar'),
-      builder: (context, child) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: child!,
-      ),
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.brand,
-          surface: Colors.white,
-        ),
-        scaffoldBackgroundColor: Colors.white,
-        fontFamily: 'Cairo',
+      builder: (context, child) =>
+          Directionality(textDirection: TextDirection.rtl, child: child!),
+      theme: base.copyWith(
+        // ✅ خط Cairo على كل نصوص اللوحة
+        textTheme: GoogleFonts.cairoTextTheme(base.textTheme),
+        primaryTextTheme: GoogleFonts.cairoTextTheme(base.primaryTextTheme),
       ),
       home: const LoginPage(),
     );
@@ -62,7 +66,9 @@ class _ConnectionTestPageState extends State<ConnectionTestPage> {
   Future<void> _test() async {
     try {
       final res = await supabase.from('subscription_plans').select('name');
-      setState(() => _status = 'الاتصال ناجح — عدد الباقات: ${(res as List).length}');
+      setState(
+        () => _status = 'الاتصال ناجح — عدد الباقات: ${(res as List).length}',
+      );
     } catch (e) {
       setState(() => _status = 'فشل الاتصال: $e');
     }
