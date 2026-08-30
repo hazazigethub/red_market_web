@@ -70,10 +70,11 @@ class _AdminAnalyticsMerchantCategoriesScreenState
                     future: supabase
                         .from('profiles')
                         .select('id')
-                        .eq('role', 'merchant'),
+                        .eq('role', 'merchant')
+                        .count(CountOption.exact),
                     builder: (context, totalSnapshot) {
-                      final data = totalSnapshot.data as List<dynamic>? ?? [];
-                      final int totalMerchantsCount = data.length;
+                      final int totalMerchantsCount =
+                          totalSnapshot.data?.count ?? 0;
 
                       return CustomScrollView(
                         slivers: [
@@ -143,9 +144,9 @@ class _AdminAnalyticsMerchantCategoriesScreenState
                                               .from('profiles')
                                               .select('id')
                                               .eq('role', 'merchant')
-                                              // التعديل هنا: البحث داخل قائمة preferred_categories عن معرف التصنيف
                                               .contains('preferred_categories',
-                                                  [catId]),
+                                                  [catId])
+                                              .count(CountOption.exact),
                                           builder: (context, countSnapshot) {
                                             if (countSnapshot.connectionState ==
                                                 ConnectionState.waiting) {
@@ -158,11 +159,8 @@ class _AdminAnalyticsMerchantCategoriesScreenState
                                                               strokeWidth: 2)));
                                             }
 
-                                            final List<dynamic> catData =
-                                                countSnapshot.data
-                                                        as List<dynamic>? ??
-                                                    [];
-                                            final int count = catData.length;
+                                            final int count =
+                                                countSnapshot.data?.count ?? 0;
 
                                             return _buildCategoryGridTile(
                                                 catName,

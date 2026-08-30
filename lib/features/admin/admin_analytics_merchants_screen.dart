@@ -2,6 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+
+/// يجلب كل الصفوف على دفعات — يتجاوز حد الألف الافتراضي في Supabase
+Future<List<dynamic>> fetchAllRows(String table, {String columns = '*'}) async {
+  final supabase = Supabase.instance.client;
+  final List<dynamic> out = [];
+  const int pageSize = 1000;
+  int from = 0;
+
+  while (true) {
+    final page = await supabase
+        .from(table)
+        .select(columns)
+        .range(from, from + pageSize - 1);
+    final rows = page as List;
+    out.addAll(rows);
+    if (rows.length < pageSize) break;
+    from += pageSize;
+    if (from > 50000) break;
+  }
+  return out;
+}
+
 class AdminAnalyticsMerchantsScreen extends ConsumerStatefulWidget {
   const AdminAnalyticsMerchantsScreen({super.key});
 
@@ -21,9 +43,9 @@ class _AdminAnalyticsMerchantsScreenState
     final now = DateTime.now();
     final twentyFourHoursAgo = now.subtract(const Duration(hours: 24));
 
-    final response = await supabase.from('merchants').select(
-        'id, store_name, logo_url, store_category_id, created_at, is_subscription_active');
-    final List merchants = response as List;
+    final List merchants = await fetchAllRows('merchants',
+        columns:
+            'id, store_name, logo_url, store_category_id, created_at, is_subscription_active');
 
     int totalMerchants = merchants.length;
 
@@ -56,13 +78,12 @@ class _AdminAnalyticsMerchantsScreenState
       planCounts[planName] = (planCounts[planName] ?? 0) + 1;
     }
 
-    final visitsRes = await supabase
-        .from('analytics_visits')
-        .select('merchant_id')
-        .not('merchant_id', 'is', null);
+    final List visitsRes =
+        await fetchAllRows('analytics_visits', columns: 'merchant_id');
 
     final Map<String, int> visitCounts = {};
-    for (var v in visitsRes as List) {
+    for (var v in visitsRes) {
+      if (v['merchant_id'] == null) continue;
       final id = v['merchant_id'].toString();
       visitCounts[id] = (visitCounts[id] ?? 0) + 1;
     }

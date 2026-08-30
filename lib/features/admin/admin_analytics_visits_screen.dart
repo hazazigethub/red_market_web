@@ -25,11 +25,31 @@ class _AdminAnalyticsVisitsScreenState
     final todayOnly = material.DateUtils.dateOnly(now);
 
     try {
-      final visitsResponse = await supabase.from('analytics_visits').select();
+      // العدد الحقيقي بلا حد الألف الافتراضي
+      final totalCountRes = await supabase
+          .from('analytics_visits')
+          .count(CountOption.exact);
+
+      // جلب الصفوف على دفعات لتجاوز حد الألف
+      final List visitsData = [];
+      const int pageSize = 1000;
+      int from = 0;
+      while (true) {
+        final page = await supabase
+            .from('analytics_visits')
+            .select()
+            .order('visited_at', ascending: false)
+            .range(from, from + pageSize - 1);
+
+        final rows = page as List;
+        visitsData.addAll(rows);
+        if (rows.length < pageSize) break;
+        from += pageSize;
+        if (from > 50000) break; // حد أمان
+      }
+
       final profilesResponse =
           await supabase.from('profiles').select('id, gender');
-
-      final List visitsData = visitsResponse as List;
       final List profilesData = profilesResponse as List;
 
       // خريطة لجنس المستخدمين لسرعة الوصول
@@ -61,7 +81,7 @@ class _AdminAnalyticsVisitsScreenState
         }
       }
 
-      int totalVisitsCount = visitsData.length;
+      int totalVisitsCount = totalCountRes;
       int monthlyVisitsCount = 0;
       int todayVisitsCount = 0;
       int filteredIosCount = 0;

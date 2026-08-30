@@ -2,6 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+
+/// يجلب كل الصفوف على دفعات — يتجاوز حد الألف الافتراضي في Supabase
+Future<List<dynamic>> fetchAllRows(String table, {String columns = '*'}) async {
+  final supabase = Supabase.instance.client;
+  final List<dynamic> out = [];
+  const int pageSize = 1000;
+  int from = 0;
+
+  while (true) {
+    final page = await supabase
+        .from(table)
+        .select(columns)
+        .range(from, from + pageSize - 1);
+    final rows = page as List;
+    out.addAll(rows);
+    if (rows.length < pageSize) break;
+    from += pageSize;
+    if (from > 50000) break;
+  }
+  return out;
+}
+
 class AdminAnalyticsProductsScreen extends ConsumerStatefulWidget {
   const AdminAnalyticsProductsScreen({super.key});
 
@@ -29,9 +51,9 @@ class _AdminAnalyticsProductsScreenState
     final twentyFourHoursAgo = now.subtract(const Duration(hours: 24));
 
     // ✅ جلب كل المنتجات
-    final response = await supabase.from('products').select(
-        'id, name, image_url, category, is_available, is_banned, likes_count, created_at');
-    final List products = response as List;
+    final List products = await fetchAllRows('products',
+        columns:
+            'id, name, image_url, category, is_available, is_banned, likes_count, created_at');
 
     int totalProducts = products.length;
 

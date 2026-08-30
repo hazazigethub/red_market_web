@@ -84,9 +84,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
   Future<int> _count(String table, [String? col, dynamic val]) async {
     try {
+      // count بدل جلب الصفوف — يتجاوز حد الألف الافتراضي
       var q = Supabase.instance.client.from(table).select('id');
       if (col != null) q = q.eq(col, val);
-      return (await q as List).length;
+      return await q.count(CountOption.exact).then((r) => r.count);
     } catch (_) {
       return 0;
     }
@@ -102,9 +103,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
       final res = await Supabase.instance.client
           .from('analytics_visits')
           .select('id')
-          .gte('visited_at', midnight);
+          .gte('visited_at', midnight)
+          .count(CountOption.exact);
 
-      return (res as List).length;
+      return res.count;
     } catch (_) {
       return 0;
     }

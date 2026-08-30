@@ -14,6 +14,26 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   static const Color brandRed = Color(0xFFC21815);
   String _searchQuery = '';
 
+  /// كل العملاء على دفعات — يتجاوز حد الألف الافتراضي
+  Future<List<Map<String, dynamic>>> _fetchAllCustomers() async {
+    final List<Map<String, dynamic>> out = [];
+    const int pageSize = 1000;
+    int from = 0;
+    while (true) {
+      final page = await supabase
+          .from('profiles')
+          .select()
+          .eq('role', 'customer')
+          .range(from, from + pageSize - 1);
+      final rows = List<Map<String, dynamic>>.from(page as List);
+      out.addAll(rows);
+      if (rows.length < pageSize) break;
+      from += pageSize;
+      if (from > 50000) break;
+    }
+    return out;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -48,11 +68,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             ),
             Expanded(
               child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: supabase
-                    .from('profiles')
-                    .select()
-                    .eq('role', 'customer')
-                    .then((v) => List<Map<String, dynamic>>.from(v)),
+                future: _fetchAllCustomers(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(

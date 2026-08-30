@@ -1,8 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+
+/// يجلب كل الصفوف على دفعات — يتجاوز حد الألف الافتراضي في Supabase
+Future<List<dynamic>> fetchAllRows(
+  String table, {
+  String columns = '*',
+  void Function(dynamic q)? unused,
+}) async {
+  final supabase = Supabase.instance.client;
+  final List<dynamic> out = [];
+  const int pageSize = 1000;
+  int from = 0;
+
+  while (true) {
+    final page = await supabase
+        .from(table)
+        .select(columns)
+        .range(from, from + pageSize - 1);
+    final rows = page as List;
+    out.addAll(rows);
+    if (rows.length < pageSize) break;
+    from += pageSize;
+    if (from > 50000) break;
+  }
+  return out;
+}
+
 class AdminAnalyticsUsersScreen extends StatelessWidget {
   const AdminAnalyticsUsersScreen({super.key});
+
+  /// كل العملاء على دفعات
+  Future<List<dynamic>> _fetchAllCustomers() async {
+    final supabase = Supabase.instance.client;
+    final List<dynamic> out = [];
+    const int pageSize = 1000;
+    int from = 0;
+    while (true) {
+      final page = await supabase
+          .from('profiles')
+          .select()
+          .eq('role', 'customer')
+          .range(from, from + pageSize - 1);
+      final rows = page as List;
+      out.addAll(rows);
+      if (rows.length < pageSize) break;
+      from += pageSize;
+      if (from > 50000) break;
+    }
+    return out;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,11 +60,8 @@ class AdminAnalyticsUsersScreen extends StatelessWidget {
       child: Scaffold(
                 body: FutureBuilder(
           future: Future.wait([
-            Supabase.instance.client
-                .from('profiles')
-                .select()
-                .eq('role', 'customer'),
-            Supabase.instance.client.from('analytics_visits').select(),
+            _fetchAllCustomers(),
+            fetchAllRows('analytics_visits', columns: 'id'),
           ]),
           builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {

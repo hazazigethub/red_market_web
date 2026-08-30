@@ -66,9 +66,12 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
     try {
       final uid = Supabase.instance.client.auth.currentUser?.id;
       if (uid == null) return 0;
-      final res =
-          await Supabase.instance.client.from(table).select('id').eq(col, uid);
-      return (res as List).length;
+      final res = await Supabase.instance.client
+          .from(table)
+          .select('id')
+          .eq(col, uid)
+          .count(CountOption.exact);
+      return res.count;
     } catch (_) {
       return 0;
     }
