@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 import '../../shell/dashboard_shell.dart';
 import 'merchant_register_page.dart';
+import 'account_recovery_page.dart';
 import '../admin/categories_page.dart';
 import '../admin/admin_home_page.dart';
 import '../admin/new_merchants_screen.dart';
@@ -103,13 +104,37 @@ class _LoginPageState extends State<LoginPage> {
       if (uid == null) throw 'تعذر تسجيل الدخول';
 
       final profile = await supabase
-          .from('profiles').select('role').eq('id', uid).maybeSingle();
+          .from('profiles')
+          .select('role, deletion_scheduled_at')
+          .eq('id', uid)
+          .maybeSingle();
       final role = profile?['role']?.toString();
 
       if (role != 'super_admin' && role != 'merchant') {
         await supabase.auth.signOut();
         throw 'هذه اللوحة مخصصة للتجار والإدارة فقط';
       }
+
+      // حساب مجدول للحذف: نعرض شاشة الاستعادة بدل اللوحة
+      final scheduledRaw = profile?['deletion_scheduled_at'];
+      final scheduled = scheduledRaw == null
+          ? null
+          : DateTime.tryParse(scheduledRaw.toString());
+
+      if (scheduled != null && mounted) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (_) => AccountRecoveryPage(
+            scheduledAt: scheduled,
+            onRestored: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              );
+            },
+          ),
+        ));
+        return;
+      }
+
       if (mounted) {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (_) => DashboardShell(
