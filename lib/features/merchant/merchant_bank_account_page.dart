@@ -24,20 +24,14 @@ class _MerchantBankAccountPageState
   // وحدات التحكم في النصوص
   final TextEditingController _ownerNameController = TextEditingController();
   final TextEditingController _ibanController = TextEditingController();
-  final TextEditingController _accountNumberController =
-      TextEditingController();
-
-  String? _selectedBank;
   bool _isLinked = false;
 
-  final List<String> _saudiBanks = [
-    "مصرف الراجحي",
-    "البنك الأهلي السعودي",
-    "بنك الرياض",
-    "بنك الإنماء",
-    "بنك البلاد",
-    "البنك العربي الوطني",
-    "البنك السعودي للاستثمار",
+  /// طرق الدفع المعتمدة في المنصة
+  static const _paymentMethods = <Map<String, dynamic>>[
+    {'label': 'مدى', 'icon': Icons.credit_card_rounded},
+    {'label': 'فيزا', 'icon': Icons.payment_rounded},
+    {'label': 'ماستركارد', 'icon': Icons.credit_score_rounded},
+    {'label': 'Apple Pay', 'icon': Icons.phone_iphone_rounded},
   ];
 
   void _linkAccount() {
@@ -80,17 +74,35 @@ class _MerchantBankAccountPageState
                   final card = _buildStatusCard(isDark);
                   final form = _buildBankForm(isDark);
 
+                  final methods = _buildPaymentMethods(isDark);
+
                   if (!wide) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [card, const SizedBox(height: 28), form],
+                      children: [
+                        card,
+                        const SizedBox(height: 16),
+                        methods,
+                        const SizedBox(height: 28),
+                        form,
+                      ],
                     );
                   }
 
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(flex: 5, child: card),
+                      Expanded(
+                        flex: 5,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            card,
+                            const SizedBox(height: 16),
+                            methods,
+                          ],
+                        ),
+                      ),
                       const SizedBox(width: 24),
                       Expanded(flex: 6, child: form),
                     ],
@@ -170,7 +182,7 @@ class _MerchantBankAccountPageState
               fontFamily: 'Cairo',
             ),
           ),
-          if (_isLinked && _selectedBank != null) ...[
+          if (_isLinked) ...[
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(14),
@@ -182,7 +194,9 @@ class _MerchantBankAccountPageState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _selectedBank!,
+                    _ownerNameController.text.isEmpty
+                        ? "—"
+                        : _ownerNameController.text,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -206,6 +220,118 @@ class _MerchantBankAccountPageState
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// طرق الدفع المعتمدة — عرض تعريفي
+  Widget _buildPaymentMethods(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: isDark ? Colors.white10 : const Color(0xFFEDEFF3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: brandRed.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(Icons.payments_outlined,
+                    color: brandRed, size: 17),
+              ),
+              const SizedBox(width: 11),
+              Text(
+                "طرق الدفع المعتمدة",
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF1F2937),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: _paymentMethods.map((m) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white10 : const Color(0xFFF7F8FA),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                      color: isDark
+                          ? Colors.white10
+                          : const Color(0xFFEDEFF3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(m['icon'] as IconData,
+                        size: 16, color: Colors.grey.shade600),
+                    const SizedBox(width: 8),
+                    Text(
+                      m['label'] as String,
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? Colors.white70
+                            : const Color(0xFF4A5468),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 14),
+
+          Container(
+            padding: const EdgeInsets.all(11),
+            decoration: BoxDecoration(
+              color: brandRed.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded,
+                    size: 15, color: brandRed),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    "تُسدَّد رسوم الاشتراك عبر هذه الوسائل، ويُعاد أي استرداد "
+                    "إلى الوسيلة نفسها.",
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 11,
+                      height: 1.7,
+                      color: isDark
+                          ? Colors.white70
+                          : Colors.grey.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
