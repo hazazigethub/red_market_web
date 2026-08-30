@@ -137,17 +137,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FA), // نفس خلفية صفحة التصنيفات
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          elevation: 0,
-          title: const Text("إدارة الإشعارات",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-          centerTitle: true,
-        ),
-        body: Column(
+                body: Column(
           children: [
             // --- شريط التبويب بتصميم صفحة التصنيفات ---
             Container(

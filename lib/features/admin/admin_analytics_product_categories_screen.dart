@@ -21,20 +21,7 @@ class _AdminAnalyticsProductCategoriesScreenState
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          elevation: 0,
-          title: const Text(
-            "إحصائيات أقسام المنتجات",
-            style: TextStyle(
-                fontFamily: 'Cairo',
-                fontWeight: FontWeight.bold,
-                color: Colors.white),
-          ),
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: Column(
+                body: Column(
           children: [
             Container(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 25),
@@ -340,14 +327,7 @@ class SubCategoriesDetailScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          title: Text("أقسام $title",
-              style: const TextStyle(
-                  fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
-          centerTitle: true,
-        ),
-        body: subs.isEmpty
+                body: subs.isEmpty
             ? const Center(child: Text("لا توجد أقسام فرعية"))
             : GridView.builder(
                 padding: const EdgeInsets.all(20),

@@ -146,18 +146,7 @@ class _AdminAnalyticsVisitsScreenState
       textDirection: material.TextDirection.rtl,
       child: material.Scaffold(
         backgroundColor: material.Colors.grey.shade50,
-        appBar: material.AppBar(
-          backgroundColor: brandRed,
-          elevation: 0,
-          title: const material.Text("إحصائيات الزيارات",
-              style: material.TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: material.FontWeight.bold,
-                  color: material.Colors.white)),
-          centerTitle: true,
-          iconTheme: const material.IconThemeData(color: material.Colors.white),
-        ),
-        body: material.FutureBuilder<Map<String, dynamic>>(
+                body: material.FutureBuilder<Map<String, dynamic>>(
           future: _fetchAdvancedVisitsData(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == material.ConnectionState.waiting) {

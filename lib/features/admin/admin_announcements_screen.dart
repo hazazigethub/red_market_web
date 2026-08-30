@@ -321,21 +321,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
       child: Scaffold(
         backgroundColor:
             isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          title: const Text("الترويج العام",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-          centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.white),
-            onPressed: () => context.pop(),
-          ),
-        ),
-        floatingActionButton: FloatingActionButton.extended(
+                floatingActionButton: FloatingActionButton.extended(
           onPressed: _showAddDialog,
           backgroundColor: brandRed,
           icon: const Icon(Icons.add, color: Colors.white),

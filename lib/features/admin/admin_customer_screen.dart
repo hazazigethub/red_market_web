@@ -19,18 +19,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          elevation: 0,
-          title: const Text("إحصائيات وإدارة العملاء",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: Column(
+                body: Column(
           children: [
             // قسم البحث العلوي
             Container(

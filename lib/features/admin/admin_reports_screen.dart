@@ -12,18 +12,7 @@ class AdminReportsScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          elevation: 0,
-          title: const Text("نظام الرقابة وخدمة العملاء",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
-                  color: Colors.white)),
-          centerTitle: true,
-        ),
-        body: SingleChildScrollView(
+                body: SingleChildScrollView(
           child: Column(
             children: [
               Padding(

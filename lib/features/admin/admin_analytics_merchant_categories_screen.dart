@@ -21,20 +21,7 @@ class _AdminAnalyticsMerchantCategoriesScreenState
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          elevation: 0,
-          title: const Text(
-            "إحصائيات أنشطة المتاجر",
-            style: TextStyle(
-                fontFamily: 'Cairo',
-                fontWeight: FontWeight.bold,
-                color: Colors.white),
-          ),
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: Column(
+                body: Column(
           children: [
             // --- 🔍 خانة البحث ---
             Container(

@@ -126,16 +126,7 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            "إدارة أكواد الخصم",
-            style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: brandRed,
-          centerTitle: true,
-          elevation: 0,
-        ),
-        body: Container(
+                body: Container(
           color: Colors.grey[100],
           child: Column(
             children: [

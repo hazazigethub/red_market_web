@@ -67,17 +67,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          title: const Text("إعدادات النظام",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: _isLoading
+                body: _isLoading
             ? const Center(child: CircularProgressIndicator(color: brandRed))
             : SingleChildScrollView(
                 padding: const EdgeInsets.all(20),

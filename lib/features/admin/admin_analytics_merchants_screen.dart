@@ -96,17 +96,7 @@ class _AdminAnalyticsMerchantsScreenState
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          title: const Text("إحصائيات التجار والاشتراكات",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: FutureBuilder<Map<String, dynamic>>(
+                body: FutureBuilder<Map<String, dynamic>>(
           future: _fetchMerchantsStats(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {

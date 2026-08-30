@@ -11,20 +11,7 @@ class AdminAnalyticsUsersScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          elevation: 0,
-          title: const Text(
-            "إحصائيات العملاء التفصيلية",
-            style: TextStyle(
-                fontFamily: 'Cairo',
-                fontWeight: FontWeight.bold,
-                color: Colors.white),
-          ),
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: FutureBuilder(
+                body: FutureBuilder(
           future: Future.wait([
             Supabase.instance.client
                 .from('profiles')

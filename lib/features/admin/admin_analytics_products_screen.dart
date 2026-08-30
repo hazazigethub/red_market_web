@@ -101,17 +101,7 @@ class _AdminAnalyticsProductsScreenState
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          title: const Text("إحصائيات المنتجات",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: FutureBuilder<Map<String, dynamic>>(
+                body: FutureBuilder<Map<String, dynamic>>(
           future: _fetchAdvancedStats(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {

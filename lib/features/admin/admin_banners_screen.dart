@@ -394,16 +394,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text("إدارة البنرات",
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: Column(
+                body: Column(
           children: [
             Padding(
               padding:

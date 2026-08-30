@@ -22,33 +22,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: brandRed,
-          elevation: 0,
-          title: Text(
-            _showOnlyReported
-                ? "المنتجات المُبلغ عنها"
-                : (_showOnlyBanned
-                    ? "المنتجات المحظورة"
-                    : "الرقابة على المنتجات"),
-            style: const TextStyle(
-                fontFamily: 'Cairo',
-                fontWeight: FontWeight.bold,
-                color: Colors.white),
-          ),
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-          leading: (_showOnlyReported || _showOnlyBanned)
-              ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => setState(() {
-                    _showOnlyReported = false;
-                    _showOnlyBanned = false;
-                  }),
-                )
-              : null,
-        ),
-        body: Column(
+                body: Column(
           children: [
             if (!_showOnlyReported && !_showOnlyBanned)
               Container(
