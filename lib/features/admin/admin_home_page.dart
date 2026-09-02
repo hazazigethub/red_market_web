@@ -16,6 +16,7 @@ import 'admin_announcements_screen.dart';
 import 'admin_analytics_visits_screen.dart';
 import 'admin_plans_screen.dart';
 import 'admin_refunds_screen.dart';
+import 'admin_contacts_screen.dart';
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -35,6 +36,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     {'label': 'التصنيفات', 'icon': Icons.category_outlined},
     {'label': 'إدارة المنتجات', 'icon': Icons.inventory_2_outlined},
     {'label': 'البلاغات', 'icon': Icons.report_problem_outlined},
+    {'label': 'رسائل التواصل', 'icon': Icons.mark_email_unread_outlined},
     {'label': 'الباقات', 'icon': Icons.card_membership_outlined},
     {'label': 'طلبات الاسترداد', 'icon': Icons.replay_circle_filled_outlined},
     {'label': 'أكواد الخصم', 'icon': Icons.local_offer_outlined},
@@ -60,20 +62,22 @@ class _AdminHomePageState extends State<AdminHomePage> {
       case 5:
         return const AdminReportsScreen();
       case 6:
-        return const AdminPlansScreen();
+        return const AdminContactsScreen();
       case 7:
-        return const AdminRefundsScreen();
+        return const AdminPlansScreen();
       case 8:
-        return const DiscountCodesScreen();
+        return const AdminRefundsScreen();
       case 9:
-        return const AdminNotificationsScreen();
+        return const DiscountCodesScreen();
       case 10:
-        return const AdminNewsletterScreen();
+        return const AdminNotificationsScreen();
       case 11:
-        return const AdminBannersScreen();
+        return const AdminNewsletterScreen();
       case 12:
-        return const AdminAnnouncementsScreen();
+        return const AdminBannersScreen();
       case 13:
+        return const AdminAnnouncementsScreen();
+      case 14:
         return const AdminAnalyticsVisitsScreen();
       default:
         return _welcome();
