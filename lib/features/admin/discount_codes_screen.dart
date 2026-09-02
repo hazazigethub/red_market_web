@@ -24,18 +24,43 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
   DateTime? _endDate;
 
   // تم تغيير النوع ليكون dynamic أو int ليتناسب مع ID الباقة من سوبابيس
-  dynamic _selectedPlanId;
+  dynamic _selectedPlanId = _allPlans;
+
+  /// قيمة تدل على أن الكود يسري على كل الباقات
+  static const String _allPlans = '__all__';
+
+  /// أسماء الباقات لعرضها في بطاقات الأكواد
+  final Map<dynamic, String> _planNames = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPlanNames();
+  }
+
+  Future<void> _loadPlanNames() async {
+    try {
+      final res =
+          await supabase.from('subscription_plans').select('id, name');
+      if (!mounted) return;
+      setState(() {
+        for (final p in List<Map<String, dynamic>>.from(res)) {
+          _planNames[p['id']] = (p['name'] ?? '').toString();
+        }
+      });
+    } catch (_) {
+      // تجاهل
+    }
+  }
 
   Future<void> _saveCode() async {
-    if (_formKey.currentState!.validate() &&
-        _endDate != null &&
-        _selectedPlanId != null) {
+    if (_formKey.currentState!.validate() && _endDate != null) {
       try {
         await supabase.from('promo_codes').insert({
           'code': _codeController.text,
           'discount_percent': int.tryParse(_valueController.text) ?? 0,
-          'plan_id':
-              _selectedPlanId, // نرسل الـ ID الرقمي هنا لحل مشكلة الـ bigint
+          // فارغ يعني أن الكود يسري على كل الباقات
+          'plan_id': _selectedPlanId == _allPlans ? null : _selectedPlanId,
           'is_active': true,
           'expiry_date': _endDate!.toIso8601String(),
           // ملاحظة: تم إخفاء start_date لأن الحقل غير موجود في جدول promo_codes لديك
@@ -46,7 +71,7 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
         setState(() {
           _startDate = null;
           _endDate = null;
-          _selectedPlanId = null;
+          _selectedPlanId = _allPlans;
           _activeTab = 1;
         });
 
@@ -239,21 +264,31 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
               final plans = snapshot.data!;
 
               // التحقق من وجود الـ ID في القائمة لتجنب مشاكل الـ Dropdown
-              bool valueExists = plans.any((p) => p['id'] == _selectedPlanId);
-              dynamic currentValue = valueExists ? _selectedPlanId : null;
+              final bool valueExists = _selectedPlanId == _allPlans ||
+                  plans.any((p) => p['id'] == _selectedPlanId);
+              final dynamic currentValue =
+                  valueExists ? _selectedPlanId : _allPlans;
 
               return DropdownButtonFormField<dynamic>(
-                value: currentValue,
+                initialValue: currentValue,
+                isExpanded: true,
                 decoration: _inputDecoration(
-                    icon: Icons.list_alt_rounded, label: "اختر الباقة"),
-                items: plans
-                    .map((p) => DropdownMenuItem<dynamic>(
-                        value: p['id'], // نستخدم الـ ID كقيمة مخفية
+                    icon: Icons.list_alt_rounded, label: "الباقة"),
+                items: [
+                  const DropdownMenuItem<dynamic>(
+                    value: _allPlans,
+                    child: Text('كل الباقات',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontWeight: FontWeight.bold)),
+                  ),
+                  ...plans.map((p) => DropdownMenuItem<dynamic>(
+                        value: p['id'],
                         child: Text(p['name'] ?? '',
-                            style: const TextStyle(fontFamily: 'Cairo'))))
-                    .toList(),
+                            style: const TextStyle(fontFamily: 'Cairo')),
+                      )),
+                ],
                 onChanged: (v) => setState(() => _selectedPlanId = v),
-                validator: (value) => value == null ? 'مطلوب' : null,
               );
             },
           ),
@@ -381,7 +416,10 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
                               ),
                             ),
                             Text(
-                              "${item['plan_id'] ?? ''}",
+                              item['plan_id'] == null
+                                  ? 'كل الباقات'
+                                  : (_planNames[item['plan_id']] ??
+                                      'باقة ${item['plan_id']}'),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.grey[600],
