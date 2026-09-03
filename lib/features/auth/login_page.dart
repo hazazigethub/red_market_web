@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 import '../../shell/dashboard_shell.dart';
@@ -43,16 +43,73 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   final _phone = TextEditingController();
   final _password = TextEditingController();
   bool _loading = false;
   String? _error;
+  bool _obscure = true;
+
+  /// ظهور متتابع لعناصر اللوح الجانبي
+  late final AnimationController _revealCtrl;
+
+  /// مزايا اللوحة
+  static const _highlights = <(IconData, String, String)>[
+    (
+      Icons.inventory_2_outlined,
+      'أدر عروضك',
+      'أضف منتجاتك وعدّلها ونظّمها في تصنيفات خاصة بمتجرك',
+    ),
+    (
+      Icons.insights_outlined,
+      'تابع نتائجك',
+      'زيارات متجرك، أعلى منتجاتك تفاعلاً، ومقارنة أدائك بالسوق',
+    ),
+    (
+      Icons.campaign_outlined,
+      'صل لمتابعيك',
+      'أرسل عروضك مباشرة لمن يتابع متجرك، وانشر مقاطع تعرّف بمنتجاتك',
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _revealCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1300),
+    )..forward();
+  }
+
+  /// ظهور تدريجي بتأخير لكل عنصر
+  Widget _reveal({required int order, required Widget child}) {
+    final start = (order * 0.16).clamp(0.0, 0.7);
+    final curve = CurvedAnimation(
+      parent: _revealCtrl,
+      curve: Interval(start, (start + 0.4).clamp(0.0, 1.0),
+          curve: Curves.easeOutCubic),
+    );
+
+    return AnimatedBuilder(
+      animation: curve,
+      builder: (context, c) => Opacity(
+        opacity: curve.value,
+        child: Transform.translate(
+          offset: Offset(0, 20 * (1 - curve.value)),
+          child: c,
+        ),
+      ),
+      child: child,
+    );
+  }
+
 
   @override
   void dispose() {
     _phone.dispose();
     _password.dispose();
+    _revealCtrl.dispose();
     super.dispose();
   }
 
@@ -185,69 +242,371 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            width: 420,
-            padding: const EdgeInsets.all(40),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('رد ماركت',
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold,
-                    color: AppColors.brand)),
-                const SizedBox(height: 8),
-                const Text('لوحة التحكم', style: TextStyle(fontSize: 16, color: Colors.grey)),
-                const SizedBox(height: 32),
-                TextField(
-                  controller: _phone,
-                  decoration: const InputDecoration(
-                    labelText: 'رقم الجوال', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _password,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'كلمة المرور', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _loading ? null : _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.brand,
-                      foregroundColor: Colors.white),
-                    child: _loading
-                      ? const SizedBox(width: 20, height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('دخول', style: TextStyle(fontSize: 16)),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const MerchantRegisterPage())),
-                  child: const Text('تسجيل متجر جديد'),
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 16),
-                  Text(_error!, textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red)),
-                ],
-              ],
+  /// نافذة استعادة كلمة المرور
+  void _showForgotDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.lock_reset_rounded, color: AppColors.brand),
+              const SizedBox(width: 10),
+              const Text('استعادة كلمة المرور',
+                  style:
+                      TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ],
+          ),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: const Text(
+              'تواصل مع الدعم الفني عبر واتساب أو البريد الإلكتروني، '
+              'وسنساعدك في استعادة الوصول لحسابك خلال يوم عمل. '
+              'جهّز رقم جوالك المسجّل ورقم سجلك التجاري للتحقق.',
+              style: TextStyle(fontSize: 13.5, height: 1.9),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('حسناً'),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.of(context).size.width >= 900;
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF7F8FA),
+        body: SafeArea(
+          child: Row(
+            children: [
+              if (wide) Expanded(flex: 5, child: _sidePanel()),
+              Expanded(flex: 4, child: _form()),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// اللوح التعريفي الأحمر
+  Widget _sidePanel() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.brand, const Color(0xFF8E1010)],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        ),
+      ),
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(48),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _reveal(
+                order: 0,
+                child: const Text(
+                  'لوحة تحكم متجرك',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              _reveal(
+                order: 1,
+                child: Text(
+                  'من هنا تدير عروضك ومقاطعك، وتتابع زوّار متجرك، '
+                  'وتصل إلى متابعيك مباشرة.',
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    height: 2.0,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 44),
+
+              ..._highlights.asMap().entries.map(
+                    (e) => _reveal(
+                      order: 2 + e.key,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 22),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.14),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: Colors.white
+                                        .withValues(alpha: 0.15)),
+                              ),
+                              child: Icon(e.value.$1,
+                                  color: Colors.white, size: 19),
+                            ),
+                            const SizedBox(width: 15),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    e.value.$2,
+                                    style: const TextStyle(
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    e.value.$3,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      height: 1.8,
+                                      color: Colors.white
+                                          .withValues(alpha: 0.75),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// نموذج الدخول
+  Widget _form() {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Image.asset(
+                  'logo.png',
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Text(
+                    'رد ماركت',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.brand,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              Text(
+                'أهلاً بعودتك',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.brand,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                'سجّل دخولك لإدارة متجرك',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 13.5, color: Colors.grey.shade600),
+              ),
+
+              const SizedBox(height: 34),
+
+              _field(
+                controller: _phone,
+                label: 'رقم الجوال',
+                icon: Icons.phone_android_rounded,
+                keyboard: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+              _field(
+                controller: _password,
+                label: 'كلمة المرور',
+                icon: Icons.lock_outline_rounded,
+                obscure: _obscure,
+                suffix: IconButton(
+                  onPressed: () => setState(() => _obscure = !_obscure),
+                  icon: Icon(
+                    _obscure
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: 19,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+                onSubmit: _loading ? null : _login,
+              ),
+
+              if (_error != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(13),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: Colors.red.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline_rounded,
+                          color: Colors.red, size: 18),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 12.5,
+                              height: 1.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 24),
+
+              SizedBox(
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _loading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.brand,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: _loading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Text('دخول',
+                          style: TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.bold)),
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _linkButton(
+                    'ليس لديك متجر؟',
+                    () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const MerchantRegisterPage())),
+                  ),
+                  _linkButton('نسيت كلمة المرور؟', _showForgotDialog),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// رابط نصي بلون الهوية
+  Widget _linkButton(String label, VoidCallback onTap) {
+    return TextButton(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          color: AppColors.brand,
+        ),
+      ),
+    );
+  }
+
+  /// حقل إدخال موحّد
+  Widget _field({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscure = false,
+    TextInputType? keyboard,
+    Widget? suffix,
+    VoidCallback? onSubmit,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboard,
+      onSubmitted: onSubmit == null ? null : (_) => onSubmit(),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(fontSize: 13.5, color: Colors.grey.shade600),
+        prefixIcon: Icon(icon, size: 20, color: Colors.grey.shade500),
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: Colors.white,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.brand, width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
       ),
     );
   }
