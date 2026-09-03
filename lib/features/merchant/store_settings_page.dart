@@ -2,6 +2,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import '../auth/login_page.dart';
 
 class StoreSettingsPage extends StatefulWidget {
   final String? merchantId;
@@ -169,7 +170,7 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
     }
   }
 
-  // ✅ حذف الحساب
+  // ✅ طلب حذف الحساب — تعطيل فوري وحذف بعد 30 يوماً
   void _showDeleteAccountDialog() {
     showDialog(
       context: context,
@@ -183,16 +184,37 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
             children: [
               Icon(Icons.warning_amber_rounded, color: Colors.red),
               SizedBox(width: 8),
-              Text("حذف الحساب",
+              Text("طلب حذف الحساب",
                   style: TextStyle(
                       fontFamily: 'Cairo',
                       fontWeight: FontWeight.bold,
                       color: Colors.red)),
             ],
           ),
-          content: const Text(
-            "هل أنت متأكد من رغبتك في حذف حسابك نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
-            style: TextStyle(fontFamily: 'Cairo', fontSize: 14),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  "عند تقديم الطلب:",
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "• يُعطَّل حسابك فوراً وتختفي عروضك عن العملاء\n"
+                  "• تُحذف بياناتك نهائياً بعد 30 يوماً\n"
+                  "• يمكنك التراجع بالدخول خلال هذه المدة\n"
+                  "• لا استرداد لما تبقّى من اشتراكك",
+                  style: TextStyle(
+                      fontFamily: 'Cairo', fontSize: 13, height: 2.0),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -205,25 +227,11 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
                   backgroundColor: Colors.red,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10))),
-              onPressed: () async {
+              onPressed: () {
                 Navigator.pop(ctx);
-                try {
-                  final userId = supabase.auth.currentUser!.id;
-                  await supabase.from('merchants').delete().eq('id', userId);
-                  await supabase.from('profiles').delete().eq('id', userId);
-                  await supabase.auth.signOut();
-                  if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
-                } catch (e) {
-                  debugPrint("Delete Error: $e");
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text("حدث خطأ أثناء حذف الحساب",
-                            style: TextStyle(fontFamily: 'Cairo')),
-                        backgroundColor: Colors.red));
-                  }
-                }
+                _requestDeletion();
               },
-              child: const Text("تأكيد الحذف",
+              child: const Text("تأكيد الطلب",
                   style: TextStyle(fontFamily: 'Cairo', color: Colors.white)),
             ),
           ],
@@ -231,6 +239,52 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
       ),
     );
   }
+
+  /// يستدعي دالة قاعدة البيانات لتسجيل الطلب
+  Future<void> _requestDeletion() async {
+    try {
+      final res = await supabase.rpc('request_account_deletion');
+      final map = Map<String, dynamic>.from(res as Map);
+
+      if (!mounted) return;
+
+      if (map['ok'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              "تم استلام طلبك. سيُحذف حسابك بعد 30 يوماً، ويمكنك التراجع بالدخول خلال هذه المدة.",
+              style: TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 5),
+        ));
+
+        await Future.delayed(const Duration(seconds: 3));
+        await supabase.auth.signOut();
+
+        if (!mounted) return;
+        // إخراج كامل: مسح كل الشاشات والعودة لصفحة الدخول
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(map['error']?.toString() ?? "تعذر تنفيذ الطلب",
+              style: const TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } catch (e) {
+      debugPrint("Delete request error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("تعذر تنفيذ الطلب، حاول مجدداً",
+              style: TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.red,
+        ));
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {

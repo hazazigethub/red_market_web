@@ -14,13 +14,14 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
   final supabase = Supabase.instance.client;
 
   List<Map<String, dynamic>> _rows = [];
+  final Map<String, List<Map<String, dynamic>>> _actions = {};
   bool _loading = true;
   String _filter = 'new';
 
   static const _filters = [
-    (key: 'new', label: 'جديدة'),
-    (key: 'handled', label: 'معالجة'),
-    (key: 'closed', label: 'مغلقة'),
+    (key: 'new', label: 'جديدة', color: Color(0xFFC21815)),
+    (key: 'in_progress', label: 'تحت الإجراء', color: Colors.orange),
+    (key: 'closed', label: 'مغلقة', color: Colors.grey),
   ];
 
   @override
@@ -38,9 +39,27 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
           .eq('status', _filter)
           .order('created_at', ascending: false);
 
+      final rows = List<Map<String, dynamic>>.from(data);
+
+      // إجراءات كل رسالة
+      _actions.clear();
+      final ids = rows.map((r) => r['id'].toString()).toList();
+      if (ids.isNotEmpty) {
+        final acts = await supabase
+            .from('contact_actions')
+            .select()
+            .inFilter('contact_id', ids)
+            .order('created_at');
+
+        for (final a in List<Map<String, dynamic>>.from(acts)) {
+          final cid = a['contact_id'].toString();
+          _actions.putIfAbsent(cid, () => []).add(a);
+        }
+      }
+
       if (mounted) {
         setState(() {
-          _rows = List<Map<String, dynamic>>.from(data);
+          _rows = rows;
           _loading = false;
         });
       }
@@ -58,29 +77,54 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
     ));
   }
 
-  Future<void> _updateStatus(
-      Map<String, dynamic> row, String status, String? note) async {
+  /// يضيف إجراءً ويحدّث الحالة إن لزم
+  Future<void> _addAction(
+    Map<String, dynamic> row,
+    String note, {
+    String? newStatus,
+  }) async {
     try {
-      await supabase.from('contact_requests').update({
-        'status': status,
-        'handled_at': DateTime.now().toIso8601String(),
-        if (note != null) 'admin_note': note,
-      }).eq('id', row['id']);
+      if (note.trim().isNotEmpty) {
+        await supabase.from('contact_actions').insert({
+          'contact_id': row['id'],
+          'note': note.trim(),
+          'admin_id': supabase.auth.currentUser?.id,
+        });
+      }
+
+      if (newStatus != null) {
+        await supabase.from('contact_requests').update({
+          'status': newStatus,
+          if (newStatus == 'closed')
+            'handled_at': DateTime.now().toIso8601String(),
+        }).eq('id', row['id']);
+      }
 
       await _load();
+
       _snack(
-        status == 'handled' ? 'تم وضعها كمعالجة' : 'تم إغلاق الرسالة',
-        status == 'handled' ? Colors.green : Colors.grey.shade700,
+        newStatus == 'closed'
+            ? 'أُغلقت الرسالة'
+            : newStatus == 'in_progress'
+                ? 'انتقلت إلى تحت الإجراء'
+                : 'أُضيف الإجراء',
+        newStatus == 'closed' ? Colors.grey.shade700 : Colors.green,
       );
     } catch (e) {
-      _snack('تعذر التحديث', Colors.red);
+      debugPrint('Action error: $e');
+      _snack('تعذر تنفيذ العملية', Colors.red);
     }
   }
 
-  void _noteDialog(Map<String, dynamic> row, String status) {
-    final noteCtrl =
-        TextEditingController(text: (row['admin_note'] ?? '').toString());
-    final isHandled = status == 'handled';
+  /// نافذة إضافة إجراء
+  void _actionDialog(
+    Map<String, dynamic> row, {
+    required String title,
+    required String hint,
+    String? newStatus,
+    bool noteRequired = true,
+  }) {
+    final ctrl = TextEditingController();
 
     showDialog(
       context: context,
@@ -90,31 +134,32 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
           backgroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(isHandled ? 'تأكيد المعالجة' : 'إغلاق الرسالة',
+          title: Text(title,
               style: const TextStyle(
                   fontFamily: 'Cairo',
                   fontWeight: FontWeight.bold,
                   fontSize: 16)),
           content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 440),
+            constraints: const BoxConstraints(maxWidth: 460),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isHandled
-                      ? 'أكّد أنك رددت على ${row['name'] ?? 'المرسل'}.'
-                      : 'ستُغلق الرسالة ولن تظهر في الجديدة.',
-                  style: const TextStyle(
-                      fontFamily: 'Cairo', fontSize: 13.5, height: 1.9),
+                  'من: ${row['name'] ?? 'زائر'}',
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 12.5,
+                      color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 14),
                 TextField(
-                  controller: noteCtrl,
-                  maxLines: 2,
+                  controller: ctrl,
+                  maxLines: 3,
+                  autofocus: true,
                   style: const TextStyle(fontFamily: 'Cairo', fontSize: 13),
                   decoration: InputDecoration(
-                    hintText: 'ملاحظة (اختياري)',
+                    hintText: hint,
                     hintStyle: TextStyle(
                         fontFamily: 'Cairo',
                         fontSize: 12,
@@ -125,7 +170,7 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
+                        horizontal: 14, vertical: 13),
                   ),
                 ),
               ],
@@ -139,17 +184,21 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: isHandled ? Colors.green : Colors.grey,
+                backgroundColor:
+                    newStatus == 'closed' ? Colors.grey.shade700 : brandRed,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
               onPressed: () {
+                if (noteRequired && ctrl.text.trim().isEmpty) {
+                  _snack('اكتب الإجراء أولاً', Colors.orange);
+                  return;
+                }
                 Navigator.pop(ctx);
-                _updateStatus(row, status,
-                    noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim());
+                _addAction(row, ctrl.text, newStatus: newStatus);
               },
-              child: Text(isHandled ? 'تأكيد' : 'إغلاق',
-                  style: const TextStyle(
+              child: const Text('حفظ',
+                  style: TextStyle(
                       fontFamily: 'Cairo',
                       fontWeight: FontWeight.bold,
                       color: Colors.white)),
@@ -160,13 +209,14 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
     );
   }
 
-  String _fmt(dynamic raw) {
+  String _fmt(dynamic raw, {bool withTime = true}) {
     if (raw == null) return '—';
     final d = DateTime.tryParse(raw.toString());
     if (d == null) return '—';
-    final local = d.toLocal();
-    return "${local.year}/${local.month}/${local.day} — "
-        "${local.hour}:${local.minute.toString().padLeft(2, '0')}";
+    final l = d.toLocal();
+    final date = "${l.year}/${l.month}/${l.day}";
+    if (!withTime) return date;
+    return "$date — ${l.hour}:${l.minute.toString().padLeft(2, '0')}";
   }
 
   @override
@@ -217,11 +267,11 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 9),
                           decoration: BoxDecoration(
-                            color: on ? brandRed : Colors.white,
+                            color: on ? f.color : Colors.white,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                                 color:
-                                    on ? brandRed : const Color(0xFFEDEFF3)),
+                                    on ? f.color : const Color(0xFFEDEFF3)),
                           ),
                           child: Text(
                             f.label,
@@ -261,11 +311,21 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
   }
 
   Widget _card(Map<String, dynamic> r) {
-    final isNew = r['status'] == 'new';
+    final status = (r['status'] ?? 'new').toString();
+    final isNew = status == 'new';
+    final inProgress = status == 'in_progress';
+    final isClosed = status == 'closed';
+
     final phone = (r['phone'] ?? '').toString();
     final email = (r['email'] ?? '').toString();
-    final note = (r['admin_note'] ?? '').toString();
     final registered = r['user_id'] != null;
+    final acts = _actions[r['id'].toString()] ?? const [];
+
+    final borderColor = isNew
+        ? brandRed.withValues(alpha: 0.3)
+        : inProgress
+            ? Colors.orange.withValues(alpha: 0.35)
+            : const Color(0xFFEDEFF3);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -273,14 +333,12 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: isNew
-                ? brandRed.withValues(alpha: 0.3)
-                : const Color(0xFFEDEFF3)),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ===== الترويسة =====
           Row(
             children: [
               Container(
@@ -311,24 +369,14 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: (registered ? Colors.blue : Colors.grey)
-                                .withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            registered ? 'مسجّل' : 'زائر',
-                            style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color:
-                                    registered ? Colors.blue : Colors.grey),
-                          ),
+                        _badge(
+                          registered ? 'مسجّل' : 'زائر',
+                          registered ? Colors.blue : Colors.grey,
                         ),
+                        if (acts.isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          _badge('${acts.length} إجراء', Colors.orange),
+                        ],
                       ],
                     ),
                     Text(_fmt(r['created_at']),
@@ -346,6 +394,7 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
           const Divider(color: Color(0xFFEDEFF3), height: 1),
           const SizedBox(height: 14),
 
+          // ===== بيانات التواصل =====
           if (phone.isNotEmpty) ...[
             _line(Icons.phone_android_rounded, phone),
             const SizedBox(height: 8),
@@ -357,6 +406,7 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
 
           const SizedBox(height: 6),
 
+          // ===== الرسالة =====
           Text(
             (r['subject'] ?? '').toString(),
             style: const TextStyle(
@@ -379,41 +429,84 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
             ),
           ),
 
-          if (note.isNotEmpty) ...[
-            const SizedBox(height: 12),
+          // ===== سجلّ الإجراءات =====
+          if (acts.isNotEmpty) ...[
+            const SizedBox(height: 16),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.sticky_note_2_outlined,
+                Icon(Icons.history_rounded,
                     size: 15, color: Colors.grey.shade500),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Text(note,
-                      style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 11.5,
-                          height: 1.7,
-                          color: Colors.grey.shade600)),
-                ),
+                Text('سجلّ الإجراءات',
+                    style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade700)),
               ],
             ),
+            const SizedBox(height: 10),
+            ...acts.map((a) => Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(9),
+                    border: Border(
+                      right: BorderSide(
+                          color: Colors.orange.withValues(alpha: 0.45),
+                          width: 2.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        (a['note'] ?? '').toString(),
+                        style: const TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 12,
+                            height: 1.8),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        _fmt(a['created_at']),
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 10,
+                            color: Colors.grey.shade500),
+                      ),
+                    ],
+                  ),
+                )),
           ],
 
-          if (isNew) ...[
+          // ===== الأزرار =====
+          if (!isClosed) ...[
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _noteDialog(r, 'handled'),
-                    icon: const Icon(Icons.check_rounded, size: 17),
-                    label: const Text('تمت المعالجة',
-                        style: TextStyle(
+                    onPressed: () => _actionDialog(
+                      r,
+                      title: isNew ? 'بدء الإجراء' : 'إضافة إجراء',
+                      hint: 'مثال: اتصلت به وشرحت له خطوات التسجيل',
+                      newStatus: isNew ? 'in_progress' : null,
+                    ),
+                    icon: Icon(
+                        isNew
+                            ? Icons.play_arrow_rounded
+                            : Icons.add_comment_outlined,
+                        size: 17),
+                    label: Text(isNew ? 'بدء الإجراء' : 'إضافة إجراء',
+                        style: const TextStyle(
                             fontFamily: 'Cairo',
                             fontSize: 12.5,
                             fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: Colors.orange,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -422,26 +515,68 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                OutlinedButton(
-                  onPressed: () => _noteDialog(r, 'closed'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.grey.shade700,
-                    side: BorderSide(color: Colors.grey.shade400),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                OutlinedButton.icon(
+                  onPressed: () => _actionDialog(
+                    r,
+                    title: 'إغلاق الرسالة',
+                    hint: 'سبب الإغلاق أو ملخّص ما تم (اختياري)',
+                    newStatus: 'closed',
+                    noteRequired: false,
                   ),
-                  child: const Text('إغلاق',
+                  icon: const Icon(Icons.check_circle_outline_rounded,
+                      size: 17),
+                  label: const Text('إغلاق',
                       style: TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 12.5,
                           fontWeight: FontWeight.bold)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.grey.shade700,
+                    side: BorderSide(color: Colors.grey.shade400),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 18, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                const Icon(Icons.check_circle_rounded,
+                    size: 16, color: Colors.green),
+                const SizedBox(width: 8),
+                Text(
+                  'أُغلقت في ${_fmt(r['handled_at'], withTime: false)}',
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 11.5,
+                      color: Colors.grey.shade600),
                 ),
               ],
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _badge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: color),
       ),
     );
   }

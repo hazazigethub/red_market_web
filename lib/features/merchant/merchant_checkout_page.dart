@@ -27,7 +27,7 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
   double _newCost = 0;
   int _daysLeft = 0;
 
-  /// مسار الحساب: new | free_upgrade | paid_upgrade
+  /// مسار الحساب: new | free_upgrade | paid_upgrade | cycle_change
   String _mode = 'new';
   bool _keepExpiry = false;
   bool _paying = false;
@@ -324,7 +324,9 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
                                     child: Text(
                                       _mode == 'free_upgrade'
                                           ? 'تبدأ مدة اشتراك جديدة كاملة عند الترقية'
-                                          : 'احتُسب رصيد $_daysLeft يوماً متبقياً — ويبقى تاريخ انتهائك كما هو',
+                                          : _mode == 'cycle_change'
+                                              ? 'خُصم رصيد $_daysLeft يوماً من باقتك الحالية — وتبدأ مدة الباقة الجديدة كاملة من اليوم'
+                                              : 'احتُسب رصيد $_daysLeft يوماً متبقياً — ويبقى تاريخ انتهائك كما هو',
                                       style: const TextStyle(
                                           fontFamily: 'Cairo',
                                           fontSize: 11.5,

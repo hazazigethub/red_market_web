@@ -47,6 +47,11 @@ class _AccountRecoveryPageState extends State<AccountRecoveryPage> {
               style: TextStyle(fontFamily: 'Cairo')),
           backgroundColor: Colors.green,
         ));
+        // تأخير بسيط ليقرأ المستخدم الرسالة، ثم خروج ودخول جديد
+        await Future.delayed(const Duration(milliseconds: 900));
+        await supabase.auth.signOut();
+
+        if (!mounted) return;
         widget.onRestored();
       } else {
         _snack(map['error']?.toString() ?? 'تعذرت الاستعادة');
