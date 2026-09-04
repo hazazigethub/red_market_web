@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 import '../../shell/dashboard_shell.dart';
@@ -417,18 +418,37 @@ class _LoginPageState extends State<LoginPage>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // الشعار المربّع
               Center(
-                child: Image.asset(
-                  'logo.png',
-                  width: 72,
-                  height: 72,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Text(
-                    'رد ماركت',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.brand,
+                child: SizedBox(
+                  width: 110,
+                  height: 110,
+                  child: SvgPicture.asset(
+                    'assets/images/applogo.svg',
+                    fit: BoxFit.contain,
+                    placeholderBuilder: (_) =>
+                        const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
+              // الشعار العريض
+              Center(
+                child: SizedBox(
+                  width: 210,
+                  height: 70,
+                  child: SvgPicture.asset(
+                    'assets/images/red_market_logo.svg',
+                    fit: BoxFit.contain,
+                    placeholderBuilder: (_) => Text(
+                      'رد ماركت',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.brand,
+                      ),
                     ),
                   ),
                 ),
