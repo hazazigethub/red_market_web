@@ -125,7 +125,7 @@ class _AdminBannerWeeksScreenState extends State<AdminBannerWeeksScreen> {
                 const SizedBox(width: 11),
                 Expanded(
                   child: Text(
-                    'الأسبوع ${w['week_number']} — '
+                    'الأسبوع ${w['week_number']} · ${w['year']} — '
                     '${_fmt(w['week_start'])} إلى ${_fmt(w['week_end'])}',
                     style: const TextStyle(
                         fontFamily: 'Cairo',
@@ -458,7 +458,7 @@ class _AdminBannerWeeksScreenState extends State<AdminBannerWeeksScreen> {
                     borderRadius: BorderRadius.circular(7),
                   ),
                   child: Text(
-                    'أسبوع ${w['week_number']}',
+                    'أسبوع ${w['week_number']} · ${w['year']}',
                     style: TextStyle(
                       fontFamily: 'Cairo',
                       fontSize: 11,
