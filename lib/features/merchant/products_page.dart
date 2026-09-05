@@ -21,6 +21,7 @@ class ProductItem {
   String imageUrl;
   bool isFlashSale;
   DateTime? flashSaleExpiry;
+  DateTime? flashSaleStart;
 
   ProductItem({
     required this.id,
@@ -35,6 +36,7 @@ class ProductItem {
     required this.imageUrl,
     this.isFlashSale = false,
     this.flashSaleExpiry,
+    this.flashSaleStart,
   });
 
   factory ProductItem.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,9 @@ class ProductItem {
       flashSaleExpiry: json['flash_sale_expiry'] != null
           ? DateTime.parse(json['flash_sale_expiry'])
           : null,
+      flashSaleStart: json['flash_sale_start'] != null
+          ? DateTime.parse(json['flash_sale_start'])
+          : null,
     );
   }
 
@@ -73,6 +78,7 @@ class ProductItem {
       'image_url': imageUrl,
       'is_flash_sale': isFlashSale,
       'flash_sale_expiry': flashSaleExpiry?.toIso8601String(),
+      'flash_sale_start': flashSaleStart?.toIso8601String(),
     };
   }
 }
@@ -1185,6 +1191,9 @@ class _ProductsPageState extends State<ProductsPage> {
 
     bool isFlashSale = productToEdit?.isFlashSale ?? false;
     DateTime? flashSaleExpiry = productToEdit?.flashSaleExpiry;
+    DateTime? flashSaleStart = productToEdit?.flashSaleStart;
+    // نشر مباشر أم مجدول
+    bool isScheduled = productToEdit?.flashSaleStart != null;
 
     showModalBottomSheet(
       context: context,
@@ -1375,69 +1384,169 @@ class _ProductsPageState extends State<ProductsPage> {
                             onChanged: (val) {
                               setModalState(() {
                                 isFlashSale = val;
-                                if (val && flashSaleExpiry == null) {
+                                if (val) {
+                                  // نشر مباشر افتراضياً: 24 ساعة من الآن
+                                  isScheduled = false;
+                                  flashSaleStart = null;
                                   flashSaleExpiry = DateTime.now()
                                       .add(const Duration(hours: 24));
+                                } else {
+                                  flashSaleStart = null;
+                                  flashSaleExpiry = null;
+                                  isScheduled = false;
                                 }
                               });
                             },
                           ),
                         ],
                       ),
+
                       if (isFlashSale) ...[
                         const Divider(),
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            final DateTime? picked = await showDatePicker(
-                              context: context,
-                              initialDate: flashSaleExpiry ??
-                                  DateTime.now().add(const Duration(hours: 24)),
-                              firstDate: DateTime.now(),
-                              lastDate:
-                                  DateTime.now().add(const Duration(days: 30)),
-                            );
-                            if (picked != null) {
+
+                        // ===== خيار النشر المباشر =====
+                        RadioListTile<bool>(
+                          value: false,
+                          groupValue: isScheduled,
+                          activeColor: brandRed,
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          title: const Text('نشر مباشر',
+                              style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold)),
+                          subtitle: const Text('يبدأ العرض الآن وينتهي بعد 24 ساعة',
+                              style: TextStyle(
+                                  fontFamily: 'Cairo', fontSize: 11.5)),
+                          onChanged: (v) {
+                            setModalState(() {
+                              isScheduled = false;
+                              flashSaleStart = null;
+                              flashSaleExpiry = DateTime.now()
+                                  .add(const Duration(hours: 24));
+                            });
+                          },
+                        ),
+
+                        // ===== خيار الجدولة =====
+                        RadioListTile<bool>(
+                          value: true,
+                          groupValue: isScheduled,
+                          activeColor: brandRed,
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          title: const Text('جدولة لموعد محدد',
+                              style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold)),
+                          subtitle: const Text(
+                              'يُخفى المنتج حتى موعده، ثم يظهر 24 ساعة',
+                              style: TextStyle(
+                                  fontFamily: 'Cairo', fontSize: 11.5)),
+                          onChanged: (v) {
+                            setModalState(() {
+                              isScheduled = true;
+                              flashSaleStart ??= DateTime.now()
+                                  .add(const Duration(days: 1));
+                              flashSaleExpiry = flashSaleStart!
+                                  .add(const Duration(hours: 24));
+                            });
+                          },
+                        ),
+
+                        // ===== منتقي موعد البدء =====
+                        if (isScheduled) ...[
+                          const SizedBox(height: 6),
+                          InkWell(
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            onTap: () async {
+                              final DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate: flashSaleStart ??
+                                    DateTime.now()
+                                        .add(const Duration(days: 1)),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime.now()
+                                    .add(const Duration(days: 60)),
+                              );
+                              if (picked == null) return;
+
+                              if (!context.mounted) return;
                               final TimeOfDay? time = await showTimePicker(
                                 context: context,
                                 initialTime: TimeOfDay.fromDateTime(
-                                    flashSaleExpiry ?? DateTime.now()),
+                                    flashSaleStart ?? DateTime.now()),
                               );
-                              if (time != null) {
-                                setModalState(() {
-                                  flashSaleExpiry = DateTime(
-                                      picked.year,
-                                      picked.month,
-                                      picked.day,
-                                      time.hour,
-                                      time.minute);
-                                });
-                              }
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.access_time_filled,
-                                    color: brandRed, size: 20),
-                                const SizedBox(width: 10),
-                                Text(
-                                  flashSaleExpiry == null
-                                      ? "حدد وقت انتهاء العرض"
-                                      : intl.DateFormat('yyyy/MM/dd HH:mm')
-                                          .format(flashSaleExpiry!),
-                                  style: const TextStyle(
-                                      fontFamily: 'Cairo', fontSize: 13),
-                                ),
-                                const Spacer(),
-                                const Icon(Icons.edit_calendar,
-                                    size: 18, color: Colors.grey),
-                              ],
+                              if (time == null) return;
+
+                              setModalState(() {
+                                flashSaleStart = DateTime(
+                                    picked.year,
+                                    picked.month,
+                                    picked.day,
+                                    time.hour,
+                                    time.minute);
+                                // الانتهاء دائماً بعد 24 ساعة من البدء
+                                flashSaleExpiry = flashSaleStart!
+                                    .add(const Duration(hours: 24));
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 13),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF7F8FA),
+                                borderRadius: BorderRadius.circular(11),
+                                border: Border.all(
+                                    color: brandRed.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.event_available_rounded,
+                                      color: brandRed, size: 19),
+                                  const SizedBox(width: 11),
+                                  Expanded(
+                                    child: Text(
+                                      flashSaleStart == null
+                                          ? 'اختر موعد بدء العرض'
+                                          : 'يبدأ ${intl.DateFormat('yyyy/MM/dd — HH:mm').format(flashSaleStart!)}',
+                                      style: const TextStyle(
+                                          fontFamily: 'Cairo',
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                  const Icon(Icons.edit_calendar,
+                                      size: 17, color: Colors.grey),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
+                        ],
+
+                        // ===== ملخّص المدة =====
+                        if (flashSaleExpiry != null) ...[
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              const Icon(Icons.timer_outlined,
+                                  size: 15, color: Colors.grey),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'ينتهي ${intl.DateFormat('yyyy/MM/dd — HH:mm').format(flashSaleExpiry!)}',
+                                  style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 11.5,
+                                      color: Colors.grey.shade600),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ],
                   ),
@@ -1581,6 +1690,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                     productUrl: urlController.text,
                                     isFlashSale: isFlashSale,
                                     flashSaleExpiry: flashSaleExpiry,
+                                    flashSaleStart: flashSaleStart,
                                   ),
                                   isUpdate: productToEdit != null);
                               if (mounted) Navigator.pop(sheetContext);
