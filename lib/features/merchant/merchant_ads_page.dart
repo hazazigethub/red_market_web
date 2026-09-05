@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'banner_terms_sheet.dart';
+import 'merchant_nav.dart';
 
 /// شاشة إعلانات التاجر — حجز البنرات الأسبوعية
 class MerchantAdsPage extends StatefulWidget {
@@ -30,6 +31,7 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
   List<Map<String, dynamic>> _myBookings = [];
   bool _loading = true;
   int _tab = 0;
+  String _adsFilter = 'active';
 
   @override
   void initState() {
@@ -117,7 +119,7 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
                     spacing: 8,
                     children: [
                       _tabChip(0, 'الأسابيع المتاحة', _weeks.length),
-                      _tabChip(1, 'حجوزاتي', _myBookings.length),
+                      _tabChip(1, 'إعلاناتي', _myBookings.length),
                     ],
                   ),
 
@@ -177,11 +179,13 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
     return LayoutBuilder(
       builder: (context, c) {
         const gap = 14.0;
-        int cols = 3;
+        int cols = 4;
         if (c.maxWidth < 560) {
           cols = 1;
-        } else if (c.maxWidth < 900) {
+        } else if (c.maxWidth < 820) {
           cols = 2;
+        } else if (c.maxWidth < 1080) {
+          cols = 3;
         }
         final w = (c.maxWidth - gap * (cols - 1)) / cols;
 
@@ -200,17 +204,27 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
     final occasion = (w['occasion_name'] ?? '').toString();
     final wideLeft = (w['wide_available'] as num?)?.toInt() ?? 0;
     final smallLeft = (w['small_available'] as num?)?.toInt() ?? 0;
+
+    final isOpen = w['is_open'] == true;
+    final isPast = w['is_past'] == true;
     final soldOut = wideLeft <= 0 && smallLeft <= 0;
 
-    return Container(
+    // مغلق لأي سبب: الأدمن أغلقه · أو فات وقته · أو اكتمل
+    final closed = !isOpen || isPast || soldOut;
+
+    const String closedReason = 'اكتمل الحجز';
+
+    final card = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: closed ? const Color(0xFFF4F5F7) : Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: occasion.isNotEmpty
-              ? brandRed.withValues(alpha: 0.35)
-              : const Color(0xFFEDEFF3),
+          color: closed
+              ? const Color(0xFFE5E7EB)
+              : occasion.isNotEmpty
+                  ? brandRed.withValues(alpha: 0.35)
+                  : const Color(0xFFEDEFF3),
         ),
       ),
       child: Column(
@@ -218,146 +232,194 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
         children: [
           Row(
             children: [
-              Text(
-                '${_fmt(w['week_start'])} — ${_fmt(w['week_end'])}',
-                style: const TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              Text('أسبوع ${w['week_number']}',
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: closed
+                      ? Colors.grey.withValues(alpha: 0.12)
+                      : brandRed.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Text(
+                  'أسبوع ${w['week_number']} · ${w['year']}',
                   style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 10.5,
-                      color: Colors.grey.shade500)),
+                    fontFamily: 'Cairo',
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: closed ? Colors.grey : brandRed,
+                  ),
+                ),
+              ),
             ],
           ),
 
-          const SizedBox(height: 5),
+          const SizedBox(height: 10),
 
-          if (occasion.isNotEmpty)
-            Row(
-              children: [
-                const Icon(Icons.local_fire_department_rounded,
-                    size: 14, color: brandRed),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(occasion,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: brandRed)),
-                ),
-              ],
-            )
-          else
-            Text('أسبوع عادي',
-                style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 11.5,
-                    color: Colors.grey.shade400)),
+          Text(
+            '${_fmt(w['week_start'])} — ${_fmt(w['week_end'])}',
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 13.5,
+              fontWeight: FontWeight.bold,
+              color: closed ? Colors.grey : const Color(0xFF1F2937),
+            ),
+          ),
+
+          const SizedBox(height: 4),
+
+          Text(
+            occasion.isEmpty ? 'أسبوع عادي' : occasion,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 11.5,
+              fontWeight:
+                  occasion.isEmpty ? FontWeight.normal : FontWeight.bold,
+              color: closed
+                  ? Colors.grey.shade400
+                  : occasion.isEmpty
+                      ? Colors.grey.shade400
+                      : brandRed,
+            ),
+          ),
 
           const SizedBox(height: 14),
           const Divider(color: Color(0xFFEDEFF3), height: 1),
           const SizedBox(height: 12),
 
-          _typeRow(w, 'wide', 'بنر عريض', w['price_wide'], wideLeft),
-          const SizedBox(height: 9),
-          _typeRow(w, 'small', 'بنر صغير', w['price_small'], smallLeft),
+          _typeRow(w, 'wide', 'عريض', w['price_wide'], wideLeft, closed),
+          const SizedBox(height: 8),
+          _typeRow(w, 'small', 'صغير', w['price_small'], smallLeft, closed),
 
-          if (soldOut) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+              Icon(
+                closed
+                    ? Icons.lock_outline_rounded
+                    : Icons.shopping_cart_outlined,
+                size: 14,
+                color: closed ? Colors.grey : Colors.green,
               ),
-              child: const Center(
-                child: Text('اكتمل الحجز',
-                    style: TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey)),
+              const SizedBox(width: 7),
+              Text(
+                closed ? closedReason : 'متاح للشراء',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: closed ? Colors.grey : Colors.green,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ],
       ),
+    );
+
+    if (!closed) return card;
+
+    // ===== ختم "مغلق" بالعرض =====
+    return Stack(
+      children: [
+        Opacity(opacity: 0.55, child: card),
+        Positioned.fill(
+          child: Center(
+            child: Transform.rotate(
+              angle: -0.14,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 22, vertical: 7),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.93),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: Colors.red.withValues(alpha: 0.7), width: 2),
+                ),
+                child: const Text(
+                  closedReason,
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.red,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _typeRow(Map<String, dynamic> w, String type, String label,
-      dynamic price, int left) {
-    final gone = left <= 0;
-    final scarce = left > 0 && left <= 3;
+      dynamic price, int left, bool weekClosed) {
+    final gone = weekClosed || left <= 0;
+    final scarce = !gone && left <= 3;
 
     return InkWell(
       onTap: gone ? null : () => _openBooking(w, type),
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-        decoration: BoxDecoration(
-          color: gone ? const Color(0xFFFAFAFA) : const Color(0xFFF7F8FA),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              type == 'wide'
-                  ? Icons.crop_16_9_rounded
-                  : Icons.crop_square_rounded,
-              size: 17,
-              color: gone ? Colors.grey.shade400 : Colors.grey.shade600,
-            ),
-            const SizedBox(width: 10),
-            Text(label,
+      borderRadius: BorderRadius.circular(8),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            child: Text(label,
                 style: TextStyle(
                     fontFamily: 'Cairo',
-                    fontSize: 12.5,
-                    color: gone ? Colors.grey : const Color(0xFF1F2937))),
-            const Spacer(),
-            Text(
-              '${(price as num?)?.toInt() ?? 0} ر.س',
+                    fontSize: 11.5,
+                    color: Colors.grey.shade600)),
+          ),
+          Text(
+            '${(price as num?)?.toInt() ?? 0}',
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: gone ? Colors.grey : const Color(0xFF1F2937),
+            ),
+          ),
+          Text(' ر.س',
               style: TextStyle(
                   fontFamily: 'Cairo',
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: gone ? Colors.grey : brandRed),
-            ),
-            const SizedBox(width: 10),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-              decoration: BoxDecoration(
-                color: gone
-                    ? Colors.grey.withValues(alpha: 0.1)
-                    : scarce
-                        ? Colors.orange.withValues(alpha: 0.13)
-                        : Colors.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                gone ? 'مكتمل' : 'باقٍ $left',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
                   fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: gone
-                      ? Colors.grey
-                      : scarce
-                          ? Colors.orange.shade800
-                          : Colors.green.shade700,
-                ),
+                  color: Colors.grey.shade500)),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            decoration: BoxDecoration(
+              color: gone
+                  ? Colors.grey.withValues(alpha: 0.1)
+                  : scarce
+                      ? Colors.orange.withValues(alpha: 0.13)
+                      : const Color(0xFFF1F2F5),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              left <= 0 ? 'مكتمل' : 'باقٍ $left',
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 10.5,
+                fontWeight: FontWeight.bold,
+                color: gone
+                    ? Colors.grey
+                    : scarce
+                        ? Colors.orange.shade800
+                        : Colors.grey.shade600,
               ),
             ),
+          ),
+          if (!gone) ...[
+            const SizedBox(width: 6),
+            Icon(Icons.chevron_left_rounded,
+                size: 17, color: Colors.grey.shade400),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -377,16 +439,161 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
     );
   }
 
-  // ===================== حجوزاتي =====================
+  // ===================== إعلاناتي =====================
+
+  static const _filters = [
+    (key: 'active', label: 'فعّال'),
+    (key: 'expired', label: 'منتهي'),
+    (key: 'cancelled', label: 'ملغى'),
+  ];
+
+  /// يصنّف الحجز إلى فعّال أو منتهٍ أو ملغى
+  String _groupOf(String status) {
+    if (status == 'cancelled') return 'cancelled';
+    if (status == 'expired' || status == 'suspended') return 'expired';
+    return 'active'; // paid · scheduled · active
+  }
 
   Widget _bookingsList() {
-    if (_myBookings.isEmpty) {
-      return _empty('لم تحجز أي إعلان بعد', Icons.ad_units_outlined);
-    }
+    final filtered = _myBookings
+        .where((b) =>
+            _groupOf((b['status'] ?? '').toString()) == _adsFilter)
+        .toList();
 
     return Column(
-      children: _myBookings.map(_bookingCard).toList(),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ===== أزرار التصنيف =====
+        Wrap(
+          spacing: 8,
+          children: _filters.map((f) {
+            final count = _myBookings
+                .where((b) =>
+                    _groupOf((b['status'] ?? '').toString()) == f.key)
+                .length;
+            final on = _adsFilter == f.key;
+
+            return GestureDetector(
+              onTap: () => setState(() => _adsFilter = f.key),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 15, vertical: 8),
+                decoration: BoxDecoration(
+                  color: on ? brandRed.withValues(alpha: 0.08) : Colors.white,
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(
+                      color: on ? brandRed : const Color(0xFFEDEFF3)),
+                ),
+                child: Text(
+                  '${f.label} ($count)',
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 12,
+                    fontWeight: on ? FontWeight.bold : FontWeight.normal,
+                    color: on ? brandRed : Colors.grey.shade700,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+
+        const SizedBox(height: 16),
+
+        if (filtered.isEmpty)
+          _empty(
+            _adsFilter == 'active'
+                ? 'لا إعلانات فعّالة'
+                : _adsFilter == 'expired'
+                    ? 'لا إعلانات منتهية'
+                    : 'لا إعلانات ملغاة',
+            Icons.ad_units_outlined,
+          )
+        else
+          ...filtered.map(_bookingCard),
+      ],
     );
+  }
+
+  /// إلغاء إعلان مدفوع
+  Future<void> _cancelBooking(Map<String, dynamic> b) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('إلغاء الإعلان',
+              style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold)),
+          content: Text(
+            'سيُلغى الإعلان ويعود المبلغ '
+            '${(b['final_price'] as num?)?.toStringAsFixed(2) ?? '0'} ر.س '
+            'إلى رصيدك.',
+            style: const TextStyle(
+                fontFamily: 'Cairo', fontSize: 13.5, height: 1.9),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('تراجع',
+                  style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('تأكيد الإلغاء',
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final res = await supabase.rpc('cancel_banner_purchase',
+          params: {'p_booking_id': b['id']});
+      final map = Map<String, dynamic>.from(res as Map);
+
+      if (map['ok'] == true) {
+        await _load();
+        _snack(
+          'أُلغي الإعلان — أُعيد '
+          '${(map['refunded'] as num?)?.toStringAsFixed(2)} ر.س لرصيدك',
+          Colors.green,
+        );
+      } else {
+        _snack(map['error']?.toString() ?? 'تعذر الإلغاء', Colors.red);
+      }
+    } catch (e) {
+      debugPrint('Cancel error: $e');
+      _snack('تعذر تنفيذ الإلغاء', Colors.red);
+    }
+  }
+
+  /// هل ما زال الإلغاء متاحاً؟
+  bool _canCancel(Map<String, dynamic> b) {
+    final status = (b['status'] ?? '').toString();
+    if (status != 'paid' && status != 'scheduled') return false;
+
+    final week = b['banner_weeks'] as Map<String, dynamic>?;
+    final start = DateTime.tryParse((week?['week_start'] ?? '').toString());
+    if (start == null) return false;
+
+    return start.difference(DateTime.now()).inHours >= 24;
   }
 
   Widget _bookingCard(Map<String, dynamic> b) {
@@ -394,15 +601,16 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
     final status = (b['status'] ?? '').toString();
 
     final (String label, Color color) = switch (status) {
-      'pending' => ('بانتظار الدفع', Colors.orange),
-      'released' => ('انتهت المهلة', Colors.grey),
-      'paid' => ('مدفوع', Colors.blue),
+      'paid' => ('مدفوع — لم يبدأ', Colors.blue),
       'scheduled' => ('مجدول', Colors.blue),
       'active' => ('يعرض الآن', Colors.green),
       'suspended' => ('موقوف', Colors.red),
       'expired' => ('انتهى', Colors.grey),
+      'cancelled' => ('ملغى', Colors.grey),
       _ => (status, Colors.grey),
     };
+
+    final showStats = status == 'active' || status == 'expired';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -410,7 +618,11 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFEDEFF3)),
+        border: Border.all(
+          color: status == 'active'
+              ? Colors.green.withValues(alpha: 0.3)
+              : const Color(0xFFEDEFF3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -488,16 +700,19 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
               const Spacer(),
               Text(
                 '${(b['final_price'] as num?)?.toStringAsFixed(2) ?? '0'} ر.س',
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: brandRed),
+                    color: status == 'cancelled' ? Colors.grey : brandRed,
+                    decoration: status == 'cancelled'
+                        ? TextDecoration.lineThrough
+                        : null),
               ),
             ],
           ),
 
-          if (status == 'active' || status == 'expired') ...[
+          if (showStats) ...[
             const SizedBox(height: 10),
             Row(
               children: [
@@ -519,6 +734,28 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
                         fontSize: 11,
                         color: Colors.grey.shade600)),
               ],
+            ),
+          ],
+
+          if (_canCancel(b)) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 40,
+              child: OutlinedButton.icon(
+                onPressed: () => _cancelBooking(b),
+                icon: const Icon(Icons.close_rounded, size: 16),
+                label: const Text('إلغاء الإعلان',
+                    style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: BorderSide(color: Colors.red.withValues(alpha: 0.4)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
             ),
           ],
         ],
@@ -579,6 +816,8 @@ class _BookingSheetState extends State<_BookingSheet> {
   String? _error;
 
   List<Map<String, dynamic>> _products = [];
+  double _balance = 0;
+  bool _loadingBalance = true;
 
   ({int w, int h}) get _size => widget.bannerType == 'wide'
       ? (w: 1500, h: 350)
@@ -601,6 +840,30 @@ class _BookingSheetState extends State<_BookingSheet> {
   void initState() {
     super.initState();
     _loadProducts();
+    _loadBalance();
+  }
+
+  /// يجلب رصيد المتجر
+  Future<void> _loadBalance() async {
+    try {
+      final uid = supabase.auth.currentUser?.id;
+      if (uid == null) return;
+
+      final res = await supabase
+          .from('merchant_wallets')
+          .select('balance')
+          .eq('merchant_id', uid)
+          .maybeSingle();
+
+      if (!mounted) return;
+      setState(() {
+        _balance = ((res?['balance'] as num?) ?? 0).toDouble();
+        _loadingBalance = false;
+      });
+    } catch (e) {
+      debugPrint('Balance error: $e');
+      if (mounted) setState(() => _loadingBalance = false);
+    }
   }
 
   @override
@@ -733,7 +996,7 @@ class _BookingSheetState extends State<_BookingSheet> {
         return;
       }
 
-      final res = await supabase.rpc('book_banner', params: {
+      final res = await supabase.rpc('purchase_banner', params: {
         'p_week_id': widget.week['id'],
         'p_banner_type': widget.bannerType,
         'p_slots': _slots,
@@ -752,19 +1015,20 @@ class _BookingSheetState extends State<_BookingSheet> {
         Navigator.pop(context);
         widget.onDone();
         _snack(
-          'حُجز مؤقتاً — أكمل الدفع خلال ${map['locked_minutes']} دقائق',
-          Colors.orange,
+          'تم الشراء — رصيدك المتبقي '
+          '${(map['balance'] as num?)?.toStringAsFixed(2) ?? '0'} ر.س',
+          Colors.green,
         );
       } else {
         setState(() {
-          _error = map['error']?.toString() ?? 'تعذر الحجز';
+          _error = map['error']?.toString() ?? 'تعذر إتمام الشراء';
           _busy = false;
         });
       }
     } catch (e) {
       debugPrint('Book error: $e');
       setState(() {
-        _error = 'تعذر إتمام الحجز، حاول مجدداً';
+        _error = 'تعذر إتمام الشراء، حاول مجدداً';
         _busy = false;
       });
     }
@@ -775,6 +1039,7 @@ class _BookingSheetState extends State<_BookingSheet> {
     final subtotal = _unitPrice * _slots;
     final vat = subtotal * 0.15;
     final total = subtotal + vat;
+    final enough = _loadingBalance || _balance >= total;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -1067,12 +1332,89 @@ class _BookingSheetState extends State<_BookingSheet> {
                                 ],
                               ),
                               Text(
-                                'الخصم يُحتسب عند تأكيد الحجز',
+                                'الخصم يُحتسب عند تأكيد الشراء',
                                 style: TextStyle(
                                     fontFamily: 'Cairo',
                                     fontSize: 10,
                                     color: Colors.grey.shade500),
                               ),
+
+                              // ===== الرصيد =====
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Divider(
+                                    color: Color(0xFFE5E7EB), height: 1),
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    enough
+                                        ? Icons.check_circle_rounded
+                                        : Icons.error_outline_rounded,
+                                    size: 16,
+                                    color: enough ? Colors.green : Colors.red,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'رصيدك',
+                                    style: TextStyle(
+                                        fontFamily: 'Cairo',
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    _loadingBalance
+                                        ? '...'
+                                        : '${_balance.toStringAsFixed(2)} ر.س',
+                                    style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          enough ? Colors.green : Colors.red,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (!_loadingBalance && !enough) ...[
+                                const SizedBox(height: 6),
+                                Text(
+                                  'الرصيد غير كافٍ — تحتاج '
+                                  '${(total - _balance).toStringAsFixed(2)} ر.س إضافية',
+                                  style: const TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red),
+                                ),
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  height: 42,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      MerchantNav.goTo(
+                                          MerchantNav.walletSection);
+                                    },
+                                    icon: const Icon(
+                                        Icons.account_balance_wallet_outlined,
+                                        size: 17),
+                                    label: const Text('اشحن رصيدك',
+                                        style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold)),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: brandRed,
+                                      side: const BorderSide(color: brandRed),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10)),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -1154,8 +1496,9 @@ class _BookingSheetState extends State<_BookingSheet> {
                         SizedBox(
                           height: 52,
                           child: ElevatedButton(
-                            onPressed:
-                                (_busy || !_termsAccepted) ? null : _submit,
+                            onPressed: (_busy || !_termsAccepted || !enough)
+                                ? null
+                                : _submit,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: brandRed,
                               foregroundColor: Colors.white,
@@ -1171,8 +1514,11 @@ class _BookingSheetState extends State<_BookingSheet> {
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2,
                                         color: Colors.white))
-                                : const Text('تأكيد الحجز',
-                                    style: TextStyle(
+                                : Text(
+                                    enough
+                                        ? 'تأكيد الشراء'
+                                        : 'الرصيد غير كافٍ',
+                                    style: const TextStyle(
                                         fontFamily: 'Cairo',
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold)),
@@ -1182,7 +1528,7 @@ class _BookingSheetState extends State<_BookingSheet> {
                         const SizedBox(height: 8),
 
                         Text(
-                          'يُحجز الموضع مؤقتاً 5 دقائق لإتمام الدفع',
+                          'يُخصم المبلغ من رصيد متجرك فوراً',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontFamily: 'Cairo',

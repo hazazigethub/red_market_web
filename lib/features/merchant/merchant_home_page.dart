@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 
+import 'merchant_nav.dart';
 import 'products_page.dart';
 import 'manage_reels_page.dart';
 import 'merchant_reports_page.dart';
@@ -24,6 +25,26 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
   /// -1 يعني شاشة الترحيب
   int _index = -1;
 
+  @override
+  void initState() {
+    super.initState();
+    MerchantNav.requested.addListener(_onNavRequest);
+  }
+
+  @override
+  void dispose() {
+    MerchantNav.requested.removeListener(_onNavRequest);
+    super.dispose();
+  }
+
+  /// ينتقل للقسم المطلوب من شاشة أخرى
+  void _onNavRequest() {
+    final target = MerchantNav.requested.value;
+    if (target == null || !mounted) return;
+    setState(() => _index = target);
+    MerchantNav.clear();
+  }
+
   static const _sections = <Map<String, dynamic>>[
     {'label': 'منتجاتي', 'icon': Icons.inventory_2_outlined},
     {'label': 'الريلز', 'icon': Icons.video_library_outlined},
@@ -33,7 +54,7 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
     {'label': 'الاشتراكات', 'icon': Icons.card_membership_outlined},
     {'label': 'الإشعارات', 'icon': Icons.notifications_outlined},
     {'label': 'إعدادات المتجر', 'icon': Icons.settings_outlined},
-    {'label': 'الحساب البنكي', 'icon': Icons.account_balance_outlined},
+    {'label': 'رصيد المتجر', 'icon': Icons.account_balance_wallet_outlined},
     {'label': 'روابط مفيدة', 'icon': Icons.link_outlined},
   ];
 

@@ -1,0 +1,18 @@
+import 'package:flutter/foundation.dart';
+
+/// مؤشر بسيط للتنقّل بين أقسام لوحة التاجر
+class MerchantNav {
+  MerchantNav._();
+
+  /// رقم قسم رصيد المتجر في القائمة
+  static const int walletSection = 8;
+
+  /// يُشعر لوحة التاجر بطلب الانتقال لقسم معيّن
+  static final ValueNotifier<int?> requested = ValueNotifier<int?>(null);
+
+  /// يطلب الانتقال إلى قسم
+  static void goTo(int index) => requested.value = index;
+
+  /// يُستهلك الطلب بعد تنفيذه
+  static void clear() => requested.value = null;
+}
