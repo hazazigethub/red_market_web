@@ -56,10 +56,10 @@ class ProductItem {
           : 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png',
       isFlashSale: json['is_flash_sale'] ?? false,
       flashSaleExpiry: json['flash_sale_expiry'] != null
-          ? DateTime.parse(json['flash_sale_expiry'])
+          ? DateTime.parse(json['flash_sale_expiry']).toLocal()
           : null,
       flashSaleStart: json['flash_sale_start'] != null
-          ? DateTime.parse(json['flash_sale_start'])
+          ? DateTime.parse(json['flash_sale_start']).toLocal()
           : null,
     );
   }
@@ -77,8 +77,9 @@ class ProductItem {
       'is_available': isAvailable,
       'image_url': imageUrl,
       'is_flash_sale': isFlashSale,
-      'flash_sale_expiry': flashSaleExpiry?.toIso8601String(),
-      'flash_sale_start': flashSaleStart?.toIso8601String(),
+      // تُحوَّل لتوقيت عالمي قبل الحفظ — وإلا زادت 3 ساعات
+      'flash_sale_expiry': flashSaleExpiry?.toUtc().toIso8601String(),
+      'flash_sale_start': flashSaleStart?.toUtc().toIso8601String(),
     };
   }
 }
