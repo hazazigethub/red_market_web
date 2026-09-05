@@ -7,6 +7,7 @@ import 'manage_reels_page.dart';
 import 'merchant_reports_page.dart';
 import 'merchant_promo_page.dart';
 import 'merchant_subscriptions_page.dart';
+import 'merchant_ads_page.dart';
 import 'notifications_page.dart';
 import 'store_settings_page.dart';
 import 'merchant_bank_account_page.dart';
@@ -28,6 +29,7 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
     {'label': 'الريلز', 'icon': Icons.video_library_outlined},
     {'label': 'التقارير', 'icon': Icons.bar_chart_outlined},
     {'label': 'رسائل المتابعين', 'icon': Icons.campaign_outlined},
+    {'label': 'إعلاناتي', 'icon': Icons.ad_units_outlined},
     {'label': 'الاشتراكات', 'icon': Icons.card_membership_outlined},
     {'label': 'الإشعارات', 'icon': Icons.notifications_outlined},
     {'label': 'إعدادات المتجر', 'icon': Icons.settings_outlined},
@@ -46,14 +48,16 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
       case 3:
         return const MerchantPromoPage();
       case 4:
-        return const MerchantSubscriptionsPage();
+        return const MerchantAdsPage();
       case 5:
-        return const NotificationsPage();
+        return const MerchantSubscriptionsPage();
       case 6:
-        return const StoreSettingsPage();
+        return const NotificationsPage();
       case 7:
-        return const MerchantBankAccountPage();
+        return const StoreSettingsPage();
       case 8:
+        return const MerchantBankAccountPage();
+      case 9:
         return const UsefulLinksPage();
       default:
         return _welcome();
