@@ -27,6 +27,7 @@ class _AdminMerchantBannersScreenState
     (key: 'pending', label: 'لم تُراجع'),
     (key: 'approved', label: 'معتمدة'),
     (key: 'suspended', label: 'موقوفة'),
+    (key: 'banned', label: 'محظورة'),
   ];
 
   @override
@@ -76,6 +77,7 @@ class _AdminMerchantBannersScreenState
 
   /// تصنيف البنر
   String _groupOf(Map<String, dynamic> b) {
+    if (b['status'] == 'banned') return 'banned';
     if (b['status'] == 'suspended') return 'suspended';
     if (b['is_approved'] == true) return 'approved';
     return 'pending';
@@ -131,9 +133,9 @@ class _AdminMerchantBannersScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'سيُخفى البنر ويُعاد مبلغ '
-                    '${(b['final_price'] as num?)?.toStringAsFixed(2)} ر.س '
-                    'إلى رصيد ${b['store_name']}، ويصله إشعار بالسبب.',
+                    'سيُخفى البنر ويُطلب من ${b['store_name']} تعديله. '
+                    'المبلغ يبقى محجوزاً، فإن لم يُعدَّل قبل 24 ساعة من '
+                    'بداية الأسبوع أُلغي وأُعيد تلقائياً.',
                     style: const TextStyle(
                         fontFamily: 'Cairo', fontSize: 13, height: 1.9),
                   ),
@@ -197,11 +199,8 @@ class _AdminMerchantBannersScreenState
 
                           if (map['ok'] == true) {
                             await _load();
-                            _snack(
-                              'أُوقف البنر وأُعيد '
-                              '${(map['refunded'] as num?)?.toStringAsFixed(2)} ر.س',
-                              Colors.orange,
-                            );
+                            _snack('أُوقف البنر — بانتظار تعديل التاجر',
+                                Colors.orange);
                           } else {
                             _snack(map['error']?.toString() ?? 'تعذر الإيقاف',
                                 Colors.red);
@@ -212,7 +211,7 @@ class _AdminMerchantBannersScreenState
                           _snack('تعذر تنفيذ العملية', Colors.red);
                         }
                       },
-                child: Text(saving ? 'جاري...' : 'إيقاف واسترداد',
+                child: Text(saving ? 'جاري...' : 'إيقاف',
                     style: const TextStyle(
                         fontFamily: 'Cairo',
                         fontWeight: FontWeight.bold,
@@ -220,6 +219,175 @@ class _AdminMerchantBannersScreenState
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// نافذة الحظر القطعي
+  void _banDialog(Map<String, dynamic> b) {
+    final ctrl = TextEditingController();
+    bool saving = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModal) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            title: const Row(
+              children: [
+                Icon(Icons.gpp_bad_rounded,
+                    color: Color(0xFFB71C1C), size: 19),
+                SizedBox(width: 10),
+                Text('حظر البنر',
+                    style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Text(
+                      'الحظر قطعي: لا يُعرض البنر، ولا يُسترد مبلغه، '
+                      'ولا يستطيع التاجر تعديله.',
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 12.5,
+                          height: 1.9,
+                          color: Color(0xFFB71C1C)),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: ctrl,
+                    maxLines: 3,
+                    autofocus: true,
+                    style:
+                        const TextStyle(fontFamily: 'Cairo', fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: 'سبب الحظر — يظهر للتاجر',
+                      hintStyle: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 12,
+                          color: Colors.grey.shade400),
+                      filled: true,
+                      fillColor: const Color(0xFFF7F8FA),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: saving ? null : () => Navigator.pop(ctx),
+                child: const Text('إلغاء',
+                    style:
+                        TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFB71C1C),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: saving
+                    ? null
+                    : () async {
+                        if (ctrl.text.trim().isEmpty) {
+                          _snack('اكتب سبب الحظر', Colors.orange);
+                          return;
+                        }
+                        setModal(() => saving = true);
+
+                        try {
+                          final res = await supabase
+                              .rpc('ban_banner_booking', params: {
+                            'p_booking_id': b['id'],
+                            'p_reason': ctrl.text.trim(),
+                          });
+                          final map = Map<String, dynamic>.from(res as Map);
+
+                          if (ctx.mounted) Navigator.pop(ctx);
+
+                          if (map['ok'] == true) {
+                            await _load();
+                            _snack('حُظر البنر نهائياً',
+                                const Color(0xFFB71C1C));
+                          } else {
+                            _snack(map['error']?.toString() ?? 'تعذر الحظر',
+                                Colors.red);
+                          }
+                        } catch (e) {
+                          debugPrint('Ban error: $e');
+                          setModal(() => saving = false);
+                          _snack('تعذر تنفيذ العملية', Colors.red);
+                        }
+                      },
+                child: Text(saving ? 'جاري...' : 'حظر نهائي',
+                    style: const TextStyle(
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// معاينة صورة البنر بالحجم الكامل
+  void _previewImage(String url) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (ctx) => GestureDetector(
+        onTap: () => Navigator.pop(ctx),
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                maxScale: 4,
+                child: Image.network(
+                  url,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(
+                      Icons.broken_image_outlined,
+                      size: 60,
+                      color: Colors.white54),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              left: 20,
+              child: IconButton(
+                onPressed: () => Navigator.pop(ctx),
+                icon: const Icon(Icons.close_rounded,
+                    color: Colors.white, size: 28),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -357,7 +525,8 @@ class _AdminMerchantBannersScreenState
       'paid' => ('مدفوع — لم يبدأ', Colors.blue),
       'scheduled' => ('مجدول', Colors.blue),
       'active' => ('يعرض الآن', Colors.green),
-      'suspended' => ('موقوف', Colors.red),
+      'suspended' => ('موقوف — بانتظار تعديل التاجر', Colors.orange),
+      'banned' => ('محظور', Color(0xFFB71C1C)),
       'expired' => ('انتهى', Colors.grey),
       'cancelled' => ('ألغاه التاجر', Colors.grey),
       _ => (status, Colors.grey),
@@ -383,20 +552,38 @@ class _AdminMerchantBannersScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if ((b['image_url'] ?? '').toString().isNotEmpty)
-                ClipRRect(
+                InkWell(
+                  onTap: () => _previewImage(b['image_url'].toString()),
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    b['image_url'],
-                    width: 110,
-                    height: 58,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 110,
-                      height: 58,
-                      color: const Color(0xFFF1F2F5),
-                      child: const Icon(Icons.image_outlined,
-                          size: 18, color: Colors.grey),
-                    ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          b['image_url'],
+                          width: 110,
+                          height: 58,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 110,
+                            height: 58,
+                            color: const Color(0xFFF1F2F5),
+                            child: const Icon(Icons.image_outlined,
+                                size: 18, color: Colors.grey),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.45),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.zoom_in_rounded,
+                            size: 15, color: Colors.white),
+                      ),
+                    ],
                   ),
                 ),
               const SizedBox(width: 13),
@@ -537,44 +724,67 @@ class _AdminMerchantBannersScreenState
           ],
 
           // ===== الأزرار =====
-          if (group != 'suspended' &&
+          if (group != 'banned' &&
               (status == 'paid' ||
                   status == 'scheduled' ||
-                  status == 'active')) ...[
+                  status == 'active' ||
+                  status == 'suspended')) ...[
             const SizedBox(height: 14),
-            Row(
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
               children: [
                 if (group == 'pending')
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _approve(b),
-                      icon: const Icon(Icons.check_rounded, size: 17),
-                      label: const Text('اعتماد',
-                          style: TextStyle(
-                              fontFamily: 'Cairo',
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
+                  ElevatedButton.icon(
+                    onPressed: () => _approve(b),
+                    icon: const Icon(Icons.check_rounded, size: 17),
+                    label: const Text('اعتماد',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 22, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
-                if (group == 'pending') const SizedBox(width: 10),
+                if (status != 'suspended')
+                  OutlinedButton.icon(
+                    onPressed: () => _suspendDialog(b),
+                    icon: const Icon(Icons.pause_circle_outline_rounded,
+                        size: 16),
+                    label: const Text('إيقاف',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.orange.shade800,
+                      side: BorderSide(
+                          color: Colors.orange.withValues(alpha: 0.5)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
                 OutlinedButton.icon(
-                  onPressed: () => _suspendDialog(b),
-                  icon: const Icon(Icons.block_rounded, size: 16),
-                  label: const Text('إيقاف',
+                  onPressed: () => _banDialog(b),
+                  icon: const Icon(Icons.gpp_bad_outlined, size: 16),
+                  label: const Text('حظر',
                       style: TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 12.5,
                           fontWeight: FontWeight.bold)),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: BorderSide(color: Colors.red.withValues(alpha: 0.4)),
+                    foregroundColor: const Color(0xFFB71C1C),
+                    side: BorderSide(
+                        color: const Color(0xFFB71C1C)
+                            .withValues(alpha: 0.4)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -908,7 +1118,9 @@ class _AdminMerchantBannersScreenState
                 ? 'لا بنرات بانتظار المراجعة'
                 : _filter == 'approved'
                     ? 'لا بنرات معتمدة'
-                    : 'لا بنرات موقوفة',
+                    : _filter == 'suspended'
+                        ? 'لا بنرات موقوفة'
+                        : 'لا بنرات محظورة',
             style: const TextStyle(
                 fontFamily: 'Cairo', fontSize: 15, color: Colors.grey),
           ),
