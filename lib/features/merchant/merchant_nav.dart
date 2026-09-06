@@ -4,6 +4,9 @@ import 'package:flutter/foundation.dart';
 class MerchantNav {
   MerchantNav._();
 
+  /// رقم قسم بنراتي في القائمة
+  static const int adsSection = 4;
+
   /// رقم قسم رصيد المتجر في القائمة
   static const int walletSection = 8;
 

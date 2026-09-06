@@ -25,10 +25,37 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
   /// -1 يعني شاشة الترحيب
   int _index = -1;
 
+  /// بنرات أوقفتها الإدارة ولم يطّلع عليها التاجر
+  List<Map<String, dynamic>> _suspendedBanners = [];
+
   @override
   void initState() {
     super.initState();
     MerchantNav.requested.addListener(_onNavRequest);
+    _loadSuspended();
+  }
+
+  /// يجلب البنرات الموقوفة لعرض تنبيه
+  Future<void> _loadSuspended() async {
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) return;
+
+      final res = await Supabase.instance.client
+          .from('banner_bookings')
+          .select('id, rejection_reason, final_price, banner_type')
+          .eq('merchant_id', uid)
+          .eq('status', 'suspended')
+          .order('reviewed_at', ascending: false)
+          .limit(3);
+
+      if (!mounted) return;
+      setState(() {
+        _suspendedBanners = List<Map<String, dynamic>>.from(res);
+      });
+    } catch (e) {
+      debugPrint('Suspended load error: $e');
+    }
   }
 
   @override
@@ -50,7 +77,7 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
     {'label': 'الريلز', 'icon': Icons.video_library_outlined},
     {'label': 'التقارير', 'icon': Icons.bar_chart_outlined},
     {'label': 'رسائل المتابعين', 'icon': Icons.campaign_outlined},
-    {'label': 'إعلاناتي', 'icon': Icons.ad_units_outlined},
+    {'label': 'بنراتي', 'icon': Icons.ad_units_outlined},
     {'label': 'الاشتراكات', 'icon': Icons.card_membership_outlined},
     {'label': 'الإشعارات', 'icon': Icons.notifications_outlined},
     {'label': 'إعدادات المتجر', 'icon': Icons.settings_outlined},
@@ -119,6 +146,89 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
 
   // ===================== شاشة الترحيب =====================
 
+  /// بطاقة تنبيه ببنر أوقفته الإدارة
+  Widget _suspendedAlert(Map<String, dynamic> b) {
+    final reason = (b['rejection_reason'] ?? '').toString();
+    final price = (b['final_price'] as num?)?.toStringAsFixed(2) ?? '0';
+    final type = b['banner_type'] == 'wide' ? 'العريض' : 'الصغير';
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(Icons.block_rounded,
+                    color: Colors.red, size: 17),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'أُوقف بنرك $type',
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => MerchantNav.goTo(MerchantNav.adsSection),
+                child: const Text(
+                  'عرض بنراتي',
+                  style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+
+          if (reason.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              reason,
+              style: const TextStyle(
+                  fontSize: 12.5, height: 1.9, color: Color(0xFF4A5468)),
+            ),
+          ],
+
+          const SizedBox(height: 10),
+
+          Row(
+            children: [
+              const Icon(Icons.account_balance_wallet_outlined,
+                  size: 14, color: Colors.green),
+              const SizedBox(width: 7),
+              Text(
+                'أُعيد مبلغ $price ر.س إلى رصيد متجرك',
+                style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade700),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _welcome() {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(28, 40, 28, 40),
@@ -127,6 +237,12 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
           constraints: const BoxConstraints(maxWidth: 900),
           child: Column(
             children: [
+              // ===== تنبيه البنرات الموقوفة =====
+              if (_suspendedBanners.isNotEmpty) ...[
+                ..._suspendedBanners.map(_suspendedAlert),
+                const SizedBox(height: 28),
+              ],
+
               Text(
                 'مرحباً بك في متجرك',
                 textAlign: TextAlign.center,

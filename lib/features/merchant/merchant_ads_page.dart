@@ -7,7 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'banner_terms_sheet.dart';
 import 'merchant_nav.dart';
 
-/// شاشة إعلانات التاجر — حجز البنرات الأسبوعية
+/// شاشة بنرات التاجر — شراء المساحات الإعلانية الأسبوعية
 class MerchantAdsPage extends StatefulWidget {
   const MerchantAdsPage({super.key});
 
@@ -49,7 +49,8 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
       if (uid != null) {
         bookings = await supabase
             .from('banner_bookings')
-            .select('*, banner_weeks(week_number, year, week_start, week_end)')
+            .select(
+                '*, banner_weeks(week_number, year, week_start, week_end)')
             .eq('merchant_id', uid)
             .order('created_at', ascending: false);
       }
@@ -98,14 +99,14 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('إعلاناتي',
+                  const Text('بنراتي',
                       style: TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 19,
                           fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
                   Text(
-                    'احجز مساحة إعلانية أسبوعية تظهر لزوار المنصة',
+                    'اشترِ مساحة إعلانية أسبوعية تظهر لزوار المنصة',
                     style: TextStyle(
                         fontFamily: 'Cairo',
                         fontSize: 12.5,
@@ -119,7 +120,7 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
                     spacing: 8,
                     children: [
                       _tabChip(0, 'الأسابيع المتاحة', _weeks.length),
-                      _tabChip(1, 'إعلاناتي', _myBookings.length),
+                      _tabChip(1, 'بنراتي', _myBookings.length),
                     ],
                   ),
 
@@ -439,7 +440,7 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
     );
   }
 
-  // ===================== إعلاناتي =====================
+  // ===================== بنراتي =====================
 
   static const _filters = [
     (key: 'active', label: 'فعّال'),
@@ -449,8 +450,9 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
 
   /// يصنّف الحجز إلى فعّال أو منتهٍ أو ملغى
   String _groupOf(String status) {
-    if (status == 'cancelled') return 'cancelled';
-    if (status == 'expired' || status == 'suspended') return 'expired';
+    // الموقوف والملغى معاً — كلاهما لا يُعرض وأُعيد مبلغه
+    if (status == 'cancelled' || status == 'suspended') return 'cancelled';
+    if (status == 'expired') return 'expired';
     return 'active'; // paid · scheduled · active
   }
 
@@ -503,10 +505,10 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
         if (filtered.isEmpty)
           _empty(
             _adsFilter == 'active'
-                ? 'لا إعلانات فعّالة'
+                ? 'لا بنرات فعّالة'
                 : _adsFilter == 'expired'
-                    ? 'لا إعلانات منتهية'
-                    : 'لا إعلانات ملغاة',
+                    ? 'لا بنرات منتهية'
+                    : 'لا بنرات ملغاة',
             Icons.ad_units_outlined,
           )
         else
@@ -515,7 +517,7 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
     );
   }
 
-  /// إلغاء إعلان مدفوع
+  /// إلغاء بنر مدفوع
   Future<void> _cancelBooking(Map<String, dynamic> b) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -525,13 +527,13 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
           backgroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('إلغاء الإعلان',
+          title: const Text('إلغاء البنر',
               style: TextStyle(
                   fontFamily: 'Cairo',
                   fontSize: 16,
                   fontWeight: FontWeight.bold)),
           content: Text(
-            'سيُلغى الإعلان ويعود المبلغ '
+            'سيُلغى البنر ويعود المبلغ '
             '${(b['final_price'] as num?)?.toStringAsFixed(2) ?? '0'} ر.س '
             'إلى رصيدك.',
             style: const TextStyle(
@@ -571,7 +573,7 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
       if (map['ok'] == true) {
         await _load();
         _snack(
-          'أُلغي الإعلان — أُعيد '
+          'أُلغي البنر — أُعيد '
           '${(map['refunded'] as num?)?.toStringAsFixed(2)} ر.س لرصيدك',
           Colors.green,
         );
@@ -712,6 +714,57 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
             ],
           ),
 
+          // ===== سبب الإيقاف من الإدارة =====
+          if ((b['rejection_reason'] ?? '').toString().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(10),
+                border: Border(
+                  right: BorderSide(
+                      color: Colors.red.withValues(alpha: 0.5), width: 2.5),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.info_outline_rounded,
+                          size: 14, color: Colors.red),
+                      const SizedBox(width: 7),
+                      const Text('سبب الإيقاف',
+                          style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    b['rejection_reason'].toString(),
+                    style: const TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 11.5,
+                        height: 1.8,
+                        color: Colors.red),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'أُعيد المبلغ إلى رصيد متجرك',
+                    style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 10.5,
+                        color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           if (showStats) ...[
             const SizedBox(height: 10),
             Row(
@@ -744,7 +797,7 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
               child: OutlinedButton.icon(
                 onPressed: () => _cancelBooking(b),
                 icon: const Icon(Icons.close_rounded, size: 16),
-                label: const Text('إلغاء الإعلان',
+                label: const Text('إلغاء البنر',
                     style: TextStyle(
                         fontFamily: 'Cairo',
                         fontSize: 12.5,

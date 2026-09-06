@@ -18,6 +18,7 @@ import 'admin_plans_screen.dart';
 import 'admin_refunds_screen.dart';
 import 'admin_contacts_screen.dart';
 import 'admin_banner_weeks_screen.dart';
+import 'admin_merchant_banners_screen.dart';
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -45,6 +46,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     {'label': 'النشرة الأسبوعية', 'icon': Icons.mail_outline_rounded},
     {'label': 'البنرات', 'icon': Icons.ad_units_outlined},
     {'label': 'الأسابيع الإعلانية', 'icon': Icons.calendar_month_outlined},
+    {'label': 'بنرات التجار', 'icon': Icons.storefront_outlined},
     {'label': 'الإعلانات', 'icon': Icons.campaign_outlined},
     {'label': 'الزيارات', 'icon': Icons.trending_up_outlined},
   ];
@@ -80,8 +82,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
       case 13:
         return const AdminBannerWeeksScreen();
       case 14:
-        return const AdminAnnouncementsScreen();
+        return const AdminMerchantBannersScreen();
       case 15:
+        return const AdminAnnouncementsScreen();
+      case 16:
         return const AdminAnalyticsVisitsScreen();
       default:
         return _welcome();
