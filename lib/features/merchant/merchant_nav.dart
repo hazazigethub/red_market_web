@@ -7,8 +7,11 @@ class MerchantNav {
   /// رقم قسم بنراتي في القائمة
   static const int adsSection = 4;
 
+  /// رقم قسم الحملة الموسمية في القائمة
+  static const int campaignSection = 5;
+
   /// رقم قسم رصيد المتجر في القائمة
-  static const int walletSection = 8;
+  static const int walletSection = 9;
 
   /// يُشعر لوحة التاجر بطلب الانتقال لقسم معيّن
   static final ValueNotifier<int?> requested = ValueNotifier<int?>(null);

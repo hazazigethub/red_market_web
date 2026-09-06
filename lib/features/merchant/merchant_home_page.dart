@@ -9,6 +9,7 @@ import 'merchant_reports_page.dart';
 import 'merchant_promo_page.dart';
 import 'merchant_subscriptions_page.dart';
 import 'merchant_ads_page.dart';
+import 'merchant_campaign_page.dart';
 import 'notifications_page.dart';
 import 'store_settings_page.dart';
 import 'merchant_bank_account_page.dart';
@@ -28,11 +29,46 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
   /// بنرات أوقفتها الإدارة ولم يطّلع عليها التاجر
   List<Map<String, dynamic>> _suspendedBanners = [];
 
+  /// الحملة الموسمية النشطة
+  Map<String, dynamic>? _campaign;
+  int _campaignProducts = 0;
+
   @override
   void initState() {
     super.initState();
     MerchantNav.requested.addListener(_onNavRequest);
     _loadSuspended();
+    _loadCampaign();
+  }
+
+  /// يجلب الحملة النشطة وعدد منتجات التاجر فيها
+  Future<void> _loadCampaign() async {
+    try {
+      final res = await Supabase.instance.client.rpc('get_active_campaign');
+      if (res == null) return;
+
+      final c = Map<String, dynamic>.from(res as Map);
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+
+      int mine = 0;
+      if (uid != null) {
+        final rows = await Supabase.instance.client
+            .from('campaign_product_stats')
+            .select('id')
+            .eq('campaign_id', c['id'])
+            .eq('merchant_id', uid)
+            .eq('current_status', 'active');
+        mine = (rows as List).length;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _campaign = c;
+        _campaignProducts = mine;
+      });
+    } catch (e) {
+      debugPrint('Campaign banner error: $e');
+    }
   }
 
   /// يجلب البنرات الموقوفة لعرض تنبيه
@@ -78,6 +114,7 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
     {'label': 'التقارير', 'icon': Icons.bar_chart_outlined},
     {'label': 'رسائل المتابعين', 'icon': Icons.campaign_outlined},
     {'label': 'بنراتي', 'icon': Icons.ad_units_outlined},
+    {'label': 'الحملة الموسمية', 'icon': Icons.local_fire_department_outlined},
     {'label': 'الاشتراكات', 'icon': Icons.card_membership_outlined},
     {'label': 'الإشعارات', 'icon': Icons.notifications_outlined},
     {'label': 'إعدادات المتجر', 'icon': Icons.settings_outlined},
@@ -98,14 +135,16 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
       case 4:
         return const MerchantAdsPage();
       case 5:
-        return const MerchantSubscriptionsPage();
+        return const MerchantCampaignPage();
       case 6:
-        return const NotificationsPage();
+        return const MerchantSubscriptionsPage();
       case 7:
-        return const StoreSettingsPage();
+        return const NotificationsPage();
       case 8:
-        return const MerchantBankAccountPage();
+        return const StoreSettingsPage();
       case 9:
+        return const MerchantBankAccountPage();
+      case 10:
         return const UsefulLinksPage();
       default:
         return _welcome();
@@ -145,6 +184,133 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
   }
 
   // ===================== شاشة الترحيب =====================
+
+  /// بنر الحملة الموسمية
+  Widget _campaignBanner() {
+    final c = _campaign!;
+    final daysLeft = (c['days_left'] as num?)?.toInt() ?? 0;
+    final total = (c['product_count'] as num?)?.toInt() ?? 0;
+    final joined = _campaignProducts > 0;
+
+    return InkWell(
+      onTap: () => MerchantNav.goTo(MerchantNav.campaignSection),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFC21815), Color(0xFF8E1010)],
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFC21815).withValues(alpha: 0.2),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.local_fire_department_rounded,
+                    color: Colors.white, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    (c['title'] ?? '').toString(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 11, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    daysLeft > 0 ? 'باقٍ $daysLeft يوم' : 'آخر يوم',
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            Text(
+              joined
+                  ? 'لديك $_campaignProducts منتج في الحملة — أضف المزيد لزيادة ظهورك'
+                  : 'اعرض منتجاتك في صفحة الحملة أمام كل زوّار المنصة',
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.9,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Icon(Icons.inventory_2_outlined,
+                    size: 15, color: Colors.white.withValues(alpha: 0.8)),
+                const SizedBox(width: 7),
+                Text(
+                  '$total منتج في الحملة',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        joined ? 'إدارة منتجاتي' : 'شارك الآن',
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFC21815),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      const Icon(Icons.chevron_left_rounded,
+                          size: 17, color: Color(0xFFC21815)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   /// بطاقة تنبيه ببنر أوقفته الإدارة
   Widget _suspendedAlert(Map<String, dynamic> b) {
@@ -240,6 +406,12 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
               // ===== تنبيه البنرات الموقوفة =====
               if (_suspendedBanners.isNotEmpty) ...[
                 ..._suspendedBanners.map(_suspendedAlert),
+                const SizedBox(height: 20),
+              ],
+
+              // ===== بنر الحملة الموسمية =====
+              if (_campaign != null) ...[
+                _campaignBanner(),
                 const SizedBox(height: 28),
               ],
 
