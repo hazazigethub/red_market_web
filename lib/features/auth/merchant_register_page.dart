@@ -136,10 +136,23 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
       final String techEmail = 'u$cleanPhone@redocean-official.com';
       final String password = _passwordController.text.trim();
 
-      // 1) رفع صورة السجل التجاري
+      // 1) إنشاء الحساب أولاً — فالرفع يتطلب مستخدماً مسجّلاً
+      final response = await supabase.auth.signUp(
+        email: techEmail,
+        password: password,
+        data: {
+          'role': 'merchant',
+          'full_name': _ownerNameController.text.trim(),
+        },
+      );
+
+      final user = response.user;
+      if (user == null) throw 'تعذر إنشاء الحساب';
+
+      // 2) رفع صورة السجل التجاري داخل مجلد المستخدم
       final ext = (_crImageName ?? 'cr.jpg').split('.').last;
       final fileName =
-          'cr_${cleanPhone}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+          '${user.id}/cr_${DateTime.now().millisecondsSinceEpoch}.$ext';
       await supabase.storage.from('merchants_docs').uploadBinary(
             fileName,
             _crImageBytes!,
@@ -155,7 +168,7 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
         try {
           final vExt = (_vatImageName ?? 'vat.jpg').split('.').last;
           final vName =
-              'vat_${cleanPhone}_${DateTime.now().millisecondsSinceEpoch}.$vExt';
+              '${user.id}/vat_${DateTime.now().millisecondsSinceEpoch}.$vExt';
           await supabase.storage.from('merchants_docs').uploadBinary(
                 vName,
                 _vatImageBytes!,
@@ -170,19 +183,7 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
         }
       }
 
-      // 2) إنشاء الحساب — الدور يُعيَّن من قاعدة البيانات
-      final response = await supabase.auth.signUp(
-        email: techEmail,
-        password: password,
-        data: {
-          'role': 'merchant',
-          'full_name': _ownerNameController.text.trim(),
-        },
-      );
-
-      final user = response.user;
-      if (user == null) throw 'تعذر إنشاء الحساب';
-
+      // 3) نسخة الشروط المقبولة
       int latestTermsVersion = 0;
       try {
         final termsData = await supabase
@@ -193,7 +194,7 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
         latestTermsVersion = (termsData?['version'] as num?)?.toInt() ?? 0;
       } catch (_) {}
 
-      // 3) بيانات الملف الشخصي
+      // 4) بيانات الملف الشخصي
       await supabase.from('profiles').upsert({
         'id': user.id,
         'full_name': _ownerNameController.text.trim(),
@@ -202,7 +203,7 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
         'accepted_terms_version': latestTermsVersion,
       });
 
-      // 4) بيانات المتجر
+      // 5) بيانات المتجر
       await supabase.from('merchants').upsert({
         'id': user.id,
         'owner_id': user.id,
