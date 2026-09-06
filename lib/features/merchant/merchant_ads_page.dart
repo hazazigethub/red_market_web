@@ -31,12 +31,31 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
   List<Map<String, dynamic>> _myBookings = [];
   bool _loading = true;
   int _tab = 0;
+
+  Map<String, dynamic>? _stats;
+  bool _loadingStats = true;
   String _adsFilter = 'active';
 
   @override
   void initState() {
     super.initState();
     _load();
+    _loadStats();
+  }
+
+  /// يجلب إحصاءات أداء البنرات
+  Future<void> _loadStats() async {
+    try {
+      final res = await supabase.rpc('get_merchant_banner_stats');
+      if (!mounted) return;
+      setState(() {
+        _stats = Map<String, dynamic>.from(res as Map);
+        _loadingStats = false;
+      });
+    } catch (e) {
+      debugPrint('Stats error: $e');
+      if (mounted) setState(() => _loadingStats = false);
+    }
   }
 
   Future<void> _load() async {
@@ -121,6 +140,7 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
                     children: [
                       _tabChip(0, 'الأسابيع المتاحة', _weeks.length),
                       _tabChip(1, 'بنراتي', _myBookings.length),
+                      _tabChip(2, 'الأداء', null),
                     ],
                   ),
 
@@ -134,8 +154,10 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
                     )
                   else if (_tab == 0)
                     _weeksGrid()
+                  else if (_tab == 1)
+                    _bookingsList()
                   else
-                    _bookingsList(),
+                    _statsView(),
                 ],
               ),
             ),
@@ -145,7 +167,7 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
     );
   }
 
-  Widget _tabChip(int index, String label, int count) {
+  Widget _tabChip(int index, String label, int? count) {
     final on = _tab == index;
     return GestureDetector(
       onTap: () => setState(() => _tab = index),
@@ -157,7 +179,7 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
           border: Border.all(color: on ? brandRed : const Color(0xFFEDEFF3)),
         ),
         child: Text(
-          '$label ($count)',
+          count == null ? label : '$label ($count)',
           style: TextStyle(
             fontFamily: 'Cairo',
             fontSize: 12.5,
@@ -811,6 +833,261 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  // ===================== الأداء =====================
+
+  Widget _statsView() {
+    if (_loadingStats) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Center(child: CircularProgressIndicator(color: brandRed)),
+      );
+    }
+
+    final st = _stats;
+    if (st == null || st['ok'] != true) {
+      return _empty('تعذر تحميل الأداء', Icons.bar_chart_outlined);
+    }
+
+    final impressions = (st['impressions'] as num?)?.toInt() ?? 0;
+    final clicks = (st['clicks'] as num?)?.toInt() ?? 0;
+    final ctr = (st['ctr'] as num?)?.toDouble() ?? 0;
+    final platformCtr = (st['platform_ctr'] as num?)?.toDouble() ?? 0;
+    final banners = (st['total_banners'] as num?)?.toInt() ?? 0;
+    final spent = (st['total_spent'] as num?)?.toDouble() ?? 0;
+    final best = st['best'] as Map<String, dynamic>?;
+
+    if (impressions == 0 && banners == 0) {
+      return _empty(
+          'لا بيانات بعد — تظهر بعد عرض أول بنر', Icons.bar_chart_outlined);
+    }
+
+    final better = ctr >= platformCtr;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ===== البطاقات =====
+        LayoutBuilder(
+          builder: (context, c) {
+            const gap = 12.0;
+            final cols = c.maxWidth < 560 ? 2 : 4;
+            final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                SizedBox(
+                    width: w,
+                    child: _statCard('الظهور', '$impressions',
+                        Icons.visibility_outlined, Colors.blue)),
+                SizedBox(
+                    width: w,
+                    child: _statCard('النقرات', '$clicks',
+                        Icons.touch_app_outlined, Colors.orange)),
+                SizedBox(
+                    width: w,
+                    child: _statCard('معدل النقر', '$ctr%',
+                        Icons.percent_rounded,
+                        better ? Colors.green : Colors.grey)),
+                SizedBox(
+                    width: w,
+                    child: _statCard('بنراتك', '$banners',
+                        Icons.ad_units_outlined, brandRed)),
+              ],
+            );
+          },
+        ),
+
+        const SizedBox(height: 16),
+
+        // ===== المقارنة =====
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: (better ? Colors.green : Colors.orange)
+                .withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+                color: (better ? Colors.green : Colors.orange)
+                    .withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                better
+                    ? Icons.trending_up_rounded
+                    : Icons.trending_down_rounded,
+                color: better ? Colors.green : Colors.orange,
+                size: 22,
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      better
+                          ? 'أداؤك أعلى من متوسط المنصة'
+                          : 'أداؤك دون متوسط المنصة',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: better ? Colors.green.shade800
+                                      : Colors.orange.shade800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'معدل نقرك $ctr% · ومتوسط المنصة $platformCtr%',
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 11.5,
+                          color: Colors.grey.shade700),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // ===== أفضل بنر =====
+        if (best != null)
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFEDEFF3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.emoji_events_outlined,
+                        size: 18, color: brandRed),
+                    const SizedBox(width: 10),
+                    const Text('أفضل بنر لك',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Text(
+                      '${best['banner_type'] == 'wide' ? 'عريض' : 'صغير'} · '
+                      'أسبوع ${best['week_number']}',
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 12.5,
+                          color: Colors.grey.shade700),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${best['ctr']}%',
+                      style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${best['impressions']} ظهور · ${best['clicks']} نقرة',
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 11.5,
+                      color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+
+        const SizedBox(height: 16),
+
+        // ===== الإنفاق =====
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF7F8FA),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.payments_outlined,
+                  size: 18, color: Colors.grey.shade600),
+              const SizedBox(width: 12),
+              Text('إجمالي إنفاقك على البنرات',
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 12.5,
+                      color: Colors.grey.shade700)),
+              const Spacer(),
+              Text(
+                '${spent.toStringAsFixed(2)} ر.س',
+                style: const TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: brandRed),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: const Color(0xFFEDEFF3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 15, color: color),
+          ),
+          const SizedBox(height: 11),
+          Text(
+            value,
+            style: const TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 20,
+                fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 11,
+                color: Colors.grey.shade600),
+          ),
         ],
       ),
     );

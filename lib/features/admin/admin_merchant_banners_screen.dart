@@ -18,6 +18,10 @@ class _AdminMerchantBannersScreenState
   List<Map<String, dynamic>> _rows = [];
   bool _loading = true;
   String _filter = 'pending';
+  int _tab = 0;
+
+  Map<String, dynamic>? _stats;
+  bool _loadingStats = true;
 
   static const _filters = [
     (key: 'pending', label: 'لم تُراجع'),
@@ -29,6 +33,22 @@ class _AdminMerchantBannersScreenState
   void initState() {
     super.initState();
     _load();
+    _loadStats();
+  }
+
+  /// يجلب إحصاءات البنرات للمنصة
+  Future<void> _loadStats() async {
+    try {
+      final res = await supabase.rpc('get_admin_banner_stats');
+      if (!mounted) return;
+      setState(() {
+        _stats = Map<String, dynamic>.from(res as Map);
+        _loadingStats = false;
+      });
+    } catch (e) {
+      debugPrint('Admin stats error: $e');
+      if (mounted) setState(() => _loadingStats = false);
+    }
   }
 
   Future<void> _load() async {
@@ -256,6 +276,20 @@ class _AdminMerchantBannersScreenState
 
                   const SizedBox(height: 18),
 
+                  // ===== التبويبان =====
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      _mainTab(0, 'المراجعة'),
+                      _mainTab(1, 'التقرير'),
+                    ],
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  if (_tab == 1) ...[
+                    _statsView(),
+                  ] else ...[
                   Wrap(
                     spacing: 8,
                     children: _filters.map((f) {
@@ -303,6 +337,7 @@ class _AdminMerchantBannersScreenState
                     _empty()
                   else
                     ...visible.map(_card),
+                  ],
                 ],
               ),
             ),
@@ -550,6 +585,313 @@ class _AdminMerchantBannersScreenState
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _mainTab(int index, String label) {
+    final on = _tab == index;
+    return GestureDetector(
+      onTap: () => setState(() => _tab = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: on ? brandRed : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: on ? brandRed : const Color(0xFFEDEFF3)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 13,
+            fontWeight: on ? FontWeight.bold : FontWeight.normal,
+            color: on ? Colors.white : Colors.grey.shade700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ===================== التقرير =====================
+
+  Widget _statsView() {
+    if (_loadingStats) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Center(child: CircularProgressIndicator(color: brandRed)),
+      );
+    }
+
+    final st = _stats;
+    if (st == null || st['ok'] != true) {
+      return _emptyMsg('تعذر تحميل التقرير');
+    }
+
+    final revenue = (st['revenue'] as num?)?.toDouble() ?? 0;
+    final banners = (st['banners'] as num?)?.toInt() ?? 0;
+    final merchants = (st['merchants'] as num?)?.toInt() ?? 0;
+    final impressions = (st['impressions'] as num?)?.toInt() ?? 0;
+    final clicks = (st['clicks'] as num?)?.toInt() ?? 0;
+    final ctr = (st['ctr'] as num?)?.toDouble() ?? 0;
+    final wallets = (st['wallets_balance'] as num?)?.toDouble() ?? 0;
+    final weeks = (st['weeks'] as List?) ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ===== البطاقات =====
+        LayoutBuilder(
+          builder: (context, c) {
+            const gap = 12.0;
+            final cols = c.maxWidth < 560 ? 2 : 3;
+            final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                SizedBox(
+                    width: w,
+                    child: _statCard('الإيراد',
+                        '${revenue.toStringAsFixed(0)} ر.س',
+                        Icons.payments_outlined, Colors.green)),
+                SizedBox(
+                    width: w,
+                    child: _statCard('البنرات المباعة', '$banners',
+                        Icons.ad_units_outlined, brandRed)),
+                SizedBox(
+                    width: w,
+                    child: _statCard('تجار مشترون', '$merchants',
+                        Icons.storefront_outlined, Colors.blue)),
+                SizedBox(
+                    width: w,
+                    child: _statCard('الظهور', '$impressions',
+                        Icons.visibility_outlined, Colors.purple)),
+                SizedBox(
+                    width: w,
+                    child: _statCard('النقرات', '$clicks',
+                        Icons.touch_app_outlined, Colors.orange)),
+                SizedBox(
+                    width: w,
+                    child: _statCard('معدل النقر', '$ctr%',
+                        Icons.percent_rounded, Colors.teal)),
+              ],
+            );
+          },
+        ),
+
+        const SizedBox(height: 16),
+
+        // ===== الأرصدة =====
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.amber.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(14),
+            border:
+                Border.all(color: Colors.amber.withValues(alpha: 0.35)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.account_balance_wallet_outlined,
+                  size: 19, color: Colors.orange),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('أرصدة لم تُستهلك',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 3),
+                    Text(
+                      'مبالغ شحنها التجار ولم ينفقوها بعد',
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 11,
+                          color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '${wallets.toStringAsFixed(2)} ر.س',
+                style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade800),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // ===== أداء الأسابيع =====
+        const Text('إشغال الأسابيع',
+            style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 15,
+                fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+
+        if (weeks.isEmpty)
+          _emptyMsg('لا أسابيع')
+        else
+          ...weeks.map((w) => _weekRow(Map<String, dynamic>.from(w))),
+      ],
+    );
+  }
+
+  Widget _weekRow(Map<String, dynamic> w) {
+    final wideSold = (w['wide_sold'] as num?)?.toInt() ?? 0;
+    final wideTotal = (w['wide_total'] as num?)?.toInt() ?? 20;
+    final smallSold = (w['small_sold'] as num?)?.toInt() ?? 0;
+    final smallTotal = (w['small_total'] as num?)?.toInt() ?? 20;
+    final revenue = (w['revenue'] as num?)?.toDouble() ?? 0;
+    final occasion = (w['occasion_name'] ?? '').toString();
+
+    final sold = wideSold + smallSold;
+    final total = wideTotal + smallTotal;
+    final rate = total > 0 ? sold / total : 0.0;
+
+    final Color color = rate >= 0.7
+        ? Colors.green
+        : rate >= 0.3
+            ? Colors.orange
+            : Colors.grey;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFEDEFF3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text(
+                'أسبوع ${w['week_number']} · ${w['year']}',
+                style: const TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold),
+              ),
+              if (occasion.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Text(occasion,
+                    style: const TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: brandRed)),
+              ],
+              const Spacer(),
+              Text(
+                '${revenue.toStringAsFixed(0)} ر.س',
+                style: const TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: rate,
+              minHeight: 6,
+              backgroundColor: const Color(0xFFF1F2F5),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Row(
+            children: [
+              Text(
+                'عريض $wideSold/$wideTotal · صغير $smallSold/$smallTotal',
+                style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 11,
+                    color: Colors.grey.shade600),
+              ),
+              const Spacer(),
+              Text(
+                '${(rate * 100).toStringAsFixed(0)}% إشغال',
+                style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: color),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: const Color(0xFFEDEFF3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 15, color: color),
+          ),
+          const SizedBox(height: 11),
+          Text(
+            value,
+            style: const TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 18,
+                fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 11,
+                color: Colors.grey.shade600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyMsg(String msg) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Center(
+        child: Text(msg,
+            style: const TextStyle(
+                fontFamily: 'Cairo', fontSize: 14, color: Colors.grey)),
       ),
     );
   }
