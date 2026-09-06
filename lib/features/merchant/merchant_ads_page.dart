@@ -40,6 +40,7 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
   List<Map<String, dynamic>> _mySplashAds = [];
   bool _loadingSplash = true;
   String _splashSub = 'calendar';
+  String _splashFilter = 'active';
   DateTime _calMonth = DateTime(DateTime.now().year, DateTime.now().month);
   String _adsFilter = 'active';
 
@@ -503,21 +504,31 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
 
   // ===================== بنراتي =====================
 
-  static const _filters = [
-    (key: 'active', label: 'فعّال'),
-    (key: 'expired', label: 'منتهي'),
-    (key: 'cancelled', label: 'ملغى'),
-  ];
-
-  /// يصنّف الحجز إلى فعّال أو منتهٍ أو ملغى
+  /// يصنّف البنر — والموقوف في خانة "إجراء"
   String _groupOf(String status) {
-    // الموقوف والملغى معاً — كلاهما لا يُعرض وأُعيد مبلغه
-    if (status == 'cancelled' || status == 'suspended') return 'cancelled';
+    if (status == 'suspended') return 'action';
+    if (status == 'cancelled' || status == 'banned') return 'cancelled';
     if (status == 'expired') return 'expired';
     return 'active'; // paid · scheduled · active
   }
 
   Widget _bookingsList() {
+    final actionCount = _myBookings
+        .where((b) => _groupOf((b['status'] ?? '').toString()) == 'action')
+        .length;
+
+    // خانة "إجراء" تظهر عند الحاجة فقط
+    final filters = <({String key, String label})>[
+      if (actionCount > 0) (key: 'action', label: 'إجراء'),
+      (key: 'active', label: 'فعّال'),
+      (key: 'expired', label: 'منتهي'),
+      (key: 'cancelled', label: 'ملغى'),
+    ];
+
+    if (_adsFilter == 'action' && actionCount == 0) {
+      _adsFilter = 'active';
+    }
+
     final filtered = _myBookings
         .where((b) =>
             _groupOf((b['status'] ?? '').toString()) == _adsFilter)
@@ -526,35 +537,59 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ===== أزرار التصنيف =====
         Wrap(
           spacing: 8,
-          children: _filters.map((f) {
+          runSpacing: 8,
+          children: filters.map((f) {
             final count = _myBookings
                 .where((b) =>
                     _groupOf((b['status'] ?? '').toString()) == f.key)
                 .length;
             final on = _adsFilter == f.key;
+            final urgent = f.key == 'action';
 
             return GestureDetector(
               onTap: () => setState(() => _adsFilter = f.key),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 15, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
                 decoration: BoxDecoration(
-                  color: on ? brandRed.withValues(alpha: 0.08) : Colors.white,
+                  color: on
+                      ? (urgent
+                          ? Colors.orange.withValues(alpha: 0.12)
+                          : brandRed.withValues(alpha: 0.08))
+                      : (urgent
+                          ? Colors.orange.withValues(alpha: 0.06)
+                          : Colors.white),
                   borderRadius: BorderRadius.circular(9),
                   border: Border.all(
-                      color: on ? brandRed : const Color(0xFFEDEFF3)),
-                ),
-                child: Text(
-                  '${f.label} ($count)',
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 12,
-                    fontWeight: on ? FontWeight.bold : FontWeight.normal,
-                    color: on ? brandRed : Colors.grey.shade700,
+                    color: urgent
+                        ? Colors.orange
+                        : (on ? brandRed : const Color(0xFFEDEFF3)),
                   ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (urgent) ...[
+                      const Icon(Icons.priority_high_rounded,
+                          size: 14, color: Colors.orange),
+                      const SizedBox(width: 4),
+                    ],
+                    Text(
+                      '${f.label} ($count)',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 12,
+                        fontWeight: (on || urgent)
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: urgent
+                            ? Colors.orange.shade800
+                            : (on ? brandRed : Colors.grey.shade700),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -575,6 +610,25 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
         else
           ...filtered.map(_bookingCard),
       ],
+    );
+  }
+
+  /// تعديل بنر — الصورة والوجهة
+  void _editBooking(Map<String, dynamic> b) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _AdEditSheet(
+        kind: 'banner',
+        id: b['id'].toString(),
+        currentTarget: (b['target_type'] ?? 'store').toString(),
+        currentProduct: b['product_id']?.toString(),
+        width: b['banner_type'] == 'wide' ? 1500 : 760,
+        height: b['banner_type'] == 'wide' ? 350 : 400,
+        maxKb: 500,
+        onDone: _load,
+      ),
     );
   }
 
@@ -667,13 +721,21 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
       'paid' => ('مدفوع — لم يبدأ', Colors.blue),
       'scheduled' => ('مجدول', Colors.blue),
       'active' => ('يعرض الآن', Colors.green),
-      'suspended' => ('موقوف', Colors.red),
+      'suspended' => ('موقوف — بانتظار تعديلك', Colors.orange),
+      'banned' => ('محظور', Color(0xFFB71C1C)),
       'expired' => ('انتهى', Colors.grey),
       'cancelled' => ('ملغى', Colors.grey),
       _ => (status, Colors.grey),
     };
 
     final showStats = status == 'active' || status == 'expired';
+
+    // التعديل متاح ما بقي أكثر من 24 ساعة
+    final start = DateTime.tryParse((week?['week_start'] ?? '').toString());
+    final canEdit = ['paid', 'scheduled', 'active', 'suspended']
+            .contains(status) &&
+        start != null &&
+        start.difference(DateTime.now()).inHours >= 24;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -851,25 +913,59 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
             ),
           ],
 
-          if (_canCancel(b)) ...[
+          if (canEdit || _canCancel(b)) ...[
             const SizedBox(height: 12),
-            SizedBox(
-              height: 40,
-              child: OutlinedButton.icon(
-                onPressed: () => _cancelBooking(b),
-                icon: const Icon(Icons.close_rounded, size: 16),
-                label: const Text('إلغاء البنر',
-                    style: TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.bold)),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: BorderSide(color: Colors.red.withValues(alpha: 0.4)),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
+            Row(
+              children: [
+                if (canEdit)
+                  Expanded(
+                    child: SizedBox(
+                      height: 40,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _editBooking(b),
+                        icon: const Icon(Icons.edit_outlined, size: 16),
+                        label: Text(
+                            status == 'suspended'
+                                ? 'تعديل وإعادة للمراجعة'
+                                : 'تعديل البنر',
+                            style: const TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: status == 'suspended'
+                              ? Colors.orange
+                              : brandRed,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (canEdit && _canCancel(b)) const SizedBox(width: 10),
+                if (_canCancel(b))
+                  SizedBox(
+                    height: 40,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _cancelBooking(b),
+                      icon: const Icon(Icons.close_rounded, size: 16),
+                      label: const Text('إلغاء',
+                          style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: BorderSide(
+                            color: Colors.red.withValues(alpha: 0.4)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ],
@@ -1455,13 +1551,137 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
 
   // ===== إعلاناتي =====
 
+  /// تصنيف الإعلان
+  String _splashGroupOf(String status) {
+    if (status == 'suspended') return 'action';
+    if (status == 'cancelled' || status == 'banned') return 'cancelled';
+    if (status == 'expired') return 'expired';
+    return 'active'; // paid · scheduled · active
+  }
+
   Widget _mySplashList() {
     if (_mySplashAds.isEmpty) {
       return _empty('لم تشترِ أي إعلان بعد', Icons.smartphone_outlined);
     }
 
+    final actionCount = _mySplashAds
+        .where((a) =>
+            _splashGroupOf((a['status'] ?? '').toString()) == 'action')
+        .length;
+
+    // خانة "إجراء" تظهر عند الحاجة فقط
+    final filters = <({String key, String label})>[
+      if (actionCount > 0) (key: 'action', label: 'إجراء'),
+      (key: 'active', label: 'فعّال'),
+      (key: 'expired', label: 'منتهي'),
+      (key: 'cancelled', label: 'ملغى'),
+    ];
+
+    // إن اختفت الخانة نعود للفعّال
+    if (_splashFilter == 'action' && actionCount == 0) {
+      _splashFilter = 'active';
+    }
+
+    final filtered = _mySplashAds
+        .where((a) =>
+            _splashGroupOf((a['status'] ?? '').toString()) == _splashFilter)
+        .toList();
+
     return Column(
-      children: _mySplashAds.map(_splashCard).toList(),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: filters.map((f) {
+            final count = _mySplashAds
+                .where((a) =>
+                    _splashGroupOf((a['status'] ?? '').toString()) == f.key)
+                .length;
+            final on = _splashFilter == f.key;
+            final urgent = f.key == 'action';
+
+            return GestureDetector(
+              onTap: () => setState(() => _splashFilter = f.key),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                decoration: BoxDecoration(
+                  color: on
+                      ? (urgent
+                          ? Colors.orange.withValues(alpha: 0.12)
+                          : brandRed.withValues(alpha: 0.08))
+                      : (urgent
+                          ? Colors.orange.withValues(alpha: 0.06)
+                          : Colors.white),
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(
+                    color: urgent
+                        ? Colors.orange
+                        : (on ? brandRed : const Color(0xFFEDEFF3)),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (urgent) ...[
+                      const Icon(Icons.priority_high_rounded,
+                          size: 14, color: Colors.orange),
+                      const SizedBox(width: 4),
+                    ],
+                    Text(
+                      '${f.label} ($count)',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 12,
+                        fontWeight: (on || urgent)
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: urgent
+                            ? Colors.orange.shade800
+                            : (on ? brandRed : Colors.grey.shade700),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+
+        const SizedBox(height: 16),
+
+        if (filtered.isEmpty)
+          _empty(
+            _splashFilter == 'active'
+                ? 'لا إعلانات فعّالة'
+                : _splashFilter == 'expired'
+                    ? 'لا إعلانات منتهية'
+                    : 'لا إعلانات ملغاة',
+            Icons.smartphone_outlined,
+          )
+        else
+          ...filtered.map(_splashCard),
+      ],
+    );
+  }
+
+  /// تعديل إعلان — الصورة والوجهة
+  void _editSplashAd(Map<String, dynamic> a) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _AdEditSheet(
+        kind: 'splash',
+        id: a['id'].toString(),
+        currentTarget: (a['target_type'] ?? 'store').toString(),
+        currentProduct: a['product_id']?.toString(),
+        width: 1080,
+        height: 1920,
+        maxKb: 300,
+        onDone: _loadSplash,
+      ),
     );
   }
 
@@ -1473,19 +1693,25 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
       'paid' => ('مدفوع', Colors.blue),
       'scheduled' => ('مجدول', Colors.blue),
       'active' => ('يعرض اليوم', Colors.green),
-      'suspended' => ('موقوف', Colors.red),
+      'suspended' => ('موقوف — بانتظار تعديلك', Colors.orange),
+      'banned' => ('محظور', Color(0xFFB71C1C)),
       'expired' => ('انتهى', Colors.grey),
       'cancelled' => ('ملغى', Colors.grey),
       _ => (status, Colors.grey),
     };
 
     final adDate = (a['ad_date'] ?? '').toString();
-    final canCancel = (status == 'paid' || status == 'scheduled') &&
-        (DateTime.tryParse(adDate)
-                ?.difference(DateTime.now())
-                .inHours ??
-            0) >=
-            24;
+    final hoursLeft = DateTime.tryParse(adDate)
+            ?.difference(DateTime.now())
+            .inHours ??
+        0;
+
+    final canCancel =
+        (status == 'paid' || status == 'scheduled') && hoursLeft >= 24;
+
+    final canEdit = ['paid', 'scheduled', 'active', 'suspended']
+            .contains(status) &&
+        hoursLeft >= 24;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1642,25 +1868,59 @@ class _MerchantAdsPageState extends State<MerchantAdsPage> {
             ),
           ],
 
-          if (canCancel) ...[
+          if (canEdit || canCancel) ...[
             const SizedBox(height: 12),
-            SizedBox(
-              height: 40,
-              child: OutlinedButton.icon(
-                onPressed: () => _cancelSplashAd(a),
-                icon: const Icon(Icons.close_rounded, size: 16),
-                label: const Text('إلغاء الإعلان',
-                    style: TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.bold)),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: BorderSide(color: Colors.red.withValues(alpha: 0.4)),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
+            Row(
+              children: [
+                if (canEdit)
+                  Expanded(
+                    child: SizedBox(
+                      height: 40,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _editSplashAd(a),
+                        icon: const Icon(Icons.edit_outlined, size: 16),
+                        label: Text(
+                            status == 'suspended'
+                                ? 'تعديل وإعادة للمراجعة'
+                                : 'تعديل الإعلان',
+                            style: const TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: status == 'suspended'
+                              ? Colors.orange
+                              : brandRed,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (canEdit && canCancel) const SizedBox(width: 10),
+                if (canCancel)
+                  SizedBox(
+                    height: 40,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _cancelSplashAd(a),
+                      icon: const Icon(Icons.close_rounded, size: 16),
+                      label: const Text('إلغاء',
+                          style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: BorderSide(
+                            color: Colors.red.withValues(alpha: 0.4)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ],
@@ -3307,6 +3567,509 @@ class _SplashBookingSheetState extends State<_SplashBookingSheet> {
       ),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+    );
+  }
+}
+
+
+// ============================================================
+//        نافذة تعديل إعلان — بنر أو شاشة رئيسية
+// ============================================================
+
+class _AdEditSheet extends StatefulWidget {
+  /// banner أو splash
+  final String kind;
+  final String id;
+  final String currentTarget;
+  final String? currentProduct;
+  final int width;
+  final int height;
+  final int maxKb;
+  final VoidCallback onDone;
+
+  const _AdEditSheet({
+    required this.kind,
+    required this.id,
+    required this.currentTarget,
+    required this.currentProduct,
+    required this.width,
+    required this.height,
+    required this.maxKb,
+    required this.onDone,
+  });
+
+  @override
+  State<_AdEditSheet> createState() => _AdEditSheetState();
+}
+
+class _AdEditSheetState extends State<_AdEditSheet> {
+  static const Color brandRed = Color(0xFFC21815);
+
+  final supabase = Supabase.instance.client;
+
+  late String _targetType;
+  String? _productId;
+  Uint8List? _imageBytes;
+  String? _imageName;
+  bool _busy = false;
+  String? _error;
+
+  List<Map<String, dynamic>> _products = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _targetType = widget.currentTarget;
+    _productId = widget.currentProduct;
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    try {
+      final uid = supabase.auth.currentUser?.id;
+      if (uid == null) return;
+      final res = await supabase
+          .from('products')
+          .select('id, name')
+          .eq('merchant_id', uid)
+          .eq('is_available', true)
+          .order('created_at', ascending: false)
+          .limit(100);
+      if (mounted) {
+        setState(() => _products = List<Map<String, dynamic>>.from(res));
+      }
+    } catch (e) {
+      debugPrint('Products error: $e');
+    }
+  }
+
+  void _snack(String msg, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: const TextStyle(fontFamily: 'Cairo')),
+      backgroundColor: color,
+      behavior: SnackBarBehavior.floating,
+    ));
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final picked = await ImagePicker()
+          .pickImage(source: ImageSource.gallery, imageQuality: 100);
+      if (picked == null) return;
+
+      final name = picked.name.toLowerCase();
+      if (!name.endsWith('.jpg') &&
+          !name.endsWith('.jpeg') &&
+          !name.endsWith('.webp')) {
+        setState(() => _error = 'الصيغة غير مقبولة — استخدم JPG أو WebP');
+        return;
+      }
+
+      final bytes = await picked.readAsBytes();
+
+      final kb = bytes.lengthInBytes / 1024;
+      if (kb > widget.maxKb) {
+        setState(() => _error =
+            'حجم الملف ${kb.toStringAsFixed(0)} كيلوبايت — '
+            'والحد الأقصى ${widget.maxKb}\n'
+            'جرّب حفظ الصورة بصيغة JPG لتقليل حجمها');
+        return;
+      }
+
+      final decoded = await decodeImageFromList(bytes);
+      if (decoded.width != widget.width || decoded.height != widget.height) {
+        setState(() => _error =
+            'المقاس غير مطابق\nالصورة: ${decoded.width} × ${decoded.height}\n'
+            'المطلوب: ${widget.width} × ${widget.height}');
+        return;
+      }
+
+      setState(() {
+        _imageBytes = bytes;
+        _imageName = picked.name;
+        _error = null;
+      });
+    } catch (e) {
+      debugPrint('Pick error: $e');
+      setState(() => _error = 'تعذر قراءة الصورة');
+    }
+  }
+
+  Future<String?> _uploadImage() async {
+    if (_imageBytes == null) return '';
+    try {
+      final uid = supabase.auth.currentUser!.id;
+      final ext = (_imageName ?? 'ad.jpg').split('.').last;
+      final bucket =
+          widget.kind == 'splash' ? 'splash_ads' : 'banners_bucket';
+      final path =
+          '$uid/edit-${DateTime.now().millisecondsSinceEpoch}.$ext';
+
+      await supabase.storage.from(bucket).uploadBinary(
+            path,
+            _imageBytes!,
+            fileOptions: const FileOptions(upsert: true),
+          );
+
+      return supabase.storage.from(bucket).getPublicUrl(path);
+    } catch (e) {
+      debugPrint('Upload error: $e');
+      return null;
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_busy) return;
+
+    if (_targetType == 'product' && _productId == null) {
+      setState(() => _error = 'اختر المنتج المستهدف');
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+
+    try {
+      final url = await _uploadImage();
+      if (url == null) {
+        setState(() {
+          _error = 'تعذر رفع الصورة';
+          _busy = false;
+        });
+        return;
+      }
+
+      final fn = widget.kind == 'splash'
+          ? 'update_splash_ad'
+          : 'update_banner_booking';
+
+      final idParam =
+          widget.kind == 'splash' ? 'p_ad_id' : 'p_booking_id';
+
+      final res = await supabase.rpc(fn, params: {
+        idParam: widget.id,
+        'p_image_url': url,
+        'p_target_type': _targetType,
+        'p_product_id': _productId,
+      });
+
+      final map = Map<String, dynamic>.from(res as Map);
+
+      if (map['ok'] == true) {
+        if (!mounted) return;
+        Navigator.pop(context);
+        widget.onDone();
+        _snack('حُفظ التعديل — وأُعيد الإعلان للمراجعة', Colors.green);
+      } else {
+        setState(() {
+          _error = map['error']?.toString() ?? 'تعذر الحفظ';
+          _busy = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Update error: $e');
+      setState(() {
+        _error = 'تعذر حفظ التعديل، حاول مجدداً';
+        _busy = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              width: 42,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 6, 20, 20),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          widget.kind == 'splash'
+                              ? 'تعديل إعلان الشاشة الرئيسية'
+                              : 'تعديل البنر',
+                          style: const TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'أي تعديل يُعيد الإعلان لمراجعة الإدارة',
+                          style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 11.5,
+                              color: Colors.grey.shade600),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        Row(
+                          children: [
+                            const Icon(Icons.image_outlined,
+                                size: 17, color: brandRed),
+                            const SizedBox(width: 9),
+                            const Text('الصورة',
+                                style: TextStyle(
+                                    fontFamily: 'Cairo',
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold)),
+                            const Spacer(),
+                            Text(
+                              '${widget.width} × ${widget.height} · '
+                              '${widget.maxKb} ك.ب',
+                              style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 10.5,
+                                  color: Colors.grey.shade500),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        if (_imageBytes != null) ...[
+                          Center(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(11),
+                              child: Image.memory(
+                                _imageBytes!,
+                                height: widget.kind == 'splash' ? 200 : 110,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
+                        InkWell(
+                          onTap: _busy ? null : _pickImage,
+                          borderRadius: BorderRadius.circular(11),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: _imageBytes != null
+                                  ? Colors.green.withValues(alpha: 0.05)
+                                  : const Color(0xFFF7F8FA),
+                              borderRadius: BorderRadius.circular(11),
+                              border: Border.all(
+                                color: _imageBytes != null
+                                    ? Colors.green.withValues(alpha: 0.35)
+                                    : Colors.grey.shade300,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _imageBytes != null
+                                      ? Icons.check_circle_rounded
+                                      : Icons.upload_file_rounded,
+                                  size: 19,
+                                  color: _imageBytes != null
+                                      ? Colors.green
+                                      : Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _imageBytes != null
+                                        ? 'صورة جديدة مطابقة'
+                                        : 'اختر صورة جديدة — أو أبقِ الحالية',
+                                    style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 12.5,
+                                      color: _imageBytes != null
+                                          ? Colors.green.shade800
+                                          : Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        Row(
+                          children: const [
+                            Icon(Icons.link_rounded,
+                                size: 17, color: brandRed),
+                            SizedBox(width: 9),
+                            Text('الوجهة',
+                                style: TextStyle(
+                                    fontFamily: 'Cairo',
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+
+                        RadioListTile<String>(
+                          value: 'store',
+                          groupValue: _targetType,
+                          activeColor: brandRed,
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          title: const Text('صفحة متجري',
+                              style: TextStyle(
+                                  fontFamily: 'Cairo', fontSize: 13)),
+                          onChanged: (v) => setState(() {
+                            _targetType = 'store';
+                            _productId = null;
+                          }),
+                        ),
+                        RadioListTile<String>(
+                          value: 'product',
+                          groupValue: _targetType,
+                          activeColor: brandRed,
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          title: const Text('منتج محدد',
+                              style: TextStyle(
+                                  fontFamily: 'Cairo', fontSize: 13)),
+                          onChanged: (v) =>
+                              setState(() => _targetType = 'product'),
+                        ),
+
+                        if (_targetType == 'product') ...[
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            initialValue: _productId,
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              hintText: 'اختر المنتج',
+                              hintStyle: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 12,
+                                  color: Colors.grey.shade400),
+                              filled: true,
+                              fillColor: const Color(0xFFF7F8FA),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(11),
+                                borderSide:
+                                    BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(11),
+                                borderSide: const BorderSide(
+                                    color: brandRed, width: 1.5),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 13),
+                            ),
+                            items: _products
+                                .map((p) => DropdownMenuItem<String>(
+                                      value: p['id'].toString(),
+                                      child: Text(
+                                        (p['name'] ?? '').toString(),
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontSize: 13),
+                                      ),
+                                    ))
+                                .toList(),
+                            onChanged: (v) => setState(() => _productId = v),
+                          ),
+                        ],
+
+                        if (_error != null) ...[
+                          const SizedBox(height: 14),
+                          Container(
+                            padding: const EdgeInsets.all(13),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withValues(alpha: 0.06),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: Colors.red.withValues(alpha: 0.25)),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.error_outline_rounded,
+                                    color: Colors.red, size: 18),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    _error!,
+                                    style: const TextStyle(
+                                        color: Colors.red,
+                                        fontFamily: 'Cairo',
+                                        fontSize: 12,
+                                        height: 1.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+
+                        const SizedBox(height: 20),
+
+                        SizedBox(
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: _busy ? null : _submit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: brandRed,
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: Colors.grey.shade300,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: _busy
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white))
+                                : const Text('حفظ التعديل',
+                                    style: TextStyle(
+                                        fontFamily: 'Cairo',
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
