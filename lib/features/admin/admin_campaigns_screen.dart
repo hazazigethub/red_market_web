@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// إدارة الحملات الموسمية
@@ -119,6 +122,11 @@ class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
     DateTime? end = DateTime.tryParse((edit?['ends_at'] ?? '').toString());
     bool saving = false;
 
+    // صورة البنر — مقاس 30:7
+    Uint8List? imageBytes;
+    String? imageName;
+    String? imageError;
+
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -204,14 +212,151 @@ class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
                       decoration:
                           _dec('رسم المنتج الواحد', Icons.payments_outlined),
                     ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: banner,
-                      style:
-                          const TextStyle(fontFamily: 'Cairo', fontSize: 12.5),
-                      decoration:
-                          _dec('رابط صورة البنر', Icons.image_outlined),
+                    const SizedBox(height: 16),
+
+                    // ===== صورة البنر =====
+                    Row(
+                      children: [
+                        const Icon(Icons.image_outlined,
+                            size: 17, color: brandRed),
+                        const SizedBox(width: 9),
+                        const Text('صورة البنر',
+                            style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold)),
+                        const Spacer(),
+                        Text('1500 × 350 · نسبة 30:7',
+                            style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 10.5,
+                                color: Colors.grey.shade500)),
+                      ],
                     ),
+
+                    const SizedBox(height: 10),
+
+                    if (imageBytes != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.memory(imageBytes!,
+                            height: 90, fit: BoxFit.cover),
+                      )
+                    else if (banner.text.trim().isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          banner.text.trim(),
+                          height: 90,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              const SizedBox.shrink(),
+                        ),
+                      ),
+
+                    if (imageBytes != null ||
+                        banner.text.trim().isNotEmpty)
+                      const SizedBox(height: 8),
+
+                    InkWell(
+                      onTap: saving
+                          ? null
+                          : () async {
+                              try {
+                                final picked = await ImagePicker().pickImage(
+                                    source: ImageSource.gallery,
+                                    imageQuality: 100);
+                                if (picked == null) return;
+
+                                final bytes = await picked.readAsBytes();
+
+                                final kb = bytes.lengthInBytes / 1024;
+                                if (kb > 500) {
+                                  setModal(() => imageError =
+                                      'الحجم ${kb.toStringAsFixed(0)} ك.ب — '
+                                      'والحد 500');
+                                  return;
+                                }
+
+                                final d =
+                                    await decodeImageFromList(bytes);
+                                final ratio = d.width / d.height;
+                                if ((ratio - (30 / 7)).abs() > 0.15) {
+                                  setModal(() => imageError =
+                                      'النسبة غير مطابقة\n'
+                                      'الصورة: ${d.width} × ${d.height}\n'
+                                      'المطلوب نسبة 30:7');
+                                  return;
+                                }
+
+                                setModal(() {
+                                  imageBytes = bytes;
+                                  imageName = picked.name;
+                                  imageError = null;
+                                });
+                              } catch (e) {
+                                debugPrint('Pick error: $e');
+                                setModal(
+                                    () => imageError = 'تعذر قراءة الصورة');
+                              }
+                            },
+                      borderRadius: BorderRadius.circular(11),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 13),
+                        decoration: BoxDecoration(
+                          color: imageBytes != null
+                              ? Colors.green.withValues(alpha: 0.05)
+                              : const Color(0xFFF7F8FA),
+                          borderRadius: BorderRadius.circular(11),
+                          border: Border.all(
+                            color: imageBytes != null
+                                ? Colors.green.withValues(alpha: 0.35)
+                                : Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              imageBytes != null
+                                  ? Icons.check_circle_rounded
+                                  : Icons.upload_file_rounded,
+                              size: 18,
+                              color: imageBytes != null
+                                  ? Colors.green
+                                  : Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 11),
+                            Expanded(
+                              child: Text(
+                                imageBytes != null
+                                    ? 'صورة جديدة جاهزة'
+                                    : (banner.text.trim().isEmpty
+                                        ? 'اختر صورة البنر'
+                                        : 'تغيير الصورة'),
+                                style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 12.5,
+                                  color: imageBytes != null
+                                      ? Colors.green.shade800
+                                      : Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    if (imageError != null) ...[
+                      const SizedBox(height: 8),
+                      Text(imageError!,
+                          style: const TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 11,
+                              height: 1.8,
+                              color: Colors.red)),
+                    ],
                   ],
                 ),
               ),
@@ -248,14 +393,44 @@ class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
 
                         setModal(() => saving = true);
 
+                        // رفع الصورة إن اختار جديدة
+                        String? bannerUrl = banner.text.trim().isEmpty
+                            ? null
+                            : banner.text.trim();
+
+                        if (imageBytes != null) {
+                          try {
+                            final ext =
+                                (imageName ?? 'banner.jpg').split('.').last;
+                            final path =
+                                'campaign-${DateTime.now().millisecondsSinceEpoch}.$ext';
+
+                            await supabase.storage
+                                .from('campaigns')
+                                .uploadBinary(
+                                  path,
+                                  imageBytes!,
+                                  fileOptions:
+                                      const FileOptions(upsert: true),
+                                );
+
+                            bannerUrl = supabase.storage
+                                .from('campaigns')
+                                .getPublicUrl(path);
+                          } catch (e) {
+                            debugPrint('Upload error: $e');
+                            setModal(() => saving = false);
+                            _snack('تعذر رفع الصورة', Colors.red);
+                            return;
+                          }
+                        }
+
                         final data = {
                           'title': title.text.trim(),
                           'description': desc.text.trim().isEmpty
                               ? null
                               : desc.text.trim(),
-                          'banner_image': banner.text.trim().isEmpty
-                              ? null
-                              : banner.text.trim(),
+                          'banner_image': bannerUrl,
                           'starts_at':
                               start!.toIso8601String().substring(0, 10),
                           'ends_at': end!.toIso8601String().substring(0, 10),
@@ -365,6 +540,126 @@ class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
+  }
+
+  /// حذف حملة مع استرداد كامل
+  Future<void> _deleteCampaign(Map<String, dynamic> c) async {
+    final id = c['id'].toString();
+    final merchants = _merchantCounts[id] ?? 0;
+    final revenue = _revenue[id] ?? 0;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.delete_outline_rounded,
+                  color: Colors.red, size: 19),
+              SizedBox(width: 10),
+              Text('حذف الحملة',
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ستُحذف حملة "${c['title']}" نهائياً بكل بياناتها.',
+                  style: const TextStyle(
+                      fontFamily: 'Cairo', fontSize: 13.5, height: 1.9),
+                ),
+                if (merchants > 0) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: Colors.orange.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.undo_rounded,
+                            size: 16, color: Colors.orange),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: Text(
+                            'سيُعاد ${revenue.toStringAsFixed(2)} ر.س '
+                            'إلى $merchants تاجر، ويصلهم إشعار بذلك.',
+                            style: const TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 12,
+                                height: 1.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('تراجع',
+                  style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('حذف نهائي',
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final res = await supabase
+          .rpc('delete_campaign', params: {'p_campaign_id': id});
+      final map = Map<String, dynamic>.from(res as Map);
+
+      if (map['ok'] == true) {
+        await _load();
+        final n = (map['merchants'] as num?)?.toInt() ?? 0;
+        _snack(
+          n > 0
+              ? 'حُذفت الحملة وأُعيد '
+                  '${(map['refunded'] as num?)?.toStringAsFixed(2)} ر.س لـ$n تاجر'
+              : 'حُذفت الحملة',
+          Colors.orange,
+        );
+      } else {
+        _snack(map['error']?.toString() ?? 'تعذر الحذف', Colors.red);
+      }
+    } catch (e) {
+      debugPrint('Delete campaign error: $e');
+      _snack('تعذر تنفيذ الحذف', Colors.red);
+    }
   }
 
   Future<void> _toggleActive(Map<String, dynamic> c, bool value) async {
@@ -528,6 +823,15 @@ class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
                   padding: const EdgeInsets.all(6),
                   child: Icon(Icons.edit_outlined,
                       size: 17, color: Colors.grey.shade600),
+                ),
+              ),
+              InkWell(
+                onTap: () => _deleteCampaign(c),
+                borderRadius: BorderRadius.circular(8),
+                child: const Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Icon(Icons.delete_outline_rounded,
+                      size: 17, color: Colors.red),
                 ),
               ),
             ],
