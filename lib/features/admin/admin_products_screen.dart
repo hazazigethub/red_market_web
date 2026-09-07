@@ -17,6 +17,17 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
 
   String get _searchQuery => widget.searchQuery;
 
+  /// التيّاران يُنشآن مرة واحدة — وإلا أُعيد الاشتراك مع كل بناء
+  late final Stream<List<Map<String, dynamic>>> _productsStream =
+      supabase.from('products').stream(primaryKey: ['id']);
+
+  late final Stream<List<Map<String, dynamic>>> _reportsStream = supabase
+      .from('reports')
+      .stream(primaryKey: ['id']).map((items) => items
+          .where((i) =>
+              i['target_type'] == 'product' && i['status'] == 'pending')
+          .toList());
+
   bool _showOnlyReported = false;
   bool _showOnlyBanned = false; // حالة جديدة لعرض المحظورات فقط
 
@@ -32,16 +43,10 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
           children: [
             Expanded(
               child: StreamBuilder<List<Map<String, dynamic>>>(
-                stream: supabase.from('products').stream(primaryKey: ['id']),
+                stream: _productsStream,
                 builder: (context, productsSnapshot) {
                   return StreamBuilder<List<Map<String, dynamic>>>(
-                    stream: supabase
-                        .from('reports')
-                        .stream(primaryKey: ['id']).map((items) => items
-                            .where((i) =>
-                                i['target_type'] == 'product' &&
-                                i['status'] == 'pending')
-                            .toList()),
+                    stream: _reportsStream,
                     builder: (context, reportsSnapshot) {
                       if (productsSnapshot.connectionState ==
                           ConnectionState.waiting) {

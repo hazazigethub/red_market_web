@@ -62,9 +62,6 @@ class _AdminCatalogHubScreenState extends State<AdminCatalogHubScreen> {
                         ],
                       );
 
-                      // التصنيفات لها بحثها الداخلي المرتبط بالتنقّل
-                      if (_tab == 1) return Row(children: [tabs]);
-
                       final search = _searchField();
 
                       if (!wide) {
@@ -99,7 +96,7 @@ class _AdminCatalogHubScreenState extends State<AdminCatalogHubScreen> {
                     index: _tab,
                     children: [
                       AdminProductsScreen(searchQuery: _query),
-                      const AdminCategoriesScreen(),
+                      AdminCategoriesScreen(searchQuery: _query),
                     ],
                   ),
                 ),
@@ -119,7 +116,9 @@ class _AdminCatalogHubScreenState extends State<AdminCatalogHubScreen> {
         onChanged: (v) => setState(() => _query = v),
         style: const TextStyle(fontFamily: 'Cairo', fontSize: 13),
         decoration: InputDecoration(
-          hintText: 'ابحث باسم المنتج أو التاجر',
+          hintText: _tab == 0
+              ? 'ابحث باسم المنتج أو التاجر'
+              : 'ابحث عن تصنيف',
           hintStyle: TextStyle(
               fontFamily: 'Cairo',
               fontSize: 12.5,

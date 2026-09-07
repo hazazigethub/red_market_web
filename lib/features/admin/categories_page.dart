@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AdminCategoriesScreen extends StatefulWidget {
-  const AdminCategoriesScreen({super.key});
+  /// نص البحث — يأتي من الغلاف
+  final String searchQuery;
+
+  const AdminCategoriesScreen({super.key, this.searchQuery = ''});
 
   @override
   State<AdminCategoriesScreen> createState() => _AdminCategoriesScreenState();
@@ -16,7 +19,7 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
   String? _selectedStoreCategoryId;
   String? _selectedStoreCategoryName;
   bool _isProcessing = false;
-  String _searchQuery = "";
+  String get _searchQuery => widget.searchQuery;
 
   @override
   void dispose() {
@@ -141,63 +144,32 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
         body: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            SliverAppBar(
-              expandedHeight: 110.0,
-              floating: false,
-              pinned: true,
-              elevation: 0,
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF1F2937),
-              surfaceTintColor: Colors.transparent,
-              centerTitle: true,
-              leadingWidth: 70,
-              leading: _selectedStoreCategoryId != null
-                  ? Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new,
-                            color: Color(0xFF1F2937), size: 18),
-                        onPressed: () => setState(() {
-                          _selectedStoreCategoryId = null;
-                          _selectedStoreCategoryName = null;
-                          _searchQuery = "";
-                          _searchController.clear();
-                        }),
-                      ),
-                    )
-                  : null,
-              title: const Text(
-                "إدارة التصنيفات",
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Color(0xFF1F2937),
-                ),
-              ),
-              flexibleSpace: FlexibleSpaceBar(
-                background: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [brandRed, Color(0xFF8E110F)],
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
-                        ),
+            // شريط رجوع يظهر داخل الأقسام الفرعية فقط
+            if (_selectedStoreCategoryId != null)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => setState(() {
+                        _selectedStoreCategoryId = null;
+                        _selectedStoreCategoryName = null;
+                        _searchController.clear();
+                      }),
+                      icon: const Icon(Icons.arrow_back_ios_new, size: 15),
+                      label: const Text('الأقسام الرئيسية',
+                          style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold)),
+                      style: TextButton.styleFrom(
+                        foregroundColor: brandRed,
                       ),
                     ),
-                    Positioned(
-                      bottom: 15,
-                      left: 15,
-                      right: 15,
-                      child: _buildSearchBar(),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 5),
@@ -257,39 +229,6 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      height: 45,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(11),
-        border: Border.all(color: const Color(0xFFEDEFF3)),
-      ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (val) => setState(() => _searchQuery = val.trim()),
-        style: const TextStyle(fontFamily: 'Cairo', fontSize: 14),
-        decoration: InputDecoration(
-          hintText: "ابحث عن تصنيف...",
-          hintStyle:
-              TextStyle(fontFamily: 'Cairo', color: Colors.grey.shade600),
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, size: 18),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = "");
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 10),
-        ),
-      ),
-    );
-  }
-
   Widget _buildCategoryGrid(
       {required bool isGeneral, required Color brandRed}) {
     final tableName = isGeneral ? 'store_categories' : 'product_categories';
@@ -342,7 +281,6 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
           setState(() {
             _selectedStoreCategoryId = item['id'].toString();
             _selectedStoreCategoryName = item['name'];
-            _searchQuery = "";
             _searchController.clear();
           });
         }

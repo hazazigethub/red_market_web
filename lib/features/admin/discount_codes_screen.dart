@@ -150,10 +150,9 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
-      child: Scaffold(
-                body: Container(
-          color: Colors.grey[100],
-          child: Column(
+      child: Container(
+        color: const Color(0xFFF7F8FA),
+        child: Column(
             children: [
               const SizedBox(height: 15),
               Padding(
@@ -191,8 +190,7 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
                       _activeTab == 0 ? _buildCreateView() : _buildListView(),
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );
