@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'admin_merchants_screen.dart';
 
@@ -11,62 +11,82 @@ class AdminReportsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-                body: SingleChildScrollView(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                child: Row(
-                  children: [
-                    _buildNavigationCard(
-                      context,
-                      "بلاغات المتاجر",
-                      Icons.storefront_outlined,
-                      Colors.indigo,
-                      'merchant',
-                      'reports',
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: Row(
-                  children: [
-                    _buildNavigationCard(
-                      context,
-                      "خدمة العملاء",
-                      Icons.support_agent,
-                      Colors.green,
-                      'user_support',
-                      'reports',
-                    ),
-                    const SizedBox(width: 15),
-                    _buildNavigationCard(
-                      context,
-                      "دعم المتاجر",
-                      Icons.contact_support_outlined,
-                      Colors.teal,
-                      'merchant_support',
-                      'reports',
-                    ),
-                  ],
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text("اختر القسم لمراجعة الوارد واتخاذ إجراء مباشر",
+      child: Container(
+        color: const Color(0xFFF7F8FA),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1050),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('البلاغات والدعم',
                       style: TextStyle(
                           fontFamily: 'Cairo',
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black54,
-                          fontSize: 16)),
-                ),
+                          fontSize: 19,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  Text(
+                    'اختر القسم لمراجعة الوارد واتخاذ إجراء مباشر',
+                    style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 11.5,
+                        color: Colors.grey.shade500),
+                  ),
+
+                  const SizedBox(height: 22),
+
+                  LayoutBuilder(
+                    builder: (context, c) {
+                      const gap = 12.0;
+                      final cols = c.maxWidth < 620 ? 1 : 3;
+                      final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+                      return Wrap(
+                        spacing: gap,
+                        runSpacing: gap,
+                        children: [
+                          SizedBox(
+                            width: w,
+                            child: _buildNavigationCard(
+                              context,
+                              "بلاغات المتاجر",
+                              Icons.storefront_outlined,
+                              Colors.indigo,
+                              'merchant',
+                              'reports',
+                            ),
+                          ),
+                          SizedBox(
+                            width: w,
+                            child: _buildNavigationCard(
+                              context,
+                              "خدمة العملاء",
+                              Icons.support_agent,
+                              Colors.green,
+                              'user_support',
+                              'reports',
+                            ),
+                          ),
+                          SizedBox(
+                            width: w,
+                            child: _buildNavigationCard(
+                              context,
+                              "دعم المتاجر",
+                              Icons.contact_support_outlined,
+                              Colors.teal,
+                              'merchant_support',
+                              'reports',
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -79,11 +99,10 @@ class AdminReportsScreen extends StatelessWidget {
     final String filterColumn = 'target_type';
     const Color brandRed = Color(0xFFC21815);
 
-    return Expanded(
-      child: InkWell(
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        onTap: () {
+    return InkWell(
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -101,9 +120,8 @@ class AdminReportsScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 10),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: brandRed.withOpacity(0.5), width: 1.5),
-            boxShadow: const [],
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFEDEFF3)),
           ),
           child: Stack(
             clipBehavior: Clip.none,
@@ -170,7 +188,6 @@ class AdminReportsScreen extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }
@@ -225,7 +242,7 @@ class ReportsDetailsPage extends StatelessWidget {
           backgroundColor: Colors.white,
           surfaceTintColor: Colors.white,
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           titlePadding: EdgeInsets.zero,
           title: Container(
             padding: const EdgeInsets.all(16),
@@ -399,18 +416,18 @@ class ReportsDetailsPage extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.grey.shade100,
+        backgroundColor: const Color(0xFFF7F8FA),
         appBar: AppBar(
-          backgroundColor: brandRed,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
           elevation: 0,
+          foregroundColor: const Color(0xFF1F2937),
           title: Text(title,
               style: const TextStyle(
                   fontFamily: 'Cairo',
                   fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  color: Colors.white)),
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
+                  fontSize: 16,
+                  color: Color(0xFF1F2937))),
         ),
         body: StreamBuilder<List<Map<String, dynamic>>>(
           stream: supabase
@@ -429,18 +446,27 @@ class ReportsDetailsPage extends StatelessWidget {
             }
             final data = snapshot.data ?? [];
             if (data.isEmpty) {
-              return const Center(
-                  child: Text("لا توجد بلاغات قيد المراجعة حالياً",
-                      style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold)));
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.inbox_outlined,
+                        size: 58, color: Colors.grey.shade300),
+                    const SizedBox(height: 14),
+                    const Text("لا توجد بلاغات قيد المراجعة حالياً",
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 15,
+                            color: Colors.grey)),
+                  ],
+                ),
+              );
             }
 
             return GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              padding: const EdgeInsets.all(20),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 420,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
                 mainAxisExtent: 320,
@@ -458,9 +484,8 @@ class ReportsDetailsPage extends StatelessWidget {
                   elevation: 0,
                   color: Colors.white,
                   shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                          color: brandRed.withOpacity(0.3), width: 1),
-                      borderRadius: BorderRadius.circular(15)),
+                      side: const BorderSide(color: Color(0xFFEDEFF3)),
+                      borderRadius: BorderRadius.circular(14)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -652,7 +677,7 @@ class ReportsDetailsPage extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),

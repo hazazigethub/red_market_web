@@ -130,6 +130,11 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
     ));
   }
 
+  /// يُنشأ مرة واحدة — وإلا أُعيد الاشتراك مع كل بناء
+  late final Stream<List<Map<String, dynamic>>> _logsStream = supabase
+      .from('notifications_log')
+      .stream(primaryKey: ['id']).order('created_at', ascending: false);
+
   @override
   Widget build(BuildContext context) {
     const Color brandRed = Color(0xFFC21815);
@@ -605,64 +610,156 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
 
   Widget _buildLogsTab(Color brandRed) {
     return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: supabase
-          .from('notifications_log')
-          .stream(primaryKey: ['id']).order('created_at', ascending: false),
+      stream: _logsStream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
-          return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData) {
+          return Center(
+              child: CircularProgressIndicator(color: brandRed));
+        }
+
         final logs = snapshot.data!;
-        if (logs.isEmpty)
-          return const Center(
-              child: Text("لا يوجد سجل إشعارات بعد",
-                  style: TextStyle(fontFamily: 'Cairo')));
-        return ListView.builder(
-          padding: const EdgeInsets.all(15),
-          itemCount: logs.length,
-          itemBuilder: (ctx, i) {
-            final item = logs[i];
-            bool isSent = item['status'] == 'sent';
-            return Card(
-              elevation: 0.5,
-              margin: const EdgeInsets.only(bottom: 10),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor:
-                      isSent ? Colors.green.shade50 : Colors.blue.shade50,
-                  child: Icon(isSent ? Icons.check_circle : Icons.watch_later,
-                      color: isSent ? Colors.green : Colors.blue, size: 20),
-                ),
-                title: Text(item['title'],
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+
+        if (logs.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 60),
+            child: Column(
+              children: [
+                Icon(Icons.history_rounded,
+                    size: 58, color: Colors.grey.shade300),
+                const SizedBox(height: 14),
+                const Text("لا يوجد سجل إشعارات بعد",
+                    style: TextStyle(
                         fontFamily: 'Cairo',
-                        fontSize: 13)),
-                subtitle: Text(item['body'],
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11)),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                        intl.DateFormat('MM/dd')
-                            .format(DateTime.parse(item['created_at'])),
-                        style: const TextStyle(fontSize: 9)),
-                    Text(
-                        intl.DateFormat('HH:mm')
-                            .format(DateTime.parse(item['created_at'])),
-                        style:
-                            const TextStyle(fontSize: 9, color: Colors.grey)),
-                  ],
-                ),
-              ),
-            );
-          },
+                        fontSize: 15,
+                        color: Colors.grey)),
+              ],
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+          child: LayoutBuilder(
+            builder: (context, c) {
+              const gap = 12.0;
+              int cols = 3;
+              if (c.maxWidth < 560) {
+                cols = 1;
+              } else if (c.maxWidth < 900) {
+                cols = 2;
+              }
+              final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: logs
+                    .map((item) => SizedBox(
+                        width: w, child: _logCard(item, brandRed)))
+                    .toList(),
+              );
+            },
+          ),
         );
       },
+    );
+  }
+
+  Widget _logCard(Map<String, dynamic> item, Color brandRed) {
+    final bool isSent = item['status'] == 'sent';
+    final created = DateTime.tryParse(item['created_at']?.toString() ?? '');
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFEDEFF3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: (isSent ? Colors.green : Colors.blue)
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(
+                  isSent
+                      ? Icons.check_circle_rounded
+                      : Icons.schedule_rounded,
+                  size: 16,
+                  color: isSent ? Colors.green : Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  (item['title'] ?? '').toString(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          Text(
+            (item['body'] ?? '').toString(),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 11.5,
+                height: 1.8,
+                color: Colors.grey.shade600),
+          ),
+
+          const SizedBox(height: 12),
+          const Divider(color: Color(0xFFEDEFF3), height: 1),
+          const SizedBox(height: 10),
+
+          Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (isSent ? Colors.green : Colors.blue)
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Text(
+                  isSent ? 'أُرسل' : 'مجدول',
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                      color: isSent ? Colors.green : Colors.blue),
+                ),
+              ),
+              const Spacer(),
+              if (created != null)
+                Text(
+                  intl.DateFormat('yyyy/MM/dd · HH:mm').format(created),
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 10.5,
+                      color: Colors.grey.shade500),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

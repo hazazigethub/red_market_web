@@ -342,7 +342,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.campaign_outlined,
-                            size: 60, color: Colors.grey.withOpacity(0.4)),
+                            size: 58, color: Colors.grey.shade300),
                         const SizedBox(height: 12),
                         const Text("لا توجد إعلانات بعد",
                             style: TextStyle(
@@ -353,8 +353,15 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                 : RefreshIndicator(
                     onRefresh: () => _fetchAnnouncements(),
                     color: brandRed,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                    child: GridView.builder(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 400,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        mainAxisExtent: 330,
+                      ),
                       itemCount: _announcements.length,
                       itemBuilder: (context, index) {
                         final ann = _announcements[index];
@@ -363,7 +370,8 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                         final int merchantViews = ann['merchant_views'] ?? 0;
 
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
+                          margin: EdgeInsets.zero,
+                          clipBehavior: Clip.antiAlias,
                           elevation: 0,
                           color: Colors.white,
                           shape: RoundedRectangleBorder(

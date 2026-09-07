@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -378,12 +378,13 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
         });
       },
       child: Container(
-        height: 45,
-        width: 45,
+        height: 44,
+        width: 44,
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Theme.of(context).dividerColor)),
-        child: Icon(icon, color: color, size: 22),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(color: const Color(0xFFEDEFF3))),
+        child: Icon(icon, color: color, size: 20),
       ),
     );
   }
@@ -393,35 +394,45 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
     const Color brandRed = Color(0xFFC21815);
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-                body: Column(
+      child: Container(
+        color: const Color(0xFFF7F8FA),
+        child: Column(
           children: [
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 15.0),
-              child: Row(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1050),
+                  child: Row(
                 children: [
                   Expanded(
                     child: SizedBox(
-                      height: 45,
+                      height: 44,
                       child: TextField(
                         controller: _searchController,
                         style:
                             const TextStyle(fontFamily: 'Cairo', fontSize: 13),
                         decoration: InputDecoration(
-                          hintText: "بحث عن بنر...",
-                          prefixIcon: const Icon(Icons.search,
-                              color: brandRed, size: 20),
+                          hintText: "بحث عن بنر",
+                          hintStyle: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 12.5,
+                              color: Colors.grey.shade400),
+                          prefixIcon: Icon(Icons.search_rounded,
+                              size: 19, color: Colors.grey.shade500),
                           filled: true,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide:
-                                  BorderSide(color: Colors.grey.shade300)),
+                          fillColor: Colors.white,
+                          isDense: true,
                           enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide:
-                                  BorderSide(color: Colors.grey.shade200)),
-                          contentPadding: EdgeInsets.zero,
+                              borderRadius: BorderRadius.circular(11),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFEDEFF3))),
+                          focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(11),
+                              borderSide: const BorderSide(
+                                  color: brandRed, width: 1.4)),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
                         ),
                       ),
                     ),
@@ -436,15 +447,18 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
                   GestureDetector(
                     onTap: () => _showAddBannerSheet(brandRed),
                     child: Container(
-                      height: 45,
-                      width: 45,
+                      height: 44,
+                      width: 44,
                       decoration: BoxDecoration(
                           color: brandRed,
-                          borderRadius: BorderRadius.circular(10)),
-                      child: const Icon(Icons.add, color: Colors.white),
+                          borderRadius: BorderRadius.circular(11)),
+                      child: const Icon(Icons.add_rounded,
+                          color: Colors.white, size: 22),
                     ),
                   ),
                 ],
+                  ),
+                ),
               ),
             ),
             Expanded(
@@ -478,35 +492,72 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
                       .toList();
 
                   return SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Column(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1050),
+                        child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        ...wideBanners
-                            .map((banner) => Container(
-                                  width: double.infinity,
-                                  margin: const EdgeInsets.only(bottom: 15),
-                                  child:
-                                      _buildBannerCard(banner, true, brandRed),
-                                ))
-                            .toList(),
-                        if (smallBanners.isNotEmpty) ...[
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                              childAspectRatio: 1.2,
-                            ),
-                            itemCount: smallBanners.length,
-                            itemBuilder: (context, index) => _buildBannerCard(
-                                smallBanners[index], false, brandRed),
+                        // ===== البنرات العريضة — اثنتان في الصف =====
+                        if (wideBanners.isNotEmpty)
+                          LayoutBuilder(
+                            builder: (context, c) {
+                              const gap = 12.0;
+                              final cols = c.maxWidth < 700 ? 1 : 2;
+                              final w =
+                                  (c.maxWidth - gap * (cols - 1)) / cols;
+
+                              return Wrap(
+                                spacing: gap,
+                                runSpacing: gap,
+                                children: wideBanners
+                                    .map((banner) => SizedBox(
+                                          width: w,
+                                          child: _buildBannerCard(
+                                              banner, true, brandRed),
+                                        ))
+                                    .toList(),
+                              );
+                            },
                           ),
-                        ],
+
+                        if (wideBanners.isNotEmpty &&
+                            smallBanners.isNotEmpty)
+                          const SizedBox(height: 12),
+
+                        // ===== البنرات الصغيرة — أربع في الصف =====
+                        if (smallBanners.isNotEmpty)
+                          LayoutBuilder(
+                            builder: (context, c) {
+                              const gap = 12.0;
+                              int cols = 4;
+                              if (c.maxWidth < 500) {
+                                cols = 2;
+                              } else if (c.maxWidth < 780) {
+                                cols = 3;
+                              }
+                              final w =
+                                  (c.maxWidth - gap * (cols - 1)) / cols;
+
+                              return Wrap(
+                                spacing: gap,
+                                runSpacing: gap,
+                                children: smallBanners
+                                    .map((banner) => SizedBox(
+                                          width: w,
+                                          child: _buildBannerCard(
+                                              banner, false, brandRed),
+                                        ))
+                                    .toList(),
+                              );
+                            },
+                          ),
+
                         const SizedBox(height: 20),
                       ],
+                        ),
+                      ),
                     ),
                   );
                 },
