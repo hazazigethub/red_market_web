@@ -25,6 +25,7 @@ import 'admin_financial_screen.dart';
 import 'admin_users_hub_screen.dart';
 import 'admin_catalog_hub_screen.dart';
 import 'admin_billing_hub_screen.dart';
+import 'admin_messages_hub_screen.dart';
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -45,14 +46,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
     {'label': 'رسائل التواصل', 'icon': Icons.mark_email_unread_outlined},
     {'label': 'الباقات وأكواد الخصم', 'icon': Icons.card_membership_outlined},
     {'label': 'طلبات الاسترداد', 'icon': Icons.replay_circle_filled_outlined},
-    {'label': 'الإشعارات', 'icon': Icons.notifications_outlined},
+    {'label': 'الرسائل', 'icon': Icons.notifications_outlined},
     {'label': 'النشرة الأسبوعية', 'icon': Icons.mail_outline_rounded},
     {'label': 'البنرات', 'icon': Icons.ad_units_outlined},
     {'label': 'الأسابيع الإعلانية', 'icon': Icons.calendar_month_outlined},
     {'label': 'بنرات التجار', 'icon': Icons.storefront_outlined},
     {'label': 'إعلان الشاشة الرئيسية', 'icon': Icons.smartphone_outlined},
     {'label': 'الحملات الموسمية', 'icon': Icons.campaign_outlined},
-    {'label': 'الإعلانات', 'icon': Icons.campaign_outlined},
     {'label': 'الزيارات', 'icon': Icons.trending_up_outlined},
   ];
 
@@ -73,7 +73,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       case 6:
         return const AdminRefundsScreen();
       case 7:
-        return const AdminNotificationsScreen();
+        return const AdminMessagesHubScreen();
       case 8:
         return const AdminNewsletterScreen();
       case 9:
@@ -87,8 +87,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
       case 13:
         return const AdminCampaignsScreen();
       case 14:
-        return const AdminAnnouncementsScreen();
-      case 15:
         return const AdminAnalyticsVisitsScreen();
       default:
         return _welcome();
