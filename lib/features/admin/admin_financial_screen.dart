@@ -17,6 +17,14 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
   Map<String, dynamic>? _data;
   bool _loading = true;
 
+  int? _year;
+  int? _month;
+
+  static const _months = [
+    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -26,7 +34,10 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final res = await supabase.rpc('get_financial_report');
+      final res = await supabase.rpc('get_financial_report', params: {
+        'p_year': _year,
+        'p_month': _month,
+      });
       if (!mounted) return;
       setState(() {
         _data = Map<String, dynamic>.from(res as Map);
@@ -119,6 +130,54 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
               fontFamily: 'Cairo',
               fontSize: 11.5,
               color: Colors.grey.shade500),
+        ),
+
+        const SizedBox(height: 16),
+
+        // ===== الفترة =====
+        Row(
+          children: [
+            SizedBox(
+              width: 150,
+              child: _dropdown<int?>(
+                icon: Icons.calendar_today_rounded,
+                value: _year,
+                items: [
+                  (value: null, label: 'كل السنوات'),
+                  ...List.generate(4, (i) {
+                    final y = DateTime.now().year - i;
+                    return (value: y, label: '$y');
+                  }),
+                ],
+                onChanged: (v) {
+                  setState(() {
+                    _year = v;
+                    if (v == null) _month = null;
+                  });
+                  _load();
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            SizedBox(
+              width: 150,
+              child: _dropdown<int?>(
+                icon: Icons.date_range_rounded,
+                enabled: _year != null,
+                value: _month,
+                items: [
+                  (value: null, label: 'كل الشهور'),
+                  ...List.generate(
+                      12,
+                      (i) => (value: i + 1, label: _months[i])),
+                ],
+                onChanged: (v) {
+                  setState(() => _month = v);
+                  _load();
+                },
+              ),
+            ),
+          ],
         ),
 
         const SizedBox(height: 20),
@@ -291,6 +350,59 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
           },
         ),
       ],
+    );
+  }
+
+  /// قائمة منسدلة للفترة
+  Widget _dropdown<T>({
+    required IconData icon,
+    required T value,
+    required List<({T value, String label})> items,
+    required ValueChanged<T?> onChanged,
+    bool enabled = true,
+  }) {
+    return Opacity(
+      opacity: enabled ? 1 : 0.5,
+      child: Container(
+        height: 42,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(11),
+          border: Border.all(color: const Color(0xFFEDEFF3)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 15, color: Colors.grey.shade500),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<T>(
+                  value: value,
+                  isExpanded: true,
+                  isDense: true,
+                  icon: Icon(Icons.keyboard_arrow_down_rounded,
+                      size: 17, color: Colors.grey.shade500),
+                  style: const TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 12,
+                      color: Color(0xFF1F2937)),
+                  items: items
+                      .map((e) => DropdownMenuItem<T>(
+                            value: e.value,
+                            child: Text(e.label,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontFamily: 'Cairo', fontSize: 12)),
+                          ))
+                      .toList(),
+                  onChanged: enabled ? onChanged : null,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
