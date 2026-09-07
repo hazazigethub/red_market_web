@@ -40,17 +40,17 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
   static const _sections = <Map<String, dynamic>>[
     {'label': 'التقرير المالي', 'icon': Icons.payments_outlined},
-    {'label': 'العملاء والتجار', 'icon': Icons.groups_outlined},
+    {'label': 'إدارة العملاء والتجار', 'icon': Icons.groups_outlined},
     {'label': 'المنتجات والتصنيفات', 'icon': Icons.inventory_2_outlined},
-    {'label': 'التواصل والدعم', 'icon': Icons.support_agent_outlined},
     {'label': 'الباقات وأكواد الخصم', 'icon': Icons.card_membership_outlined},
     {'label': 'طلبات الاسترداد', 'icon': Icons.replay_circle_filled_outlined},
-    {'label': 'الإشعارات والإعلانات', 'icon': Icons.notifications_outlined},
+    {'label': 'التواصل والدعم', 'icon': Icons.support_agent_outlined},
     {'label': 'النشرة الأسبوعية', 'icon': Icons.mail_outline_rounded},
-    {'label': 'البنرات', 'icon': Icons.ad_units_outlined},
-    {'label': 'بنرات التجار', 'icon': Icons.storefront_outlined},
+    {'label': 'الإشعارات والإعلانات', 'icon': Icons.notifications_outlined},
     {'label': 'إعلان الشاشة الرئيسية', 'icon': Icons.smartphone_outlined},
     {'label': 'الحملات الموسمية', 'icon': Icons.campaign_outlined},
+    {'label': 'بنرات التجار', 'icon': Icons.storefront_outlined},
+    {'label': 'البنرات', 'icon': Icons.ad_units_outlined},
     {'label': 'الزيارات', 'icon': Icons.trending_up_outlined},
   ];
 
@@ -63,23 +63,23 @@ class _AdminHomePageState extends State<AdminHomePage> {
       case 2:
         return const AdminCatalogHubScreen();
       case 3:
-        return const AdminSupportHubScreen();
-      case 4:
         return const AdminBillingHubScreen();
-      case 5:
+      case 4:
         return const AdminRefundsScreen();
+      case 5:
+        return const AdminSupportHubScreen();
       case 6:
-        return const AdminMessagesHubScreen();
-      case 7:
         return const AdminNewsletterScreen();
+      case 7:
+        return const AdminMessagesHubScreen();
       case 8:
-        return const AdminBannersScreen();
-      case 9:
-        return const AdminMerchantBannersScreen();
-      case 10:
         return const AdminSplashAdsScreen();
-      case 11:
+      case 9:
         return const AdminCampaignsScreen();
+      case 10:
+        return const AdminMerchantBannersScreen();
+      case 11:
+        return const AdminBannersScreen();
       case 12:
         return const AdminAnalyticsVisitsScreen();
       default:

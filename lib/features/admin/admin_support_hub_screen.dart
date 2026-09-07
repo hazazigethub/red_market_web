@@ -30,7 +30,7 @@ class _AdminSupportHubScreenState extends State<AdminSupportHubScreen> {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1050),
+                  constraints: const BoxConstraints(maxWidth: 1600),
                   child: Wrap(
                     spacing: 10,
                     runSpacing: 10,

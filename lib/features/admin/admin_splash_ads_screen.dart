@@ -635,7 +635,7 @@ class _AdminSplashAdsScreenState extends State<AdminSplashAdsScreen> {
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1100),
+              constraints: const BoxConstraints(maxWidth: 1600),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

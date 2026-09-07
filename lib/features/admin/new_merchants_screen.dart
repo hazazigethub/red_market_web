@@ -117,7 +117,7 @@ class _NewMerchantsScreenState extends State<NewMerchantsScreen> {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1050),
+                constraints: const BoxConstraints(maxWidth: 1600),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -165,11 +165,13 @@ class _NewMerchantsScreenState extends State<NewMerchantsScreen> {
                       LayoutBuilder(
                         builder: (context, c) {
                           const gap = 12.0;
-                          int cols = 3;
+                          int cols = 4;
                           if (c.maxWidth < 560) {
                             cols = 1;
                           } else if (c.maxWidth < 850) {
                             cols = 2;
+                          } else if (c.maxWidth < 1200) {
+                            cols = 3;
                           }
                           final w = (c.maxWidth - gap * (cols - 1)) / cols;
 

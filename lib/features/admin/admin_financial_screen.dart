@@ -73,7 +73,7 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1050),
+              constraints: const BoxConstraints(maxWidth: 1600),
               child: _loading
                   ? const Padding(
                       padding: EdgeInsets.symmetric(vertical: 80),
@@ -239,7 +239,7 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
               LayoutBuilder(
                 builder: (context, c) {
                   const gap = 10.0;
-                  final cols = c.maxWidth < 520 ? 2 : 3;
+                  final cols = c.maxWidth < 520 ? 1 : 3;
                   final w = (c.maxWidth - gap * (cols - 1)) / cols;
 
                   return Wrap(
@@ -333,7 +333,12 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
         LayoutBuilder(
           builder: (context, c) {
             const gap = 12.0;
-            final cols = c.maxWidth < 620 ? 1 : 2;
+            int cols = 4;
+            if (c.maxWidth < 620) {
+              cols = 1;
+            } else if (c.maxWidth < 1000) {
+              cols = 2;
+            }
             final w = (c.maxWidth - gap * (cols - 1)) / cols;
 
             return Wrap(

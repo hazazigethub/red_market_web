@@ -415,7 +415,7 @@ class _AdminMerchantBannersScreenState
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1000),
+              constraints: const BoxConstraints(maxWidth: 1600),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -510,7 +510,27 @@ class _AdminMerchantBannersScreenState
                   else if (visible.isEmpty)
                     _empty()
                   else
-                    ...visible.map(_card),
+                    LayoutBuilder(
+                      builder: (context, c) {
+                        const gap = 12.0;
+                        int cols = 3;
+                        if (c.maxWidth < 620) {
+                          cols = 1;
+                        } else if (c.maxWidth < 1000) {
+                          cols = 2;
+                        }
+                        final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+                        return Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: visible
+                              .map((b) =>
+                                  SizedBox(width: w, child: _card(b)))
+                              .toList(),
+                        );
+                      },
+                    ),
                   ],
                 ],
               ),
@@ -539,7 +559,6 @@ class _AdminMerchantBannersScreenState
     };
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -860,7 +879,14 @@ class _AdminMerchantBannersScreenState
         LayoutBuilder(
           builder: (context, c) {
             const gap = 12.0;
-            final cols = c.maxWidth < 560 ? 2 : 3;
+            int cols = 6;
+            if (c.maxWidth < 480) {
+              cols = 2;
+            } else if (c.maxWidth < 750) {
+              cols = 3;
+            } else if (c.maxWidth < 1100) {
+              cols = 4;
+            }
             final w = (c.maxWidth - gap * (cols - 1)) / cols;
 
             return Wrap(

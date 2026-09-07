@@ -686,7 +686,7 @@ class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1000),
+              constraints: const BoxConstraints(maxWidth: 1600),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -744,7 +744,27 @@ class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
                   else if (_campaigns.isEmpty)
                     _empty()
                   else
-                    ..._campaigns.map(_card),
+                    LayoutBuilder(
+                      builder: (context, c) {
+                        const gap = 12.0;
+                        int cols = 3;
+                        if (c.maxWidth < 620) {
+                          cols = 1;
+                        } else if (c.maxWidth < 1000) {
+                          cols = 2;
+                        }
+                        final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+                        return Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: _campaigns
+                              .map((camp) =>
+                                  SizedBox(width: w, child: _card(camp)))
+                              .toList(),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
@@ -763,7 +783,6 @@ class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
     final desc = (c['description'] ?? '').toString();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,

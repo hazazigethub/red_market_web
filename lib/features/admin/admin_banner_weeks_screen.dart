@@ -300,7 +300,7 @@ class _AdminBannerWeeksScreenState extends State<AdminBannerWeeksScreen> {
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200),
+              constraints: const BoxConstraints(maxWidth: 1600),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -385,13 +385,15 @@ class _AdminBannerWeeksScreenState extends State<AdminBannerWeeksScreen> {
                     LayoutBuilder(
                       builder: (context, c) {
                         const gap = 14.0;
-                        int cols = 4;
-                        if (c.maxWidth < 560) {
-                          cols = 1;
-                        } else if (c.maxWidth < 820) {
+                        int cols = 6;
+                        if (c.maxWidth < 480) {
                           cols = 2;
-                        } else if (c.maxWidth < 1080) {
+                        } else if (c.maxWidth < 700) {
                           cols = 3;
+                        } else if (c.maxWidth < 950) {
+                          cols = 4;
+                        } else if (c.maxWidth < 1250) {
+                          cols = 5;
                         }
 
                         final w = (c.maxWidth - gap * (cols - 1)) / cols;
