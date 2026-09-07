@@ -21,6 +21,7 @@ import 'admin_banner_weeks_screen.dart';
 import 'admin_merchant_banners_screen.dart';
 import 'admin_splash_ads_screen.dart';
 import 'admin_campaigns_screen.dart';
+import 'admin_financial_screen.dart';
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -34,6 +35,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   int _index = -1;
 
   static const _sections = <Map<String, dynamic>>[
+    {'label': 'التقرير المالي', 'icon': Icons.payments_outlined},
     {'label': 'إدارة العملاء', 'icon': Icons.person_search_outlined},
     {'label': 'إدارة التجار', 'icon': Icons.manage_accounts_outlined},
     {'label': 'التجار الجدد', 'icon': Icons.fiber_new_outlined},
@@ -58,42 +60,44 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Widget _sectionBody(int i) {
     switch (i) {
       case 0:
-        return const AdminUsersScreen();
+        return const AdminFinancialScreen();
       case 1:
-        return const AdminMerchantsScreen();
+        return const AdminUsersScreen();
       case 2:
-        return const NewMerchantsScreen();
+        return const AdminMerchantsScreen();
       case 3:
-        return const AdminCategoriesScreen();
+        return const NewMerchantsScreen();
       case 4:
-        return const AdminProductsScreen();
+        return const AdminCategoriesScreen();
       case 5:
-        return const AdminReportsScreen();
+        return const AdminProductsScreen();
       case 6:
-        return const AdminContactsScreen();
+        return const AdminReportsScreen();
       case 7:
-        return const AdminPlansScreen();
+        return const AdminContactsScreen();
       case 8:
-        return const AdminRefundsScreen();
+        return const AdminPlansScreen();
       case 9:
-        return const DiscountCodesScreen();
+        return const AdminRefundsScreen();
       case 10:
-        return const AdminNotificationsScreen();
+        return const DiscountCodesScreen();
       case 11:
-        return const AdminNewsletterScreen();
+        return const AdminNotificationsScreen();
       case 12:
-        return const AdminBannersScreen();
+        return const AdminNewsletterScreen();
       case 13:
-        return const AdminBannerWeeksScreen();
+        return const AdminBannersScreen();
       case 14:
-        return const AdminMerchantBannersScreen();
+        return const AdminBannerWeeksScreen();
       case 15:
-        return const AdminSplashAdsScreen();
+        return const AdminMerchantBannersScreen();
       case 16:
-        return const AdminCampaignsScreen();
+        return const AdminSplashAdsScreen();
       case 17:
-        return const AdminAnnouncementsScreen();
+        return const AdminCampaignsScreen();
       case 18:
+        return const AdminAnnouncementsScreen();
+      case 19:
         return const AdminAnalyticsVisitsScreen();
       default:
         return _welcome();
