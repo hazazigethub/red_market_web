@@ -3,7 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 class AdminProductsScreen extends StatefulWidget {
-  const AdminProductsScreen({super.key});
+  /// نص البحث — يأتي من الغلاف
+  final String searchQuery;
+
+  const AdminProductsScreen({super.key, this.searchQuery = ''});
 
   @override
   State<AdminProductsScreen> createState() => _AdminProductsScreenState();
@@ -11,7 +14,9 @@ class AdminProductsScreen extends StatefulWidget {
 
 class _AdminProductsScreenState extends State<AdminProductsScreen> {
   final supabase = Supabase.instance.client;
-  String _searchQuery = '';
+
+  String get _searchQuery => widget.searchQuery;
+
   bool _showOnlyReported = false;
   bool _showOnlyBanned = false; // حالة جديدة لعرض المحظورات فقط
 
@@ -21,34 +26,10 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
 
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-                body: Column(
+      child: Container(
+        color: const Color(0xFFF7F8FA),
+        child: Column(
           children: [
-            if (!_showOnlyReported && !_showOnlyBanned)
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 25),
-                decoration: const BoxDecoration(
-                  color: brandRed,
-                  borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(30),
-                      bottomRight: Radius.circular(30)),
-                ),
-                child: TextField(
-                  onChanged: (val) => setState(() => _searchQuery = val),
-                  style: const TextStyle(color: Colors.black87),
-                  decoration: InputDecoration(
-                    hintText: "ابحث باسم المنتج أو التاجر...",
-                    hintStyle: const TextStyle(
-                        fontFamily: 'Cairo', color: Colors.grey, fontSize: 13),
-                    prefixIcon: const Icon(Icons.search, color: brandRed),
-                    fillColor: Colors.white,
-                    filled: true,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide.none),
-                  ),
-                ),
-              ),
             Expanded(
               child: StreamBuilder<List<Map<String, dynamic>>>(
                 stream: supabase.from('products').stream(primaryKey: ['id']),

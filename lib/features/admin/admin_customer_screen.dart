@@ -1,9 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 class AdminUsersScreen extends StatefulWidget {
-  const AdminUsersScreen({super.key});
+  /// نص البحث — يأتي من الغلاف
+  final String searchQuery;
+
+  const AdminUsersScreen({super.key, this.searchQuery = ''});
 
   @override
   State<AdminUsersScreen> createState() => _AdminUsersScreenState();
@@ -12,7 +15,8 @@ class AdminUsersScreen extends StatefulWidget {
 class _AdminUsersScreenState extends State<AdminUsersScreen> {
   final supabase = Supabase.instance.client;
   static const Color brandRed = Color(0xFFC21815);
-  String _searchQuery = '';
+
+  String get _searchQuery => widget.searchQuery;
 
   /// كل العملاء على دفعات — يتجاوز حد الألف الافتراضي
   Future<List<Map<String, dynamic>>> _fetchAllCustomers() async {
@@ -38,34 +42,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-                body: Column(
+      child: Container(
+        color: const Color(0xFFF7F8FA),
+        child: Column(
           children: [
-            // قسم البحث العلوي
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 25),
-              decoration: const BoxDecoration(
-                color: brandRed,
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(30),
-                    bottomRight: Radius.circular(30)),
-              ),
-              child: TextField(
-                onChanged: (val) => setState(() => _searchQuery = val),
-                style: const TextStyle(color: Colors.black87),
-                decoration: InputDecoration(
-                  hintText: "ابحث باسم العميل أو رقم الهاتف...",
-                  hintStyle: const TextStyle(
-                      fontFamily: 'Cairo', color: Colors.grey, fontSize: 13),
-                  prefixIcon: const Icon(Icons.search, color: brandRed),
-                  fillColor: Colors.white,
-                  filled: true,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide.none),
-                ),
-              ),
-            ),
             Expanded(
               child: FutureBuilder<List<Map<String, dynamic>>>(
                 future: _fetchAllCustomers(),
@@ -131,12 +111,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                             child: InkWell(
                               splashColor: Colors.transparent,
                               highlightColor: Colors.transparent,
-                              onTap: () {
-                                setState(() => _searchQuery =
-                                    ""); // تصفير البحث عند فتح القائمة
-                                _showBannedBottomSheet(
-                                    context, bannedUsers, fourteenDaysAgo);
-                              },
+                              onTap: () => _showBannedBottomSheet(
+                                  context, bannedUsers, fourteenDaysAgo),
                               child: _buildSmallStatCard(
                                   "محظورون",
                                   "${bannedUsers.length}",

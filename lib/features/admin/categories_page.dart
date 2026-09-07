@@ -137,15 +137,18 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        backgroundColor: const Color(0xFFF7F8FA),
         body: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverAppBar(
-              expandedHeight: 160.0,
+              expandedHeight: 110.0,
               floating: false,
               pinned: true,
               elevation: 0,
-              backgroundColor: brandRed,
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF1F2937),
+              surfaceTintColor: Colors.transparent,
               centerTitle: true,
               leadingWidth: 70,
               leading: _selectedStoreCategoryId != null
@@ -153,7 +156,7 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
                       padding: const EdgeInsets.only(right: 10),
                       child: IconButton(
                         icon: const Icon(Icons.arrow_back_ios_new,
-                            color: Colors.white, size: 20),
+                            color: Color(0xFF1F2937), size: 18),
                         onPressed: () => setState(() {
                           _selectedStoreCategoryId = null;
                           _selectedStoreCategoryName = null;
@@ -167,9 +170,9 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
                 "إدارة التصنيفات",
                 style: TextStyle(
                   fontFamily: 'Cairo',
-                  fontWeight: FontWeight.w900,
-                  fontSize: 18,
-                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Color(0xFF1F2937),
                 ),
               ),
               flexibleSpace: FlexibleSpaceBar(
@@ -259,13 +262,8 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
       height: 45,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5))
-        ],
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: const Color(0xFFEDEFF3)),
       ),
       child: TextField(
         controller: _searchController,
