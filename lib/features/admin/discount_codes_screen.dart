@@ -154,40 +154,45 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
         color: const Color(0xFFF7F8FA),
         child: Column(
             children: [
-              const SizedBox(height: 15),
+              const SizedBox(height: 16),
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 115,
-                      height: 115,
-                      child: _buildCompactSquareCard(
-                        title: "إنشاء كود",
-                        icon: Icons.add_circle_outline,
-                        index: 0,
-                      ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1400),
+                    child: Row(
+                      children: [
+                        _buildCompactSquareCard(
+                          title: "إنشاء كود",
+                          icon: Icons.add_circle_outline,
+                          index: 0,
+                        ),
+                        const SizedBox(width: 10),
+                        _buildCompactSquareCard(
+                          title: "الأكواد الحالية",
+                          icon: Icons.format_list_bulleted_rounded,
+                          index: 1,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 15),
-                    SizedBox(
-                      width: 115,
-                      height: 115,
-                      child: _buildCompactSquareCard(
-                        title: "الأكواد الحالية",
-                        icon: Icons.format_list_bulleted_rounded,
-                        index: 1,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 15),
+
+              const SizedBox(height: 20),
+
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(15),
-                  child:
-                      _activeTab == 0 ? _buildCreateView() : _buildListView(),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1400),
+                      child: _activeTab == 0
+                          ? _buildCreateView()
+                          : _buildListView(),
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -198,46 +203,31 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
 
   Widget _buildCompactSquareCard(
       {required String title, required IconData icon, required int index}) {
-    bool isSelected = _activeTab == index;
+    final on = _activeTab == index;
 
-    return InkWell(
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
+    return GestureDetector(
       onTap: () => setState(() => _activeTab = index),
-      borderRadius: BorderRadius.circular(15),
       child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          color: isSelected ? brandRed : Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-            color: isSelected ? brandRed : Colors.grey.shade300,
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            )
-          ],
+          color: on ? brandRed : Colors.white,
+          borderRadius: BorderRadius.circular(11),
+          border: Border.all(color: on ? brandRed : const Color(0xFFEDEFF3)),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 32,
-              color: isSelected ? Colors.white : Colors.grey[600],
-            ),
-            const SizedBox(height: 8),
+            Icon(icon,
+                size: 17, color: on ? Colors.white : Colors.grey.shade600),
+            const SizedBox(width: 8),
             Text(
               title,
-              textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Cairo',
                 fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : Colors.grey[600],
+                fontWeight: on ? FontWeight.bold : FontWeight.normal,
+                color: on ? Colors.white : Colors.grey.shade700,
               ),
             ),
           ],
@@ -369,15 +359,9 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
               return Container(
                 decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                    border: Border.all(color: Theme.of(context).dividerColor)),
+                    borderRadius: BorderRadius.circular(14),
+                    border:
+                        Border.all(color: const Color(0xFFEDEFF3))),
                 child: Column(
                   children: [
                     Expanded(
@@ -446,7 +430,7 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
                         ),
                       ),
                     ),
-                    Divider(height: 1, color: Colors.grey[100]),
+                    const Divider(height: 1, color: Color(0xFFEDEFF3)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Row(
@@ -509,19 +493,22 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
       {required IconData icon, required String label}) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(fontFamily: 'Cairo', fontSize: 14),
-      prefixIcon: Icon(icon, color: brandRed),
+      labelStyle: TextStyle(
+          fontFamily: 'Cairo', fontSize: 13, color: Colors.grey.shade600),
+      prefixIcon: Icon(icon, size: 19, color: Colors.grey.shade500),
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.shade300)),
+          borderRadius: BorderRadius.circular(11),
+          borderSide: const BorderSide(color: Color(0xFFEDEFF3))),
       enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.shade300)),
+          borderRadius: BorderRadius.circular(11),
+          borderSide: const BorderSide(color: Color(0xFFEDEFF3))),
       focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: brandRed, width: 2)),
+          borderRadius: BorderRadius.circular(11),
+          borderSide: BorderSide(color: brandRed, width: 1.4)),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
 
