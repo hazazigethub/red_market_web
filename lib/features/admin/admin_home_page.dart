@@ -46,7 +46,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     {'label': 'رسائل التواصل', 'icon': Icons.mark_email_unread_outlined},
     {'label': 'الباقات وأكواد الخصم', 'icon': Icons.card_membership_outlined},
     {'label': 'طلبات الاسترداد', 'icon': Icons.replay_circle_filled_outlined},
-    {'label': 'الرسائل', 'icon': Icons.notifications_outlined},
+    {'label': 'الإشعارات والإعلانات', 'icon': Icons.notifications_outlined},
     {'label': 'النشرة الأسبوعية', 'icon': Icons.mail_outline_rounded},
     {'label': 'البنرات', 'icon': Icons.ad_units_outlined},
     {'label': 'الأسابيع الإعلانية', 'icon': Icons.calendar_month_outlined},

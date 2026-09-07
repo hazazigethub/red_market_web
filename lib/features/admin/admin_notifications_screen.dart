@@ -135,46 +135,78 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
     const Color brandRed = Color(0xFFC21815);
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA), // نفس خلفية صفحة التصنيفات
-                body: Column(
+      child: Container(
+        color: const Color(0xFFF7F8FA),
+        child: Column(
           children: [
-            // --- شريط التبويب بتصميم صفحة التصنيفات ---
-            Container(
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+            // ===== التبويبان =====
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1400),
+                  child: Row(
+                    children: [
+                      _navChip(0, 'إرسال جديد', Icons.send_rounded,
+                          brandRed),
+                      const SizedBox(width: 10),
+                      _navChip(1, 'السجل والجدولة',
+                          Icons.history_rounded, brandRed),
+                    ],
                   ),
-                ],
-              ),
-              child: TabBar(
-                controller: _tabController,
-                indicatorColor: brandRed,
-                indicatorWeight: 4,
-                labelColor: brandRed,
-                unselectedLabelColor: Colors.grey,
-                labelStyle: const TextStyle(
-                    fontFamily: 'Cairo', fontWeight: FontWeight.bold),
-                tabs: const [
-                  Tab(text: "إرسال جديد"),
-                  Tab(text: "السجل والجدولة"),
-                ],
+                ),
               ),
             ),
-            // عرض المحتوى بناءً على التبويب المختار
+
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildCreateNotificationTab(brandRed),
-                  _buildLogsTab(brandRed),
-                ],
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1400),
+                  child: TabBarView(
+                    controller: _tabController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildCreateNotificationTab(brandRed),
+                      _buildLogsTab(brandRed),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _navChip(int index, String label, IconData icon, Color brandRed) {
+    final on = _tabController.index == index;
+    return GestureDetector(
+      onTap: () {
+        _tabController.animateTo(index);
+        setState(() {});
+      },
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: on ? brandRed : Colors.white,
+          borderRadius: BorderRadius.circular(11),
+          border: Border.all(color: on ? brandRed : const Color(0xFFEDEFF3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 17, color: on ? Colors.white : Colors.grey.shade600),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 13,
+                fontWeight: on ? FontWeight.bold : FontWeight.normal,
+                color: on ? Colors.white : Colors.grey.shade700,
               ),
             ),
           ],
@@ -196,9 +228,11 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
             _buildTargetSelector(brandRed),
             const SizedBox(height: 20),
             Card(
-              elevation: 2,
+              elevation: 0,
+              color: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15)),
+                  borderRadius: BorderRadius.circular(14),
+                  side: const BorderSide(color: Color(0xFFEDEFF3))),
               child: Padding(
                 padding: const EdgeInsets.all(15),
                 child: Column(
@@ -330,8 +364,11 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
 
   Widget _buildTargetSelector(Color brandRed) {
     return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: Color(0xFFEDEFF3))),
       child: Padding(
         padding: const EdgeInsets.all(15),
         child: Column(
@@ -413,11 +450,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
             decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withOpacity(0.05), blurRadius: 10)
-                ],
-                border: Border.all(color: Theme.of(context).dividerColor)),
+                border: Border.all(color: const Color(0xFFEDEFF3))),
             child: FutureBuilder<List<dynamic>>(
               future: Future.wait([
                 supabase
@@ -516,8 +549,11 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
 
   Widget _buildSchedulingSection(Color brandRed) {
     return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: Color(0xFFEDEFF3))),
       child: SwitchListTile(
         activeColor: brandRed,
         title: const Text("تفعيل جدولة الإرسال",
@@ -633,20 +669,22 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
   InputDecoration _buildInputDecoration(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
-      prefixIcon: Icon(icon, size: 18, color: Colors.grey),
+      hintStyle: TextStyle(
+          fontFamily: 'Cairo', fontSize: 12.5, color: Colors.grey.shade400),
+      prefixIcon: Icon(icon, size: 19, color: Colors.grey.shade500),
       filled: true,
-      fillColor: Colors.grey.shade50,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+      fillColor: Colors.white,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey)),
+          borderRadius: BorderRadius.circular(11),
+          borderSide: const BorderSide(color: Color(0xFFEDEFF3))),
       enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey)),
+          borderRadius: BorderRadius.circular(11),
+          borderSide: const BorderSide(color: Color(0xFFEDEFF3))),
       focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFC21815))),
+          borderRadius: BorderRadius.circular(11),
+          borderSide: const BorderSide(color: Color(0xFFC21815), width: 1.4)),
     );
   }
 }

@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -301,27 +301,33 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
 
   InputDecoration _inputDec(String hint, IconData icon) => InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(fontFamily: 'Cairo', color: Colors.grey),
-        prefixIcon: Icon(icon, color: brandRed, size: 20),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        hintStyle: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 12.5,
+            color: Colors.grey.shade400),
+        prefixIcon: Icon(icon, size: 19, color: Colors.grey.shade500),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(11),
+            borderSide: const BorderSide(color: Color(0xFFEDEFF3))),
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300)),
+            borderRadius: BorderRadius.circular(11),
+            borderSide: const BorderSide(color: Color(0xFFEDEFF3))),
         focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: brandRed)),
+            borderRadius: BorderRadius.circular(11),
+            borderSide: const BorderSide(color: brandRed, width: 1.4)),
       );
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor:
-            isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-                floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: const Color(0xFFF7F8FA),
+        floatingActionButton: FloatingActionButton.extended(
           onPressed: _showAddDialog,
           backgroundColor: brandRed,
           icon: const Icon(Icons.add, color: Colors.white),
@@ -358,13 +364,14 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
 
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
+                          elevation: 0,
+                          color: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(14),
                             side: BorderSide(
                               color: isActive
-                                  ? brandRed.withOpacity(0.3)
-                                  : Colors.grey.shade300,
-                              width: isActive ? 1.5 : 1,
+                                  ? brandRed.withValues(alpha: 0.35)
+                                  : const Color(0xFFEDEFF3),
                             ),
                           ),
                           child: Padding(
