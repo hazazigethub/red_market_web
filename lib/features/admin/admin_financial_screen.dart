@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// التقرير المالي — إيرادات المنصة والتزاماتها
+/// التقرير المالي — تفصيل مصادر الدخل والتزامات المنصة
 class AdminFinancialScreen extends StatefulWidget {
   const AdminFinancialScreen({super.key});
 
@@ -40,8 +40,15 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
 
   double _n(dynamic v) => (v as num?)?.toDouble() ?? 0;
   int _i(dynamic v) => (v as num?)?.toInt() ?? 0;
-
   String _money(double v) => '${v.toStringAsFixed(2)} ر.س';
+
+  IconData _iconOf(String key) => switch (key) {
+        'subscriptions' => Icons.card_membership_outlined,
+        'banners' => Icons.view_carousel_outlined,
+        'splash' => Icons.smartphone_outlined,
+        'campaigns' => Icons.local_fire_department_outlined,
+        _ => Icons.payments_outlined,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +62,7 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1000),
+              constraints: const BoxConstraints(maxWidth: 1050),
               child: _loading
                   ? const Padding(
                       padding: EdgeInsets.symmetric(vertical: 80),
@@ -88,12 +95,13 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
 
   Widget _content() {
     final d = _data!;
-    final subs = Map<String, dynamic>.from(d['subscriptions'] as Map);
-    final ads = Map<String, dynamic>.from(d['ads'] as Map);
+    final sources = (d['sources'] as List?) ?? [];
     final wallets = Map<String, dynamic>.from(d['wallets'] as Map);
-    final refunds = Map<String, dynamic>.from(d['refunds'] as Map);
 
-    final net = _n(d['net_revenue']);
+    final earned = _n(d['total_earned']);
+    final pending = _n(d['total_pending']);
+    final sold = _n(d['total_sold']);
+    final refunded = _n(d['total_refunded']);
     final balance = _n(wallets['balance']);
 
     return Column(
@@ -106,7 +114,7 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
                 fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
         Text(
-          'إيرادات المنصة والتزاماتها تجاه التجار',
+          'تفصيل مصادر الدخل — ما تحصّل فعلاً وما ينتظر التنفيذ',
           style: TextStyle(
               fontFamily: 'Cairo',
               fontSize: 11.5,
@@ -115,79 +123,96 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
 
         const SizedBox(height: 20),
 
-        // ===== صافي الإيراد =====
+        // ===== الملخّص =====
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [brandRed, Color(0xFF8E1010)],
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-            ),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFEDEFF3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('صافي الإيراد المحقق',
+              Text('الإيراد المحقق',
                   style: TextStyle(
                       fontFamily: 'Cairo',
                       fontSize: 13.5,
-                      color: Colors.white70)),
-              const SizedBox(height: 10),
+                      color: Colors.grey.shade600)),
+              const SizedBox(height: 8),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    net.toStringAsFixed(2),
+                    earned.toStringAsFixed(2),
                     style: const TextStyle(
                         fontFamily: 'Cairo',
                         fontSize: 34,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: brandRed,
                         height: 1.1),
                   ),
                   const SizedBox(width: 8),
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 6),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
                     child: Text('ر.س',
                         style: TextStyle(
                             fontFamily: 'Cairo',
                             fontSize: 13,
-                            color: Colors.white70)),
+                            color: Colors.grey.shade500)),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              const Text(
-                'الاشتراكات + الإعلانات المنتهية − الاستردادات',
+              const SizedBox(height: 5),
+              Text(
+                'خدمات انتهى تنفيذها — لا يمكن استردادها',
                 style: TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 10.5,
-                    color: Colors.white60),
+                    color: Colors.grey.shade500),
               ),
 
-              const SizedBox(height: 20),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 18),
+                child: Divider(color: Color(0xFFEDEFF3), height: 1),
+              ),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: _whiteBox('الاشتراكات',
-                        _n(subs['revenue'])),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _whiteBox('الإعلانات', _n(ads['earned'])),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (context, c) {
+                  const gap = 10.0;
+                  final cols = c.maxWidth < 520 ? 2 : 3;
+                  final w = (c.maxWidth - gap * (cols - 1)) / cols;
+
+                  return Wrap(
+                    spacing: gap,
+                    runSpacing: gap,
+                    children: [
+                      SizedBox(
+                        width: w,
+                        child: _summaryBox('إجمالي المباع', sold,
+                            Colors.grey.shade700),
+                      ),
+                      SizedBox(
+                        width: w,
+                        child: _summaryBox(
+                            'تحت التنفيذ', pending, Colors.blue),
+                      ),
+                      SizedBox(
+                        width: w,
+                        child: _summaryBox(
+                            'مستردّ', refunded, Colors.grey),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
 
-        // ===== الالتزام =====
+        // ===== التزام الأرصدة =====
         if (balance > 0)
           Container(
             padding: const EdgeInsets.all(18),
@@ -213,7 +238,8 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
                               fontWeight: FontWeight.bold)),
                       const SizedBox(height: 3),
                       Text(
-                        'مبالغ شحنها التجار ولم ينفقوها — ليست إيراداً',
+                        'شُحن ${_money(_n(wallets['charged']))} · '
+                        'صُرف ${_money(_n(wallets['spent']))}',
                         style: TextStyle(
                             fontFamily: 'Cairo',
                             fontSize: 11.5,
@@ -234,155 +260,74 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
             ),
           ),
 
-        const SizedBox(height: 22),
+        const SizedBox(height: 24),
 
-        // ===== الأقسام الثلاثة =====
+        const Text('مصادر الدخل',
+            style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
+
+        const SizedBox(height: 14),
+
+        // ===== بطاقات المصادر =====
         LayoutBuilder(
           builder: (context, c) {
-            final wide = c.maxWidth >= 760;
+            const gap = 12.0;
+            final cols = c.maxWidth < 620 ? 1 : 2;
+            final w = (c.maxWidth - gap * (cols - 1)) / cols;
 
-            final cards = [
-              _section(
-                'الاشتراكات',
-                Icons.card_membership_outlined,
-                Colors.blue,
-                [
-                  ('الإيراد', _money(_n(subs['revenue'])), true),
-                  ('اشتراكات نشطة', '${_i(subs['active'])}', false),
-                  ('إجمالي الاشتراكات', '${_i(subs['total'])}', false),
-                  ('فترات تجريبية', '${_i(subs['trials'])}', false),
-                ],
-              ),
-              _section(
-                'الإعلانات',
-                Icons.ad_units_outlined,
-                brandRed,
-                [
-                  ('محقق', _money(_n(ads['earned'])), true),
-                  ('تحت التنفيذ', _money(_n(ads['pending'])), false),
-                ],
-              ),
-              _section(
-                'المحافظ',
-                Icons.account_balance_wallet_outlined,
-                Colors.green,
-                [
-                  ('شُحن', _money(_n(wallets['charged'])), false),
-                  ('صُرف', _money(_n(wallets['spent'])), true),
-                  ('الباقي', _money(_n(wallets['balance'])), false),
-                ],
-              ),
-            ];
-
-            if (!wide) {
-              return Column(
-                children: [
-                  cards[0],
-                  const SizedBox(height: 12),
-                  cards[1],
-                  const SizedBox(height: 12),
-                  cards[2],
-                ],
-              );
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: cards[0]),
-                const SizedBox(width: 12),
-                Expanded(child: cards[1]),
-                const SizedBox(width: 12),
-                Expanded(child: cards[2]),
-              ],
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: sources
+                  .map((s) => SizedBox(
+                        width: w,
+                        child: _sourceCard(
+                            Map<String, dynamic>.from(s as Map)),
+                      ))
+                  .toList(),
             );
           },
-        ),
-
-        const SizedBox(height: 16),
-
-        // ===== الاستردادات =====
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFEDEFF3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.undo_rounded,
-                      size: 18, color: Colors.grey),
-                  const SizedBox(width: 10),
-                  const Text('الاستردادات',
-                      style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const SizedBox(height: 14),
-              _line(
-                'استرداد اشتراكات',
-                '${_money(_n(refunds['subscriptions']))} '
-                    '(${_i(refunds['subscriptions_count'])})',
-              ),
-              const SizedBox(height: 9),
-              _line('أُعيد لمحافظ التجار',
-                  _money(_n(refunds['wallet']))),
-              const SizedBox(height: 10),
-              Text(
-                'استرداد الاشتراكات يُخصم من الإيراد — '
-                'وما يعود للمحافظ يبقى التزاماً',
-                style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 10.5,
-                    height: 1.9,
-                    color: Colors.grey.shade500),
-              ),
-            ],
-          ),
         ),
       ],
     );
   }
 
-  Widget _whiteBox(String label, double value) {
+  Widget _summaryBox(String label, double value, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.13),
+        color: const Color(0xFFF7F8FA),
         borderRadius: BorderRadius.circular(11),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: const TextStyle(
+              style: TextStyle(
                   fontFamily: 'Cairo',
                   fontSize: 11,
-                  color: Colors.white70)),
+                  color: Colors.grey.shade600)),
           const SizedBox(height: 5),
           Text(_money(value),
-              style: const TextStyle(
+              style: TextStyle(
                   fontFamily: 'Cairo',
-                  fontSize: 15,
+                  fontSize: 14.5,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white)),
+                  color: color)),
         ],
       ),
     );
   }
 
-  Widget _section(
-    String title,
-    IconData icon,
-    Color color,
-    List<(String, String, bool)> rows,
-  ) {
+  Widget _sourceCard(Map<String, dynamic> s) {
+    final total = _n(s['total']);
+    final earned = _n(s['earned']);
+    final pending = _n(s['pending']);
+    final refunded = _n(s['refunded']);
+    final rate = total > 0 ? earned / total : 0.0;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -393,44 +338,148 @@ class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ===== الترويسة =====
           Row(
             children: [
-              Icon(icon, size: 18, color: color),
-              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: brandRed.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(_iconOf(s['key'].toString()),
+                    size: 17, color: brandRed),
+              ),
+              const SizedBox(width: 11),
               Expanded(
-                child: Text(title,
-                    style: const TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold)),
+                child: Text(
+                  (s['name'] ?? '').toString(),
+                  style: const TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              Text(
+                _money(total),
+                style: const TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1F2937)),
               ),
             ],
           ),
+
+          const SizedBox(height: 6),
+
+          Row(
+            children: [
+              Text(
+                '${_i(s['count'])} ${s['count_label'] ?? ''}',
+                style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 11,
+                    color: Colors.grey.shade600),
+              ),
+              if (s['extra'] != null && _i(s['extra']) > 0) ...[
+                const SizedBox(width: 10),
+                Text(
+                  '· ${_i(s['extra'])} ${s['extra_label'] ?? ''}',
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 11,
+                      color: Colors.grey.shade500),
+                ),
+              ],
+              const Spacer(),
+              Text('إجمالي المباع',
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 10,
+                      color: Colors.grey.shade400)),
+            ],
+          ),
+
           const SizedBox(height: 14),
-          ...rows.map((r) => Padding(
-                padding: const EdgeInsets.only(bottom: 9),
-                child: _line(r.$1, r.$2, bold: r.$3),
-              )),
+
+          // ===== شريط النسبة =====
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: rate,
+              minHeight: 6,
+              backgroundColor: const Color(0xFFF1F2F5),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(Colors.green),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          _row('✅', 'محقق — تحصّل فعلاً', earned, Colors.green),
+          const SizedBox(height: 9),
+          _row('⏳', 'تحت التنفيذ — لم يكتمل', pending, Colors.blue),
+
+          if (refunded > 0) ...[
+            const SizedBox(height: 9),
+            _row('↩', 'مستردّ للتاجر', refunded, Colors.grey),
+          ],
+
+          if ((s['note'] ?? '').toString().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 11, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7F8FA),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 13, color: Colors.grey.shade500),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      s['note'].toString(),
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 10.5,
+                          color: Colors.grey.shade600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _line(String label, String value, {bool bold = false}) {
+  Widget _row(String mark, String label, double value, Color color) {
     return Row(
       children: [
-        Text(label,
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(label,
+              style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 11.5,
+                  color: Colors.grey.shade600)),
+        ),
+        Text(_money(value),
             style: TextStyle(
                 fontFamily: 'Cairo',
-                fontSize: 12,
-                color: Colors.grey.shade600)),
-        const Spacer(),
-        Text(value,
-            style: TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: bold ? 13.5 : 12.5,
-                fontWeight: bold ? FontWeight.bold : FontWeight.w600,
-                color: bold ? brandRed : const Color(0xFF1F2937))),
+                fontSize: 12.5,
+                fontWeight: FontWeight.bold,
+                color: color)),
       ],
     );
   }
