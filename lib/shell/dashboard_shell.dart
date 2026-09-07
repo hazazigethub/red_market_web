@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 
+import '../features/auth/login_page.dart';
+
 class NavItem {
   final String label;
   final IconData icon;
@@ -106,7 +108,62 @@ class _DashboardShellState extends State<DashboardShell> {
   }
 
   Future<void> _logout() async {
-    await supabase.auth.signOut();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('تسجيل الخروج',
+              style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold)),
+          content: const Text('هل تريد الخروج من حسابك؟',
+              style: TextStyle(
+                  fontFamily: 'Cairo', fontSize: 13.5, height: 1.9)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('تراجع',
+                  style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('خروج',
+                  style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    final navigator = Navigator.of(context);
+
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      debugPrint('Sign out error: $e');
+    }
+
+    // الانتقال لصفحة الدخول ومسح كل ما سبقها
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
   }
 
   @override
@@ -198,8 +255,12 @@ class _DashboardShellState extends State<DashboardShell> {
             IconButton(
               tooltip: 'تسجيل الخروج',
               onPressed: _logout,
-              icon: const Icon(Icons.logout_rounded,
-                  size: 20, color: Colors.red),
+              // معكوسة لتشير للخروج في الاتجاه العربي
+              icon: Transform.flip(
+                flipX: true,
+                child: const Icon(Icons.logout_rounded,
+                    size: 20, color: Colors.red),
+              ),
             ),
           ],
         ),

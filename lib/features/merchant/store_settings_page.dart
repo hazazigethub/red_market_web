@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -57,7 +57,8 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
                   fontWeight: FontWeight.bold,
                   color: brandColor)),
           content: const Text(
-            "أهلاً بك في Red Ocean! ليتم تفعيل حسابك والبدء في استقبال الطلبات، يرجى رفع شعار (لوجو) المتجر وإضافة رابط المتجر الخاص بك.",
+            "أهلاً بك في رد ماركت! لتفعيل متجرك وعرض منتجاتك أمام العملاء، "
+            "يرجى رفع شعار المتجر وإضافة رابطه.",
             style: TextStyle(fontFamily: 'Cairo', fontSize: 14),
           ),
           actions: [
