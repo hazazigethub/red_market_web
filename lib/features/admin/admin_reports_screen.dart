@@ -221,11 +221,15 @@ class ReportsDetailsPage extends StatelessWidget {
   final String title;
   final String tableName;
 
+  /// عند التضمين داخل غلاف: بلا ترويسة
+  final bool embedded;
+
   const ReportsDetailsPage({
     super.key,
     required this.filterValue,
     required this.title,
     required this.tableName,
+    this.embedded = false,
   });
 
   void _showAdvancedBanDialog(BuildContext context, Map<String, dynamic> item) {
@@ -417,18 +421,20 @@ class ReportsDetailsPage extends StatelessWidget {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: const Color(0xFFF7F8FA),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          foregroundColor: const Color(0xFF1F2937),
-          title: Text(title,
-              style: const TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Color(0xFF1F2937))),
-        ),
+        appBar: embedded
+            ? null
+            : AppBar(
+                backgroundColor: Colors.white,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                foregroundColor: const Color(0xFF1F2937),
+                title: Text(title,
+                    style: const TextStyle(
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Color(0xFF1F2937))),
+              ),
         body: StreamBuilder<List<Map<String, dynamic>>>(
           stream: supabase
               .from(tableName)

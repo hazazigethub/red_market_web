@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'new_merchants_screen.dart';
+import 'admin_reports_screen.dart';
 
 // --- الصفحة الرئيسية: الإحصائيات ---
 class AdminMerchantsScreen extends StatefulWidget {
@@ -135,6 +136,11 @@ class _AdminMerchantsScreenState extends State<AdminMerchantsScreen> {
 
                         // ===== التجار الجدد — بانتظار التوثيق =====
                         _buildNewMerchantsCard(),
+
+                        const SizedBox(height: 12),
+
+                        // ===== بلاغات المتاجر =====
+                        _buildMerchantReportsCard(),
                       ],
                     ),
                   );
@@ -144,6 +150,102 @@ class _AdminMerchantsScreenState extends State<AdminMerchantsScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// بطاقة بلاغات المتاجر — تفتح صفحة المراجعة
+  Widget _buildMerchantReportsCard() {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: supabase
+          .from('reports')
+          .select('id')
+          .eq('target_type', 'merchant')
+          .eq('status', 'pending')
+          .then((v) => List<Map<String, dynamic>>.from(v)),
+      builder: (context, snap) {
+        final count = (snap.data ?? []).length;
+
+        return GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ReportsDetailsPage(
+                filterValue: 'merchant',
+                title: 'بلاغات المتاجر',
+                tableName: 'reports',
+              ),
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: count > 0
+                  ? Colors.red.withValues(alpha: 0.04)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: count > 0
+                    ? Colors.red.withValues(alpha: 0.35)
+                    : const Color(0xFFEDEFF3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(11),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.report_problem_outlined,
+                      color: Colors.red, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('بلاغات المتاجر',
+                          style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 3),
+                      Text(
+                        count > 0
+                            ? 'بلاغات قيد المراجعة'
+                            : 'لا بلاغات جديدة',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 11.5,
+                            color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                ),
+                if (count > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('$count',
+                        style: const TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white)),
+                  ),
+                const SizedBox(width: 8),
+                Icon(Icons.chevron_left_rounded,
+                    color: Colors.grey.shade400),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

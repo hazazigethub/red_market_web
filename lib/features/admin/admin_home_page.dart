@@ -26,6 +26,7 @@ import 'admin_users_hub_screen.dart';
 import 'admin_catalog_hub_screen.dart';
 import 'admin_billing_hub_screen.dart';
 import 'admin_messages_hub_screen.dart';
+import 'admin_support_hub_screen.dart';
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -42,8 +43,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     {'label': 'التقرير المالي', 'icon': Icons.payments_outlined},
     {'label': 'العملاء والتجار', 'icon': Icons.groups_outlined},
     {'label': 'المنتجات والتصنيفات', 'icon': Icons.inventory_2_outlined},
-    {'label': 'البلاغات', 'icon': Icons.report_problem_outlined},
-    {'label': 'رسائل التواصل', 'icon': Icons.mark_email_unread_outlined},
+    {'label': 'التواصل والدعم', 'icon': Icons.support_agent_outlined},
     {'label': 'الباقات وأكواد الخصم', 'icon': Icons.card_membership_outlined},
     {'label': 'طلبات الاسترداد', 'icon': Icons.replay_circle_filled_outlined},
     {'label': 'الإشعارات والإعلانات', 'icon': Icons.notifications_outlined},
@@ -65,28 +65,26 @@ class _AdminHomePageState extends State<AdminHomePage> {
       case 2:
         return const AdminCatalogHubScreen();
       case 3:
-        return const AdminReportsScreen();
+        return const AdminSupportHubScreen();
       case 4:
-        return const AdminContactsScreen();
-      case 5:
         return const AdminBillingHubScreen();
-      case 6:
+      case 5:
         return const AdminRefundsScreen();
-      case 7:
+      case 6:
         return const AdminMessagesHubScreen();
-      case 8:
+      case 7:
         return const AdminNewsletterScreen();
-      case 9:
+      case 8:
         return const AdminBannersScreen();
-      case 10:
+      case 9:
         return const AdminBannerWeeksScreen();
-      case 11:
+      case 10:
         return const AdminMerchantBannersScreen();
-      case 12:
+      case 11:
         return const AdminSplashAdsScreen();
-      case 13:
+      case 12:
         return const AdminCampaignsScreen();
-      case 14:
+      case 13:
         return const AdminAnalyticsVisitsScreen();
       default:
         return _welcome();
