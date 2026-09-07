@@ -42,41 +42,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
       debugPrint('Release error: $e');
     }
 
-    final data = await supabase
-        .from('notifications_log')
-        .select()
-        .eq('status', 'sent')
-        .order('created_at', ascending: false)
-        .limit(100);
+    // الدالة تستبعد ما سبق تسجيل المستخدم وتحسب المقروء
+    final data = await supabase.rpc('get_my_notifications',
+        params: {'p_limit': 100});
 
-    // الإشعارات التي قرأها هذا التاجر
-    final reads = await supabase
-        .from('notification_reads')
-        .select('notification_id')
-        .eq('user_id', uid);
-
-    final readIds = List<Map<String, dynamic>>.from(reads)
-        .map((r) => r['notification_id']?.toString())
-        .whereType<String>()
-        .toSet();
-
-    return List<Map<String, dynamic>>.from(data)
-        .where((n) {
-          final type = n['target_type'];
-          final targetId = n['target_id'];
-          final segment = n['segment_filter'];
-          if (type == 'all') return true;
-          if (type == 'specific' && targetId == uid) return true;
-          if (type == 'segment' && segment != null) {
-            return segment.toString().contains('merchant');
-          }
-          return false;
-        })
-        .map((n) => {
-              ...n,
-              'is_read': readIds.contains(n['id']?.toString()),
-            })
-        .toList();
+    return List<Map<String, dynamic>>.from(data as List);
   }
 
   Future<void> _refresh() async {
