@@ -17,7 +17,6 @@ import 'admin_analytics_visits_screen.dart';
 import 'admin_plans_screen.dart';
 import 'admin_refunds_screen.dart';
 import 'admin_contacts_screen.dart';
-import 'admin_banner_weeks_screen.dart';
 import 'admin_merchant_banners_screen.dart';
 import 'admin_splash_ads_screen.dart';
 import 'admin_campaigns_screen.dart';
@@ -49,7 +48,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     {'label': 'الإشعارات والإعلانات', 'icon': Icons.notifications_outlined},
     {'label': 'النشرة الأسبوعية', 'icon': Icons.mail_outline_rounded},
     {'label': 'البنرات', 'icon': Icons.ad_units_outlined},
-    {'label': 'الأسابيع الإعلانية', 'icon': Icons.calendar_month_outlined},
     {'label': 'بنرات التجار', 'icon': Icons.storefront_outlined},
     {'label': 'إعلان الشاشة الرئيسية', 'icon': Icons.smartphone_outlined},
     {'label': 'الحملات الموسمية', 'icon': Icons.campaign_outlined},
@@ -77,14 +75,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
       case 8:
         return const AdminBannersScreen();
       case 9:
-        return const AdminBannerWeeksScreen();
-      case 10:
         return const AdminMerchantBannersScreen();
-      case 11:
+      case 10:
         return const AdminSplashAdsScreen();
-      case 12:
+      case 11:
         return const AdminCampaignsScreen();
-      case 13:
+      case 12:
         return const AdminAnalyticsVisitsScreen();
       default:
         return _welcome();

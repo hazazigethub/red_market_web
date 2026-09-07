@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'admin_banner_weeks_screen.dart';
+
 class AdminMerchantBannersScreen extends StatefulWidget {
   const AdminMerchantBannersScreen({super.key});
 
@@ -444,18 +446,22 @@ class _AdminMerchantBannersScreenState
 
                   const SizedBox(height: 18),
 
-                  // ===== التبويبان =====
+                  // ===== التبويبات =====
                   Wrap(
-                    spacing: 8,
+                    spacing: 10,
+                    runSpacing: 10,
                     children: [
                       _mainTab(0, 'المراجعة'),
                       _mainTab(1, 'التقرير'),
+                      _mainTab(2, 'إدارة أوقات وأسعار النشر'),
                     ],
                   ),
 
                   const SizedBox(height: 18),
 
-                  if (_tab == 1) ...[
+                  if (_tab == 2) ...[
+                    const AdminBannerWeeksScreen(),
+                  ] else if (_tab == 1) ...[
                     _statsView(),
                   ] else ...[
                   Wrap(
