@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart' as material;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -64,6 +64,7 @@ class _AdminAnalyticsVisitsScreenState
           !_selectedRange.start.isAtSameMomentAs(_selectedRange.end);
 
       Map<String, Map<String, int>> dynamicDistribution = {};
+      Map<String, Map<String, int>> platformDistribution = {};
 
       if (isDailyView) {
         // توليد مفاتيح الأيام للنطاق المختار
@@ -73,11 +74,13 @@ class _AdminAnalyticsVisitsScreenState
           String dayLabel = DateFormat('MM/dd')
               .format(_selectedRange.start.add(Duration(days: i)));
           dynamicDistribution[dayLabel] = {'male': 0, 'female': 0};
+          platformDistribution[dayLabel] = {'male': 0, 'female': 0};
         }
       } else {
         // توليد 24 ساعة ليوم واحد مختار
         for (int i = 0; i < 24; i++) {
           dynamicDistribution["$i"] = {'male': 0, 'female': 0};
+          platformDistribution["$i"] = {'male': 0, 'female': 0};
         }
       }
 
@@ -86,6 +89,7 @@ class _AdminAnalyticsVisitsScreenState
       int todayVisitsCount = 0;
       int filteredIosCount = 0;
       int filteredAndroidCount = 0;
+      int filteredWebCount = 0;
       int filteredMales = 0;
       int filteredFemales = 0;
 
@@ -115,6 +119,8 @@ class _AdminAnalyticsVisitsScreenState
             filteredIosCount++;
           } else if (platform.contains('android')) {
             filteredAndroidCount++;
+          } else if (platform.contains('web')) {
+            filteredWebCount++;
           }
 
           // حساب الجنس
@@ -138,6 +144,14 @@ class _AdminAnalyticsVisitsScreenState
             dynamicDistribution[key]![genderKey] =
                 (dynamicDistribution[key]![genderKey] ?? 0) + 1;
           }
+
+          // توزيع المنصات — male للتطبيق · female للموقع
+          if (platformDistribution.containsKey(key)) {
+            final isWeb = platform.contains('web');
+            final pKey = isWeb ? 'female' : 'male';
+            platformDistribution[key]![pKey] =
+                (platformDistribution[key]![pKey] ?? 0) + 1;
+          }
         }
       }
 
@@ -146,9 +160,11 @@ class _AdminAnalyticsVisitsScreenState
         'monthly': monthlyVisitsCount,
         'today': todayVisitsCount,
         'chartData': dynamicDistribution,
+        'platformChart': platformDistribution,
         'isDailyView': isDailyView,
         'ios': filteredIosCount,
         'android': filteredAndroidCount,
+        'web': filteredWebCount,
         'totalMales': filteredMales,
         'totalFemales': filteredFemales,
       };
@@ -239,8 +255,27 @@ class _AdminAnalyticsVisitsScreenState
                   const material.SizedBox(height: 15),
                   _buildAestheticChart(chartDataMap, isDailyView),
                   _buildLegend(s['totalMales'], s['totalFemales']),
+
                   const material.SizedBox(height: 30),
-                  const material.Text("توزيع الأنظمة في الفترة المحددة",
+
+                  // ===== مخطط المنصات =====
+                  const material.Text("الزيارات حسب المنصة",
+                      style: material.TextStyle(
+                          fontFamily: 'Cairo',
+                          fontWeight: material.FontWeight.bold,
+                          fontSize: 14)),
+                  const material.SizedBox(height: 15),
+                  _buildAestheticChart(
+                    (s['platformChart'] as Map<String, Map<String, int>>?) ??
+                        {},
+                    isDailyView,
+                  ),
+                  _buildPlatformLegend(
+                      (s['android'] as int) + (s['ios'] as int),
+                      s['web'] as int),
+
+                  const material.SizedBox(height: 30),
+                  const material.Text("توزيع المنصات في الفترة المحددة",
                       style: material.TextStyle(
                           fontFamily: 'Cairo',
                           fontWeight: material.FontWeight.bold,
@@ -256,6 +291,12 @@ class _AdminAnalyticsVisitsScreenState
                       const material.SizedBox(width: 10),
                       _buildStaticSmallCard("iOS", "${s['ios']}",
                           material.Colors.grey.shade800, material.Icons.apple),
+                      const material.SizedBox(width: 10),
+                      _buildStaticSmallCard(
+                          "الموقع",
+                          "${s['web']}",
+                          material.Colors.blue.shade700,
+                          material.Icons.language_rounded),
                     ],
                   ),
                 ],
@@ -445,6 +486,19 @@ class _AdminAnalyticsVisitsScreenState
             _dot(material.Colors.blue.shade400, "ذكر", maleCount),
             const material.SizedBox(width: 30),
             _dot(material.Colors.pink.shade300, "أنثى", femaleCount),
+          ]),
+    );
+  }
+
+  material.Widget _buildPlatformLegend(int appCount, int webCount) {
+    return material.Padding(
+      padding: const material.EdgeInsets.only(top: 20),
+      child: material.Row(
+          mainAxisAlignment: material.MainAxisAlignment.center,
+          children: [
+            _dot(material.Colors.blue.shade400, "التطبيق", appCount),
+            const material.SizedBox(width: 30),
+            _dot(material.Colors.pink.shade300, "الموقع", webCount),
           ]),
     );
   }
