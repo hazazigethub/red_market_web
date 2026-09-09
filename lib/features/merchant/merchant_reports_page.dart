@@ -572,7 +572,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
+                            color: color.withValues(alpha: 0.1),
                             shape: BoxShape.circle),
                         child: Icon(Icons.bar_chart_rounded,
                             color: color, size: 18),
@@ -588,7 +588,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
+                            color: color.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10)),
                         child: Text("${items.length} عنصر",
                             style: TextStyle(
@@ -610,7 +610,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                             children: [
                               Icon(Icons.inbox_rounded,
                                   size: 60,
-                                  color: Colors.grey.withOpacity(0.3)),
+                                  color: Colors.grey.withValues(alpha: 0.3)),
                               const SizedBox(height: 12),
                               const Text("لا توجد بيانات بعد",
                                   style: TextStyle(
@@ -655,7 +655,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                                                 ? Colors.grey[400]
                                                 : i == 2
                                                     ? Colors.brown[300]
-                                                    : color.withOpacity(0.15),
+                                                    : color.withValues(alpha: 0.15),
                                         shape: BoxShape.circle),
                                     child: Center(
                                       child: Text("${i + 1}",
@@ -707,7 +707,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
-                                        color: color.withOpacity(0.1),
+                                        color: color.withValues(alpha: 0.1),
                                         borderRadius:
                                             BorderRadius.circular(10)),
                                     child: Text("$count $label",
@@ -741,7 +741,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.lock_rounded,
-                size: 80, color: Colors.grey.withOpacity(0.4)),
+                size: 80, color: Colors.grey.withValues(alpha: 0.4)),
             const SizedBox(height: 20),
             const Text("التقارير غير متاحة في باقتك الحالية",
                 textAlign: TextAlign.center,
@@ -1819,7 +1819,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-              color: color.withOpacity(0.1), shape: BoxShape.circle),
+              color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
           child: Icon(icon, color: color, size: 18),
         ),
         const SizedBox(width: 10),
@@ -1846,7 +1846,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4))
         ],
@@ -1856,7 +1856,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-                color: color.withOpacity(0.1), shape: BoxShape.circle),
+                color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
             child: Icon(icon, color: color, size: 18),
           ),
           const SizedBox(height: 8),
@@ -1895,7 +1895,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 4))
           ],
@@ -1910,7 +1910,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                      color: color.withOpacity(0.1), shape: BoxShape.circle),
+                      color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: Icon(icon, color: color, size: 20),
                 ),
               ],
@@ -1960,7 +1960,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                   blurRadius: 8,
                   offset: const Offset(0, 3))
             ],
@@ -2000,7 +2000,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10)),
                 child: Text("$value $valueLabel",
                     style: TextStyle(

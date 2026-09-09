@@ -525,7 +525,7 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border:
-            _isEditing ? Border.all(color: brandColor.withOpacity(0.5)) : null,
+            _isEditing ? Border.all(color: brandColor.withValues(alpha: 0.5)) : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -563,7 +563,7 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border:
-            _isEditing ? Border.all(color: brandColor.withOpacity(0.5)) : null,
+            _isEditing ? Border.all(color: brandColor.withValues(alpha: 0.5)) : null,
       ),
       child: Row(
         children: [
@@ -627,7 +627,7 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
                     : null,
                 border: Border.all(
                     color: _isEditing
-                        ? brandColor.withOpacity(0.5)
+                        ? brandColor.withValues(alpha: 0.5)
                         : Colors.transparent),
               ),
               child: (_crImageUrl == null && _isEditing)

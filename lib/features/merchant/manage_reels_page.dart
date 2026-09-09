@@ -320,13 +320,13 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: _currentReelsCount >= _reelsLimit
-                        ? Colors.red.withOpacity(0.08)
-                        : brandRed.withOpacity(0.05),
+                        ? Colors.red.withValues(alpha: 0.08)
+                        : brandRed.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _currentReelsCount >= _reelsLimit
-                          ? Colors.red.withOpacity(0.3)
-                          : brandRed.withOpacity(0.3),
+                          ? Colors.red.withValues(alpha: 0.3)
+                          : brandRed.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -720,7 +720,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.05),
+                        color: Colors.grey.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(15),
                         border:
                             Border.all(color: Theme.of(context).dividerColor)),
@@ -885,7 +885,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: Colors.grey.withOpacity(0.05),
+        fillColor: Colors.grey.withValues(alpha: 0.05),
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
             borderSide: BorderSide.none),

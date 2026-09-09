@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:red_market_core/red_market_core.dart';
 
@@ -184,10 +184,10 @@ class _ReviewReelsPageState extends State<ReviewReelsPage> {
               end: Alignment.bottomCenter,
               stops: const [0.0, 0.2, 0.7, 1.0],
               colors: [
-                Colors.black.withOpacity(0.5),
+                Colors.black.withValues(alpha: 0.5),
                 Colors.transparent,
                 Colors.transparent,
-                Colors.black.withOpacity(0.7),
+                Colors.black.withValues(alpha: 0.7),
               ],
             ),
           ),

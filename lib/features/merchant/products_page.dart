@@ -326,7 +326,7 @@ class _ProductsPageState extends State<ProductsPage> {
                         hintText: "ابحث باسم التصنيف...",
                         prefixIcon: const Icon(Icons.search, color: brandRed),
                         filled: true,
-                        fillColor: brandRed.withOpacity(0.05),
+                        fillColor: brandRed.withValues(alpha: 0.05),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none),
@@ -343,7 +343,7 @@ class _ProductsPageState extends State<ProductsPage> {
                             margin: const EdgeInsets.only(bottom: 8),
                             decoration: BoxDecoration(
                                 color: isSelected
-                                    ? brandRed.withOpacity(0.1)
+                                    ? brandRed.withValues(alpha: 0.1)
                                     : Colors.grey.shade50,
                                 borderRadius: BorderRadius.circular(12)),
                             child: ListTile(
@@ -398,7 +398,7 @@ class _ProductsPageState extends State<ProductsPage> {
               hintText: "اسم القسم (مثلاً: حلويات)...",
               prefixIcon: const Icon(Icons.folder_open, color: brandRed),
               filled: true,
-              fillColor: brandRed.withOpacity(0.05),
+              fillColor: brandRed.withValues(alpha: 0.05),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none),
@@ -456,13 +456,13 @@ class _ProductsPageState extends State<ProductsPage> {
                               horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
                             color: _productsList.length >= _productLimit
-                                ? Colors.red.withOpacity(0.08)
-                                : brandRed.withOpacity(0.05),
+                                ? Colors.red.withValues(alpha: 0.08)
+                                : brandRed.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: _productsList.length >= _productLimit
-                                  ? Colors.red.withOpacity(0.3)
-                                  : brandRed.withOpacity(0.15),
+                                  ? Colors.red.withValues(alpha: 0.3)
+                                  : brandRed.withValues(alpha: 0.15),
                             ),
                           ),
                           child: Row(
@@ -526,7 +526,7 @@ class _ProductsPageState extends State<ProductsPage> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: brandRed.withOpacity(0.08),
+                color: brandRed.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.lock_outline_rounded,
@@ -898,7 +898,7 @@ class _ProductsPageState extends State<ProductsPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.inventory_2_outlined,
-                size: 60, color: Colors.grey.withOpacity(0.3)),
+                size: 60, color: Colors.grey.withValues(alpha: 0.3)),
             const SizedBox(height: 12),
             const Text("لا توجد منتجات في هذا القسم حالياً",
                 style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
@@ -1311,12 +1311,12 @@ class _ProductsPageState extends State<ProductsPage> {
                   child: Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
-                      color: brandRed.withOpacity(0.05),
+                      color: brandRed.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(
                         color: (showError && selectedCategoryId == null)
                             ? Colors.red.shade700
-                            : brandRed.withOpacity(0.1),
+                            : brandRed.withValues(alpha: 0.1),
                         width:
                             (showError && selectedCategoryId == null) ? 2 : 1,
                       ),
@@ -1341,9 +1341,9 @@ class _ProductsPageState extends State<ProductsPage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: brandRed.withOpacity(0.05),
+                    color: brandRed.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: brandRed.withOpacity(0.1)),
+                    border: Border.all(color: brandRed.withValues(alpha: 0.1)),
                   ),
                   child: Column(
                     children: [
@@ -1740,7 +1740,7 @@ class _ProductsPageState extends State<ProductsPage> {
           decoration: InputDecoration(
             labelText: hint,
             labelStyle: const TextStyle(fontFamily: 'Cairo', fontSize: 12),
-            fillColor: readOnly ? Colors.grey.withOpacity(0.1) : null,
+            fillColor: readOnly ? Colors.grey.withValues(alpha: 0.1) : null,
             filled: readOnly,
             prefixIcon: Icon(icon, color: brandRed, size: 20),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),

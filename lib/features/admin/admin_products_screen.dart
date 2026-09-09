@@ -204,13 +204,13 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)
+          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)
         ],
       ),
       child: Row(
         children: [
           CircleAvatar(
-              backgroundColor: color.withOpacity(0.1),
+              backgroundColor: color.withValues(alpha: 0.1),
               child: Icon(icon, color: color, size: 22)),
           const SizedBox(width: 15),
           Text(title,
@@ -236,7 +236,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
               border: Border.all(
-                  color: onTap != null ? color : color.withOpacity(0.1),
+                  color: onTap != null ? color : color.withValues(alpha: 0.1),
                   width: onTap != null ? 1.5 : 1)),
           child: Row(
             children: [
@@ -276,7 +276,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -358,8 +358,8 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                 },
                 style: TextButton.styleFrom(
                   backgroundColor: isBanned
-                      ? Colors.green.withOpacity(0.1)
-                      : brandRed.withOpacity(0.1),
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : brandRed.withValues(alpha: 0.1),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),

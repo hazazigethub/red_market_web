@@ -187,7 +187,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.9),
+        color: color.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
@@ -311,7 +311,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Colors.black.withOpacity(0.7),
+                    Colors.black.withValues(alpha: 0.7),
                     Colors.transparent,
                   ],
                 ),
@@ -341,7 +341,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
             left: 8,
             child: CircleAvatar(
               radius: 18,
-              backgroundColor: Colors.white.withOpacity(0.9),
+              backgroundColor: Colors.white.withValues(alpha: 0.9),
               child: IconButton(
                 padding: EdgeInsets.zero,
                 icon: Icon(Icons.edit, color: brandRed, size: 20),
@@ -356,7 +356,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
             right: 8,
             child: CircleAvatar(
               radius: 18,
-              backgroundColor: Colors.white.withOpacity(0.9),
+              backgroundColor: Colors.white.withValues(alpha: 0.9),
               child: IconButton(
                 padding: EdgeInsets.zero,
                 icon: const Icon(Icons.info_outline,
@@ -718,9 +718,9 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
+                            color: Colors.green.withValues(alpha: 0.1),
                             border: Border.all(
-                                color: Colors.green.withOpacity(0.3)),
+                                color: Colors.green.withValues(alpha: 0.3)),
                             borderRadius: BorderRadius.circular(15)),
                         child: Row(
                           children: [
@@ -934,12 +934,12 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
                         horizontal: 15, vertical: 15),
                     decoration: BoxDecoration(
                         color: selectedProductCategoryId != null
-                            ? Colors.green.withOpacity(0.05)
+                            ? Colors.green.withValues(alpha: 0.05)
                             : Colors.grey.shade50,
                         borderRadius: BorderRadius.circular(15),
                         border: Border.all(
                             color: selectedProductCategoryId != null
-                                ? Colors.green.withOpacity(0.3)
+                                ? Colors.green.withValues(alpha: 0.3)
                                 : Colors.grey.shade200)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

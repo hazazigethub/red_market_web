@@ -1,4 +1,4 @@
-﻿// lib/features/merchant/dashboard/presentation/pages/reviews_page.dart
+// lib/features/merchant/dashboard/presentation/pages/reviews_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -212,13 +212,13 @@ class _ReviewsPageState extends State<ReviewsPage> {
         boxShadow: [
           if (!isDark)
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 15,
               offset: const Offset(0, 5),
             )
         ],
         border:
-            isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
+            isDark ? Border.all(color: Colors.white.withValues(alpha: 0.05)) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +280,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
         ),
       ),
       child: Column(
@@ -353,10 +353,10 @@ class _ReviewsPageState extends State<ReviewsPage> {
               margin: const EdgeInsets.only(top: 15),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50).withOpacity(0.1),
+                color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: const Color(0xFF4CAF50).withOpacity(0.3),
+                  color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
                 ),
               ),
               child: Column(
@@ -489,7 +489,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                   hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
                   filled: true,
                   fillColor: isDark
-                      ? Colors.white.withOpacity(0.05)
+                      ? Colors.white.withValues(alpha: 0.05)
                       : Colors.grey.shade100,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -623,11 +623,11 @@ class _ReviewsPageState extends State<ReviewsPage> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: active
-              ? primary.withOpacity(isDark ? 0.25 : 0.12)
+              ? primary.withValues(alpha: isDark ? 0.25 : 0.12)
               : (isDark ? Colors.white10 : Colors.grey.shade100),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: active ? primary.withOpacity(0.35) : Colors.transparent,
+            color: active ? primary.withValues(alpha: 0.35) : Colors.transparent,
           ),
         ),
         child: Center(
@@ -677,7 +677,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.star_outline_rounded,
-                    size: 80, color: Colors.grey.withOpacity(0.3)),
+                    size: 80, color: Colors.grey.withValues(alpha: 0.3)),
                 const SizedBox(height: 15),
                 const Text("لا توجد تقييمات منتجات حتى الآن",
                     style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
@@ -744,7 +744,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.storefront_outlined,
-                    size: 80, color: Colors.grey.withOpacity(0.3)),
+                    size: 80, color: Colors.grey.withValues(alpha: 0.3)),
                 const SizedBox(height: 15),
                 const Text("لا توجد تقييمات متجر حتى الآن",
                     style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),

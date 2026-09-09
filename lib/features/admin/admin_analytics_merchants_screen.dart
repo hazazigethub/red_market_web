@@ -186,9 +186,9 @@ class _AdminAnalyticsMerchantsScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
-        color: iconColor.withOpacity(0.08),
+        color: iconColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: iconColor.withOpacity(0.2)),
+        border: Border.all(color: iconColor.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -240,7 +240,7 @@ class _AdminAnalyticsMerchantsScreenState
       decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2))),
+          border: Border.all(color: color.withValues(alpha: 0.2))),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -266,7 +266,7 @@ class _AdminAnalyticsMerchantsScreenState
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: Colors.blueGrey.withOpacity(0.1),
+            backgroundColor: Colors.blueGrey.withValues(alpha: 0.1),
             child: const Icon(Icons.business_center,
                 color: Colors.blueGrey, size: 20),
           ),

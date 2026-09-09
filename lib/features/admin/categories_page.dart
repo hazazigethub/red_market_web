@@ -179,7 +179,7 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
                     Row(
                       children: [
                         Icon(Icons.grid_view_rounded,
-                            size: 16, color: brandRed.withOpacity(0.7)),
+                            size: 16, color: brandRed.withValues(alpha: 0.7)),
                         const SizedBox(width: 8),
                         Text(
                           _selectedStoreCategoryId == null
@@ -291,11 +291,11 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
         decoration: BoxDecoration(
           color: isVisible
               ? Theme.of(context).colorScheme.surface
-              : Theme.of(context).colorScheme.surface.withOpacity(0.7),
+              : Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

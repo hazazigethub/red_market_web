@@ -144,7 +144,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10)),
                   child: Row(
                     children: [

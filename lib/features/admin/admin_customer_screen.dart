@@ -221,12 +221,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)
+            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)
           ]),
       child: Row(
         children: [
           CircleAvatar(
-              backgroundColor: color.withOpacity(0.1),
+              backgroundColor: color.withValues(alpha: 0.1),
               child: Icon(icon, color: color)),
           const SizedBox(width: 15),
           Text(title,
@@ -248,7 +248,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: color.withOpacity(0.1), width: 1.5)),
+          border: Border.all(color: color.withValues(alpha: 0.1), width: 1.5)),
       child: Column(
         children: [
           Icon(icon, color: color, size: 20),
@@ -282,7 +282,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         leading: Stack(
           children: [
             CircleAvatar(
-                backgroundColor: brandRed.withOpacity(0.1),
+                backgroundColor: brandRed.withValues(alpha: 0.1),
                 child: const Icon(Icons.person, color: brandRed)),
             Positioned(
               bottom: 0,

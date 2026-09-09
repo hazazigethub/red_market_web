@@ -415,8 +415,8 @@ class _MerchantSubscriptionsPageState
           boxShadow: [
             BoxShadow(
               color: isSelected
-                  ? brandRed.withOpacity(0.15)
-                  : Colors.black.withOpacity(0.05),
+                  ? brandRed.withValues(alpha: 0.15)
+                  : Colors.black.withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -427,7 +427,7 @@ class _MerchantSubscriptionsPageState
                       .green // ✅ لون أخضر للباقة الحالية
                 : isSelected
                 ? brandRed
-                : brandRed.withOpacity(0.3),
+                : brandRed.withValues(alpha: 0.3),
             width: isSelected || status == _PlanStatus.current ? 2.5 : 1.5,
           ),
         ),
@@ -474,7 +474,7 @@ class _MerchantSubscriptionsPageState
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: brandRed.withOpacity(0.1),
+                            color: brandRed.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -517,7 +517,7 @@ class _MerchantSubscriptionsPageState
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: brandRed.withOpacity(0.1),
+                                  color: brandRed.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -675,7 +675,7 @@ class _MerchantSubscriptionsPageState
           Icon(
             Icons.inventory_2_outlined,
             size: 80,
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           const Text(

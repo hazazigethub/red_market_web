@@ -354,12 +354,12 @@ class _AdminMerchantsScreenState extends State<AdminMerchantsScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)
+              BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)
             ]),
         child: Row(
           children: [
             CircleAvatar(
-                backgroundColor: color.withOpacity(0.1),
+                backgroundColor: color.withValues(alpha: 0.1),
                 child: Icon(icon, color: color)),
             const SizedBox(width: 15),
             Text(title,
@@ -386,9 +386,9 @@ class _AdminMerchantsScreenState extends State<AdminMerchantsScreen> {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-            color: color.withOpacity(0.05),
+            color: color.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: color.withOpacity(0.1), width: 1.5)),
+            border: Border.all(color: color.withValues(alpha: 0.1), width: 1.5)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -520,7 +520,7 @@ class _MerchantGridPageState extends State<MerchantGridPage> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 5))
           ]),
@@ -529,7 +529,7 @@ class _MerchantGridPageState extends State<MerchantGridPage> {
         children: [
           CircleAvatar(
               radius: 35,
-              backgroundColor: widget.brandColor.withOpacity(0.1),
+              backgroundColor: widget.brandColor.withValues(alpha: 0.1),
               backgroundImage: m['store_logo_url'] != null
                   ? NetworkImage(m['store_logo_url'])
                   : null,
@@ -763,7 +763,7 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
                   children: [
                     CircleAvatar(
                         radius: 60,
-                        backgroundColor: brandRed.withOpacity(0.1),
+                        backgroundColor: brandRed.withValues(alpha: 0.1),
                         backgroundImage: widget.merchant['store_logo_url'] !=
                                 null
                             ? NetworkImage(widget.merchant['store_logo_url'])
@@ -1102,7 +1102,7 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: primaryColor.withOpacity(0.2),
+              color: primaryColor.withValues(alpha: 0.2),
               blurRadius: 15,
               offset: const Offset(0, 8))
         ],
@@ -1122,7 +1122,7 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12)),
                   child: Icon(icon, color: Colors.white, size: 28),
                 ),

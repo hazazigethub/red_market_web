@@ -196,7 +196,7 @@ class _AdminAnalyticsMerchantCategoriesScreenState
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)
+          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)
         ],
       ),
       child: Column(
@@ -251,7 +251,7 @@ class _AdminAnalyticsMerchantCategoriesScreenState
             child: LinearProgressIndicator(
               value: percentage,
               backgroundColor: Colors.grey.shade100,
-              color: brandRed.withOpacity(0.6),
+              color: brandRed.withValues(alpha: 0.6),
               minHeight: 4,
             ),
           ),

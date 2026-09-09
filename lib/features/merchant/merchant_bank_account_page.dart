@@ -735,11 +735,11 @@ class _MerchantBankAccountPageState
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: _isLinked
-            ? Colors.white.withOpacity(0.2)
-            : Colors.amber.withOpacity(0.2),
+            ? Colors.white.withValues(alpha: 0.2)
+            : Colors.amber.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _isLinked ? Colors.white30 : Colors.amber.withOpacity(0.5),
+          color: _isLinked ? Colors.white30 : Colors.amber.withValues(alpha: 0.5),
         ),
       ),
       child: Row(
@@ -912,7 +912,7 @@ class _MerchantBankAccountPageState
       ),
       prefixIcon: Icon(icon, color: brandRed, size: 22),
       filled: true,
-      fillColor: isDark ? Colors.white.withOpacity(0.03) : Colors.grey.shade50,
+      fillColor: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.grey.shade50,
       contentPadding: const EdgeInsets.all(18),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

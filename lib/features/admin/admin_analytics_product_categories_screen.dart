@@ -213,7 +213,7 @@ class _AdminAnalyticsProductCategoriesScreenState
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(15),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)
+            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)
           ]),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center, // توسيط عمودي
@@ -221,7 +221,7 @@ class _AdminAnalyticsProductCategoriesScreenState
         children: [
           CircleAvatar(
               radius: 16,
-              backgroundColor: color.withOpacity(0.1),
+              backgroundColor: color.withValues(alpha: 0.1),
               child: Icon(icon, color: color, size: 16)),
           const SizedBox(height: 8),
           Text(title,
@@ -273,7 +273,7 @@ Widget _buildCategoryCard({
             children: [
               CircleAvatar(
                   radius: 16,
-                  backgroundColor: brandRed.withOpacity(0.1),
+                  backgroundColor: brandRed.withValues(alpha: 0.1),
                   child: Icon(Icons.category, color: brandRed, size: 16)),
               if (showStatus)
                 Icon(Icons.circle,

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart';
 import 'products_page.dart';
@@ -176,7 +176,7 @@ class _StorePreviewPageState extends State<StorePreviewPage> {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 5))
         ],
@@ -215,7 +215,7 @@ class _StorePreviewPageState extends State<StorePreviewPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
@@ -315,7 +315,7 @@ class _StorePreviewPageState extends State<StorePreviewPage> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 15,
               offset: const Offset(0, 8))
         ],
@@ -345,7 +345,7 @@ class _StorePreviewPageState extends State<StorePreviewPage> {
                   left: 10,
                   child: CircleAvatar(
                     radius: 16,
-                    backgroundColor: Colors.white.withOpacity(0.9),
+                    backgroundColor: Colors.white.withValues(alpha: 0.9),
                     child: const Icon(Icons.favorite_border_rounded,
                         size: 18, color: Colors.black54),
                   ),

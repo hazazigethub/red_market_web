@@ -471,9 +471,9 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   Widget _buildChip(String label, Color color) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Text(label,
             style: TextStyle(fontFamily: 'Cairo', fontSize: 11, color: color)),

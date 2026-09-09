@@ -148,12 +148,12 @@ class UsefulLinksPage extends StatelessWidget {
               boxShadow: [
                 if (!isDark)
                   BoxShadow(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       blurRadius: 15,
                       offset: const Offset(0, 8))
               ],
               border: Border.all(
-                color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
                 width: 1,
               ),
             ),

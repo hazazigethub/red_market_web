@@ -131,7 +131,7 @@ class AdminReportsScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   CircleAvatar(
-                    backgroundColor: color.withOpacity(0.1),
+                    backgroundColor: color.withValues(alpha: 0.1),
                     radius: 30,
                     child: Icon(icon, color: color, size: 32),
                   ),
