@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'about_us_page.dart';
 import 'contact_us_page.dart';
 import 'faq_page.dart';
@@ -203,18 +203,3 @@ class UsefulLinksPage extends StatelessWidget {
   }
 }
 
-class _ComingSoonPage extends StatelessWidget {
-  final String title;
-  const _ComingSoonPage({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: const Center(
-        child: Text('هذه الصفحة ستتوفر قريباً',
-            style: TextStyle(fontSize: 16, color: Colors.grey)),
-      ),
-    );
-  }
-}

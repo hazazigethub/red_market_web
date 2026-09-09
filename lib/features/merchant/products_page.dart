@@ -258,24 +258,6 @@ class _ProductsPageState extends State<ProductsPage> {
     }
   }
 
-  Future<void> _fetchAllCategoriesFallback() async {
-    try {
-      final data = await supabase
-          .from('product_categories')
-          .select()
-          .eq('is_visible', true)
-          .order('name');
-      if (mounted) {
-        setState(() {
-          _categoriesList =
-              (data as List).map((e) => CategoryItem.fromJson(e)).toList();
-        });
-      }
-    } catch (e) {
-      debugPrint("Fallback Error: $e");
-    }
-  }
-
   Future<String?> _uploadImage(XFile imageFile) async {
     try {
       final userId = widget.merchantId ?? supabase.auth.currentUser?.id;
@@ -1780,26 +1762,6 @@ class _ProductsPageState extends State<ProductsPage> {
         ),
       );
 
-  Widget _buildProductImage(ProductItem product, bool isDark) => ClipRRect(
-      borderRadius: BorderRadius.circular(15),
-      child: Container(
-          width: 75,
-          height: 75,
-          color: isDark ? Colors.black26 : Colors.grey.shade100,
-          child: (product.imageUrl.isEmpty || product.imageUrl == 'null')
-              ? const Icon(Icons.image_not_supported, color: Colors.grey)
-              : Image.network(
-                  product.imageUrl,
-                  fit: BoxFit.cover,
-                  key: ValueKey(product.imageUrl),
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2));
-                  },
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.image_not_supported, color: Colors.grey),
-                )));
 }
 
 class CategorySelectionPage extends StatefulWidget {

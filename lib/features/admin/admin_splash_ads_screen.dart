@@ -1307,45 +1307,6 @@ class _AdminSplashAdsScreenState extends State<AdminSplashAdsScreen> {
     );
   }
 
-  /// معاينة صورة الإعلان بالحجم الكامل
-  void _previewImage(String url) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black87,
-      builder: (ctx) => GestureDetector(
-        onTap: () => Navigator.pop(ctx),
-        child: Stack(
-          children: [
-            Center(
-              child: InteractiveViewer(
-                maxScale: 4,
-                child: Image.network(
-                  url,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(
-                      Icons.broken_image_outlined,
-                      size: 60,
-                      color: Colors.white54),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 40,
-              left: 20,
-              child: IconButton(
-                onPressed: () => Navigator.pop(ctx),
-                icon: const Icon(Icons.close_rounded,
-                    color: Colors.white, size: 28),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ===================== التقرير المالي =====================
-
   Widget _revenueView() {
     if (_loadingRevenue) {
       return const Padding(
