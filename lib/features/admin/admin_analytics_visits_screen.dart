@@ -181,7 +181,7 @@ class _AdminAnalyticsVisitsScreenState
     return material.Directionality(
       textDirection: material.TextDirection.rtl,
       child: material.Scaffold(
-        backgroundColor: material.Colors.grey.shade50,
+        backgroundColor: const material.Color(0xFFF7F8FA),
                 body: material.FutureBuilder<Map<String, dynamic>>(
           future: _fetchAdvancedVisitsData(),
           builder: (context, snapshot) {
@@ -200,15 +200,36 @@ class _AdminAnalyticsVisitsScreenState
             final bool isDailyView = s['isDailyView'];
 
             return material.SingleChildScrollView(
-              padding: const material.EdgeInsets.all(20),
-              child: material.Column(
+              padding:
+                  const material.EdgeInsets.fromLTRB(20, 24, 20, 40),
+              child: material.Center(
+                child: material.ConstrainedBox(
+                  constraints: const material.BoxConstraints(maxWidth: 1050),
+                  child: material.Column(
                 crossAxisAlignment: material.CrossAxisAlignment.start,
                 children: [
-                  _buildHeaderStat("إجمالي الزيارات (الكل)", "${s['total']}",
-                      material.Colors.blue, material.Icons.public),
-                  const material.SizedBox(height: 15),
+                  const material.Text('الزيارات',
+                      style: material.TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 19,
+                          fontWeight: material.FontWeight.bold)),
+                  const material.SizedBox(height: 6),
+                  material.Text(
+                    'حركة الزوار عبر المنصات والفترات الزمنية',
+                    style: material.TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 11.5,
+                        color: material.Colors.grey.shade500),
+                  ),
+                  const material.SizedBox(height: 20),
                   material.Row(
                     children: [
+                      _buildTappableSmallCard(
+                          "إجمالي الزيارات",
+                          "${s['total']}",
+                          material.Colors.blue,
+                          material.Icons.public, () {}),
+                      const material.SizedBox(width: 10),
                       _buildTappableSmallCard(
                           "زيارات الشهر",
                           "${s['monthly']}",
@@ -300,6 +321,8 @@ class _AdminAnalyticsVisitsScreenState
                     ],
                   ),
                 ],
+                  ),
+                ),
               ),
             );
           },
@@ -310,31 +333,6 @@ class _AdminAnalyticsVisitsScreenState
 
   // --- أدوات بناء الواجهة ---
 
-  material.Widget _buildHeaderStat(String title, String value,
-      material.Color color, material.IconData icon) {
-    return material.Container(
-      width: double.infinity,
-      padding: const material.EdgeInsets.all(25),
-      decoration: material.BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: material.BorderRadius.circular(20)),
-      child: material.Column(children: [
-        material.Icon(icon, color: color, size: 40),
-        const material.SizedBox(height: 10),
-        material.Text(title,
-            style: const material.TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: 14,
-                color: material.Colors.black54)),
-        material.Text(value,
-            style: material.TextStyle(
-                fontSize: 40,
-                fontWeight: material.FontWeight.bold,
-                color: color)),
-      ]),
-    );
-  }
-
   material.Widget _buildTappableSmallCard(
       String label,
       String value,
@@ -344,29 +342,42 @@ class _AdminAnalyticsVisitsScreenState
     return material.Expanded(
       child: material.InkWell(
         onTap: onTap,
-        borderRadius: material.BorderRadius.circular(15),
+        borderRadius: material.BorderRadius.circular(14),
         child: material.Container(
+          height: 108,
           padding: const material.EdgeInsets.all(12),
           decoration: material.BoxDecoration(
               color: material.Colors.white,
-              borderRadius: material.BorderRadius.circular(15),
-              border:
-                  material.Border.all(color: color.withOpacity(0.3), width: 1)),
-          child: material.Column(children: [
-            material.Icon(icon, color: color, size: 20),
-            const material.SizedBox(height: 5),
-            material.Text(label,
-                textAlign: material.TextAlign.center,
-                style: const material.TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 10,
-                    color: material.Colors.grey)),
-            material.Text(value,
-                style: material.TextStyle(
-                    fontSize: 16,
-                    fontWeight: material.FontWeight.bold,
-                    color: color)),
-          ]),
+              borderRadius: material.BorderRadius.circular(14),
+              border: material.Border.all(
+                  color: const material.Color(0xFFEDEFF3))),
+          child: material.Column(
+            crossAxisAlignment: material.CrossAxisAlignment.start,
+            children: [
+              material.Row(
+                children: [
+                  material.Icon(icon, color: color, size: 17),
+                  const material.SizedBox(width: 8),
+                  material.Expanded(
+                    child: material.Text(label,
+                        maxLines: 1,
+                        overflow: material.TextOverflow.ellipsis,
+                        style: material.TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 11.5,
+                            color: material.Colors.grey.shade600)),
+                  ),
+                ],
+              ),
+              const material.Spacer(),
+              material.Text(value,
+                  style: material.TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 24,
+                      fontWeight: material.FontWeight.bold,
+                      color: color)),
+            ],
+          ),
         ),
       ),
     );
@@ -376,26 +387,40 @@ class _AdminAnalyticsVisitsScreenState
       material.Color color, material.IconData icon) {
     return material.Expanded(
       child: material.Container(
+        height: 108,
         padding: const material.EdgeInsets.all(12),
         decoration: material.BoxDecoration(
             color: material.Colors.white,
-            borderRadius: material.BorderRadius.circular(15),
-            border: material.Border.all(color: material.Colors.grey.shade200)),
-        child: material.Column(children: [
-          material.Icon(icon, color: color, size: 20),
-          const material.SizedBox(height: 5),
-          material.Text(label,
-              textAlign: material.TextAlign.center,
-              style: const material.TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 10,
-                  color: material.Colors.grey)),
-          material.Text(value,
-              style: material.TextStyle(
-                  fontSize: 16,
-                  fontWeight: material.FontWeight.bold,
-                  color: color)),
-        ]),
+            borderRadius: material.BorderRadius.circular(14),
+            border: material.Border.all(
+                color: const material.Color(0xFFEDEFF3))),
+        child: material.Column(
+          crossAxisAlignment: material.CrossAxisAlignment.start,
+          children: [
+            material.Row(
+              children: [
+                material.Icon(icon, color: color, size: 17),
+                const material.SizedBox(width: 8),
+                material.Expanded(
+                  child: material.Text(label,
+                      maxLines: 1,
+                      overflow: material.TextOverflow.ellipsis,
+                      style: material.TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 11.5,
+                          color: material.Colors.grey.shade600)),
+                ),
+              ],
+            ),
+            const material.Spacer(),
+            material.Text(value,
+                style: material.TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 24,
+                    fontWeight: material.FontWeight.bold,
+                    color: color)),
+          ],
+        ),
       ),
     );
   }
@@ -417,20 +442,36 @@ class _AdminAnalyticsVisitsScreenState
           );
           if (picked != null) onRangeSelected(picked);
         },
-        borderRadius: material.BorderRadius.circular(15),
+        borderRadius: material.BorderRadius.circular(14),
         child: material.Container(
+          height: 108,
           padding: const material.EdgeInsets.all(12),
           decoration: material.BoxDecoration(
             color: material.Colors.white,
-            borderRadius: material.BorderRadius.circular(15),
+            borderRadius: material.BorderRadius.circular(14),
             border: material.Border.all(
-                color: material.Colors.orange.withOpacity(0.3)),
+                color: const material.Color(0xFFEDEFF3)),
           ),
           child: material.Column(
+            crossAxisAlignment: material.CrossAxisAlignment.start,
             children: [
-              const material.Icon(material.Icons.date_range,
-                  size: 20, color: material.Colors.orange),
-              const material.SizedBox(height: 5),
+              material.Row(
+                children: [
+                  const material.Icon(material.Icons.date_range,
+                      size: 17, color: material.Colors.orange),
+                  const material.SizedBox(width: 8),
+                  material.Expanded(
+                    child: material.Text('تاريخ مخصص',
+                        maxLines: 1,
+                        overflow: material.TextOverflow.ellipsis,
+                        style: material.TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 11.5,
+                            color: material.Colors.grey.shade600)),
+                  ),
+                ],
+              ),
+              const material.Spacer(),
               material.FittedBox(
                 child: material.Text(
                   "${DateFormat('MM/dd').format(selectedRange.start)} - ${DateFormat('MM/dd').format(selectedRange.end)}",
@@ -455,13 +496,9 @@ class _AdminAnalyticsVisitsScreenState
       width: double.infinity,
       decoration: material.BoxDecoration(
         color: material.Colors.white,
-        borderRadius: material.BorderRadius.circular(20),
-        boxShadow: [
-          material.BoxShadow(
-              color: material.Colors.black.withOpacity(0.04),
-              blurRadius: 20,
-              offset: const material.Offset(0, 10))
-        ],
+        borderRadius: material.BorderRadius.circular(16),
+        border:
+            material.Border.all(color: const material.Color(0xFFEDEFF3)),
       ),
       child: material.SingleChildScrollView(
         scrollDirection: material.Axis.horizontal,
