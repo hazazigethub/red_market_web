@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:go_router/go_router.dart';
+
+import 'customer_profile_screen.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   /// نص البحث — يأتي من الغلاف
@@ -277,8 +278,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           borderRadius: BorderRadius.circular(15),
           side: BorderSide(color: Colors.grey.shade200)),
       child: ListTile(
-        onTap: () =>
-            context.push('/customer-profile/${user['id']}', extra: user),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CustomerProfileScreen(
+              userId: user['id'].toString(),
+              userData: user,
+            ),
+          ),
+        ),
         leading: Stack(
           children: [
             CircleAvatar(

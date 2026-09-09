@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AdminProductsScreen extends StatefulWidget {
   /// نص البحث — يأتي من الغلاف
@@ -13,6 +13,32 @@ class AdminProductsScreen extends StatefulWidget {
 }
 
 class _AdminProductsScreenState extends State<AdminProductsScreen> {
+  /// رابط الموقع — يُمرَّر عند البناء
+  /// flutter build web --dart-define=SITE_URL=https://redmarket.sa
+  static const String _siteUrl = String.fromEnvironment(
+    'SITE_URL',
+    defaultValue: 'http://localhost:3000',
+  );
+
+  /// يفتح صفحة المنتج في الموقع بتبويب جديد
+  Future<void> _openProductPage(dynamic productId) async {
+    final url = Uri.parse('$_siteUrl/product/$productId');
+    try {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Open product error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تعذر فتح صفحة المنتج',
+                style: TextStyle(fontFamily: 'Cairo')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   final supabase = Supabase.instance.client;
 
   String get _searchQuery => widget.searchQuery;
@@ -458,8 +484,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () =>
-                          context.push('/product-details', extra: p),
+                      onPressed: () => _openProductPage(p['id']),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: brandRed,
                         foregroundColor: Colors.white,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ✅ إضافة Riverpod
-import 'package:go_router/go_router.dart'; // ✅ إضافة GoRouter
 import 'package:red_market_core/red_market_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
