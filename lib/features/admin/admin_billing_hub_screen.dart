@@ -13,7 +13,7 @@ class AdminBillingHubScreen extends StatefulWidget {
 }
 
 class _AdminBillingHubScreenState extends State<AdminBillingHubScreen> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   int _tab = 0;
 

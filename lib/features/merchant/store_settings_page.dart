@@ -33,7 +33,7 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
   bool _isLoading = true;
   bool _isEditing = false;
 
-  static const Color brandColor = Color(0xFFC21815);
+  static const Color brandColor = Color(0xFFD32027);
   static const Color primaryBlue = Color(0xFF2196F3);
 
   @override

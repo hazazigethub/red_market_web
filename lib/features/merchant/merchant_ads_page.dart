@@ -16,7 +16,7 @@ class MerchantAdsPage extends StatefulWidget {
 }
 
 class _MerchantAdsPageState extends State<MerchantAdsPage> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   // مقاسات ملزمة
   static const Map<String, ({int w, int h})> _sizes = {
@@ -2032,7 +2032,7 @@ class _BookingSheet extends StatefulWidget {
 }
 
 class _BookingSheetState extends State<_BookingSheet> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
   static const int _maxKb = 500;
 
   final supabase = Supabase.instance.client;
@@ -2856,7 +2856,7 @@ class _SplashBookingSheet extends StatefulWidget {
 }
 
 class _SplashBookingSheetState extends State<_SplashBookingSheet> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
   static const int _maxKb = 300;
   static const int _w = 1080;
   static const int _h = 1920;
@@ -3603,7 +3603,7 @@ class _AdEditSheet extends StatefulWidget {
 }
 
 class _AdEditSheetState extends State<_AdEditSheet> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   final supabase = Supabase.instance.client;
 

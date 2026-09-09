@@ -9,7 +9,7 @@ class MerchantPromoPage extends StatefulWidget {
 }
 
 class _MerchantPromoPageState extends State<MerchantPromoPage> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   final supabase = Supabase.instance.client;
   final _titleCtrl = TextEditingController();

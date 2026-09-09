@@ -13,7 +13,7 @@ class AdminCatalogHubScreen extends StatefulWidget {
 }
 
 class _AdminCatalogHubScreenState extends State<AdminCatalogHubScreen> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   final _searchCtrl = TextEditingController();
 

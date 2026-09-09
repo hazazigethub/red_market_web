@@ -267,7 +267,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: const Color(0xFFC21815)),
+          Icon(icon, size: 16, color: const Color(0xFFD32027)),
           const SizedBox(width: 8),
           Text("$label: ",
               style: const TextStyle(
@@ -391,7 +391,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color brandRed = Color(0xFFC21815);
+    const Color brandRed = Color(0xFFD32027);
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
@@ -1038,7 +1038,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
                             child: Row(
                               children: [
                                 const Icon(Icons.calendar_today,
-                                    color: Color(0xFFC21815), size: 18),
+                                    color: Color(0xFFD32027), size: 18),
                                 const SizedBox(width: 10),
                                 Text(
                                   start == null
@@ -1081,7 +1081,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
                             child: Row(
                               children: [
                                 const Icon(Icons.event,
-                                    color: Color(0xFFC21815), size: 18),
+                                    color: Color(0xFFD32027), size: 18),
                                 const SizedBox(width: 10),
                                 Text(
                                   end == null

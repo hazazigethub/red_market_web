@@ -176,7 +176,7 @@ class _AdminAnalyticsVisitsScreenState
 
   @override
   material.Widget build(material.BuildContext context) {
-    const material.Color brandRed = material.Color(0xFFC21815);
+    const material.Color brandRed = material.Color(0xFFD32027);
 
     return material.Directionality(
       textDirection: material.TextDirection.rtl,

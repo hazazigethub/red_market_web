@@ -17,7 +17,7 @@ class AdminMerchantsScreen extends StatefulWidget {
 
 class _AdminMerchantsScreenState extends State<AdminMerchantsScreen> {
   final supabase = Supabase.instance.client;
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   String get _searchQuery => widget.searchQuery;
 
@@ -735,7 +735,7 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const brandRed = Color(0xFFC21815);
+    const brandRed = Color(0xFFD32027);
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -1087,7 +1087,7 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
                 style: const TextStyle(
                     fontFamily: 'Cairo',
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFC21815))),
+                    color: Color(0xFFD32027))),
           ],
         ),
       );

@@ -101,7 +101,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
         appBar: AppBar(
           title:
               const Text("إدارة الحساب", style: TextStyle(fontFamily: 'Cairo')),
-          backgroundColor: const Color(0xFFC21815),
+          backgroundColor: const Color(0xFFD32027),
           foregroundColor: Colors.white,
         ),
         body: SingleChildScrollView(
@@ -117,7 +117,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                       radius: 40,
                       backgroundColor: Colors.grey.shade200,
                       child: const Icon(Icons.person,
-                          size: 50, color: Color(0xFFC21815)),
+                          size: 50, color: Color(0xFFD32027)),
                     ),
                     const SizedBox(height: 10),
                     Text(widget.userData['full_name'] ?? 'بدون اسم',

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:ui' as ui;
@@ -13,7 +13,7 @@ class MerchantReportsPage extends StatefulWidget {
 
 class _MerchantReportsPageState extends State<MerchantReportsPage> {
   final supabase = Supabase.instance.client;
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   bool _isLoading = true;
 

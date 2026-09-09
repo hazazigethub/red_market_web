@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-const Color _brandRed = Color(0xFFC21815);
+const Color _brandRed = Color(0xFFD32027);
 
 /// يعرض شروط الإعلان في نافذة، ويُرجع true إن وافق التاجر
 Future<bool?> showBannerTermsSheet(BuildContext context) {

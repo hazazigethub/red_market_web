@@ -137,7 +137,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
 
   @override
   Widget build(BuildContext context) {
-    const Color brandRed = Color(0xFFC21815);
+    const Color brandRed = Color(0xFFD32027);
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
@@ -419,7 +419,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
             duration: const Duration(milliseconds: 300),
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isSel ? const Color(0xFFC21815) : Colors.grey.shade100,
+              color: isSel ? const Color(0xFFD32027) : Colors.grey.shade100,
               shape: BoxShape.circle,
             ),
             child:
@@ -781,7 +781,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>
           borderSide: const BorderSide(color: Color(0xFFEDEFF3))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(11),
-          borderSide: const BorderSide(color: Color(0xFFC21815), width: 1.4)),
+          borderSide: const BorderSide(color: Color(0xFFD32027), width: 1.4)),
     );
   }
 }

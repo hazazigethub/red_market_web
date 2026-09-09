@@ -13,7 +13,7 @@ class AdminMessagesHubScreen extends StatefulWidget {
 }
 
 class _AdminMessagesHubScreenState extends State<AdminMessagesHubScreen> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   int _tab = 0;
 

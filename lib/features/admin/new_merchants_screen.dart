@@ -12,7 +12,7 @@ class NewMerchantsScreen extends StatefulWidget {
 }
 
 class _NewMerchantsScreenState extends State<NewMerchantsScreen> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   final supabase = Supabase.instance.client;
 

@@ -14,7 +14,7 @@ class AdminCampaignsScreen extends StatefulWidget {
 }
 
 class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   final supabase = Supabase.instance.client;
 

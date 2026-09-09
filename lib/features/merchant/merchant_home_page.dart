@@ -200,14 +200,14 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFFC21815), Color(0xFF8E1010)],
+            colors: [Color(0xFFD32027), Color(0xFF8E1010)],
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFC21815).withValues(alpha: 0.2),
+              color: const Color(0xFFD32027).withValues(alpha: 0.2),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -295,12 +295,12 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
                         style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFC21815),
+                          color: Color(0xFFD32027),
                         ),
                       ),
                       const SizedBox(width: 5),
                       const Icon(Icons.chevron_left_rounded,
-                          size: 17, color: Color(0xFFC21815)),
+                          size: 17, color: Color(0xFFD32027)),
                     ],
                   ),
                 ),

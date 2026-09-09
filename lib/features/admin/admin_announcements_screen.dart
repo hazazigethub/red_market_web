@@ -14,7 +14,7 @@ class AdminAnnouncementsScreen extends StatefulWidget {
 
 class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   final supabase = Supabase.instance.client;
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   List<Map<String, dynamic>> _announcements = [];
   bool _isLoading = true;

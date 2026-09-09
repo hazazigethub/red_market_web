@@ -33,7 +33,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color brandRed = Color(0xFFC21815);
+    const Color brandRed = Color(0xFFD32027);
 
     return Directionality(
       textDirection: TextDirection.rtl,

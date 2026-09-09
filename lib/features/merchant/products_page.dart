@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,7 +6,7 @@ import 'package:intl/intl.dart' as intl;
 import 'package:red_market_core/red_market_core.dart';
 import 'merchant_subscriptions_page.dart';
 
-const Color brandRed = Color(0xFFC21815);
+const Color brandRed = Color(0xFFD32027);
 
 class ProductItem {
   final String id;

@@ -62,7 +62,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color brandRed = Color(0xFFC21815);
+    const Color brandRed = Color(0xFFD32027);
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -147,7 +147,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           borderSide: BorderSide(color: Colors.grey.shade300)),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFC21815))),
+          borderSide: const BorderSide(color: Color(0xFFD32027))),
     );
   }
 }

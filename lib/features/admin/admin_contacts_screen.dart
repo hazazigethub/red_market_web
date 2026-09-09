@@ -9,7 +9,7 @@ class AdminContactsScreen extends StatefulWidget {
 }
 
 class _AdminContactsScreenState extends State<AdminContactsScreen> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   final supabase = Supabase.instance.client;
 
@@ -19,7 +19,7 @@ class _AdminContactsScreenState extends State<AdminContactsScreen> {
   String _filter = 'new';
 
   static const _filters = [
-    (key: 'new', label: 'جديدة', color: Color(0xFFC21815)),
+    (key: 'new', label: 'جديدة', color: Color(0xFFD32027)),
     (key: 'in_progress', label: 'تحت الإجراء', color: Colors.orange),
     (key: 'closed', label: 'مغلقة', color: Colors.grey),
   ];

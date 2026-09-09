@@ -47,7 +47,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.build_circle_outlined,
-                    size: 100, color: Color(0xFFC21815)),
+                    size: 100, color: Color(0xFFD32027)),
                 const SizedBox(height: 24),
                 const Text("تحت الصيانة",
                     style: TextStyle(

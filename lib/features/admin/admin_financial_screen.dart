@@ -10,7 +10,7 @@ class AdminFinancialScreen extends StatefulWidget {
 }
 
 class _AdminFinancialScreenState extends State<AdminFinancialScreen> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   final supabase = Supabase.instance.client;
 

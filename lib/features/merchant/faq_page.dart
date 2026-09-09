@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class FaqPage extends StatelessWidget {
   const FaqPage({super.key});
 
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   static const _groups = <Map<String, dynamic>>[
     {

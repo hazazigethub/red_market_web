@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
 
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   static const _sections = <Map<String, dynamic>>[
     {

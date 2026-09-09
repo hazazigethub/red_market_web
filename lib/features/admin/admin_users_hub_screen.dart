@@ -12,7 +12,7 @@ class AdminUsersHubScreen extends StatefulWidget {
 }
 
 class _AdminUsersHubScreenState extends State<AdminUsersHubScreen> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   final _searchCtrl = TextEditingController();
 

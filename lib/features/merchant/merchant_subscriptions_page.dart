@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -138,7 +138,7 @@ class _MerchantSubscriptionsPageState
   }
 
   int _selectedPlanIndex = 0;
-  final Color brandRed = const Color(0xFFC21815);
+  final Color brandRed = const Color(0xFFD32027);
   final Color darkCard = const Color(0xFF1E1E1E);
 
   // ✅ مضاف: دالة تحديد حالة الباقة

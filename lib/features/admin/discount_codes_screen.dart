@@ -14,7 +14,7 @@ class _DiscountCodesScreenState extends State<DiscountCodesScreen> {
   final _formKey = GlobalKey<FormState>();
   final supabase = Supabase.instance.client;
 
-  final Color brandRed = const Color(0xFFC21815);
+  final Color brandRed = const Color(0xFFD32027);
   int _activeTab = 0;
 
   final TextEditingController _codeController = TextEditingController();

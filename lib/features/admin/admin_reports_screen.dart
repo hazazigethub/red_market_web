@@ -5,7 +5,7 @@ import 'admin_merchants_screen.dart';
 class AdminReportsScreen extends StatelessWidget {
   const AdminReportsScreen({super.key});
 
-  final Color brandRed = const Color(0xFFC21815);
+  final Color brandRed = const Color(0xFFD32027);
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +97,7 @@ class AdminReportsScreen extends StatelessWidget {
       Color color, String filterValue, String tableName) {
     final supabase = Supabase.instance.client;
     final String filterColumn = 'target_type';
-    const Color brandRed = Color(0xFFC21815);
+    const Color brandRed = Color(0xFFD32027);
 
     return InkWell(
       splashColor: Colors.transparent,
@@ -237,7 +237,7 @@ class ReportsDetailsPage extends StatelessWidget {
     int selectedDays = 3;
     bool isPermanent = false;
     final supabase = Supabase.instance.client;
-    const Color brandRed = Color(0xFFC21815);
+    const Color brandRed = Color(0xFFD32027);
 
     showDialog(
       context: context,
@@ -414,7 +414,7 @@ class ReportsDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final supabase = Supabase.instance.client;
-    const Color brandRed = Color(0xFFC21815);
+    const Color brandRed = Color(0xFFD32027);
     final String filterColumn = 'target_type';
 
     return Directionality(

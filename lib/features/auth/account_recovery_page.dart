@@ -17,7 +17,7 @@ class AccountRecoveryPage extends StatefulWidget {
 }
 
 class _AccountRecoveryPageState extends State<AccountRecoveryPage> {
-  static const Color brandRed = Color(0xFFC21815);
+  static const Color brandRed = Color(0xFFD32027);
 
   final supabase = Supabase.instance.client;
   bool _busy = false;

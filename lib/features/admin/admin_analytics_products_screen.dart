@@ -118,7 +118,7 @@ class _AdminAnalyticsProductsScreenState
 
   @override
   Widget build(BuildContext context) {
-    const Color brandRed = Color(0xFFC21815);
+    const Color brandRed = Color(0xFFD32027);
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -352,11 +352,11 @@ class _AdminAnalyticsProductsScreenState
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isActive ? const Color(0xFFC21815) : Colors.white,
+                  color: isActive ? const Color(0xFFD32027) : Colors.white,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: isActive
-                        ? const Color(0xFFC21815)
+                        ? const Color(0xFFD32027)
                         : Colors.grey.shade300,
                   ),
                 ),
