@@ -154,7 +154,21 @@ class _LoginPageState extends State<LoginPage>
     final supabase = Supabase.instance.client;
     try {
       final clean = _phone.text.trim().replaceAll(RegExp(r'\D'), '');
-      final email = 'u$clean@redocean-official.com';
+
+      // يجلب بريد المصادقة المرتبط بالجوال — حقيقياً كان أو مولّداً
+      String? email;
+      try {
+        final found =
+            await supabase.rpc('get_login_email', params: {'p_phone': clean});
+        email = found?.toString();
+      } catch (e) {
+        debugPrint('get_login_email error: $e');
+      }
+
+      if (email == null || email.isEmpty) {
+        throw 'لا يوجد حساب بهذا الرقم';
+      }
+
       final res = await supabase.auth.signInWithPassword(
         email: email, password: _password.text.trim());
 

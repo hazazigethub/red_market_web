@@ -133,12 +133,14 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
       final supabase = Supabase.instance.client;
       final String cleanPhone =
           _phoneController.text.trim().replaceAll(RegExp(r'\D'), '');
-      final String techEmail = 'u$cleanPhone@redocean-official.com';
+      // البريد الحقيقي هوية المصادقة — ليعمل استرداد كلمة المرور
+      final String email =
+          _emailController.text.trim().toLowerCase();
       final String password = _passwordController.text.trim();
 
       // 1) إنشاء الحساب أولاً — فالرفع يتطلب مستخدماً مسجّلاً
       final response = await supabase.auth.signUp(
-        email: techEmail,
+        email: email,
         password: password,
         data: {
           'role': 'merchant',
