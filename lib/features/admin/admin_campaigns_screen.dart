@@ -263,18 +263,22 @@ class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
                           ? null
                           : () async {
                               try {
+                                // ضغط تلقائي: عرض 1500 يكفي أكبر شاشة،
+                                // وجودة 85 لا يُلحظ فرقها في بنر عريض
                                 final picked = await ImagePicker().pickImage(
                                     source: ImageSource.gallery,
-                                    imageQuality: 100);
+                                    maxWidth: 1500,
+                                    imageQuality: 85);
                                 if (picked == null) return;
 
                                 final bytes = await picked.readAsBytes();
 
                                 final kb = bytes.lengthInBytes / 1024;
-                                if (kb > 500) {
+                                if (kb > 200) {
                                   setModal(() => imageError =
                                       'الحجم ${kb.toStringAsFixed(0)} ك.ب — '
-                                      'والحد 500');
+                                      'والحد 200\n'
+                                      'اضغط الصورة قبل الرفع');
                                   return;
                                 }
 
