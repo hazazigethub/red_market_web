@@ -60,17 +60,17 @@ class _LoginPageState extends State<LoginPage>
     (
       Icons.inventory_2_outlined,
       'أدر عروضك',
-      'أضف منتجاتك وعدّلها ونظّمها في تصنيفات خاصة بمتجرك',
+      'أضف عروضك وعدّلها ونظّمها في تصنيفات خاصة بمتجرك',
     ),
     (
       Icons.insights_outlined,
       'تابع نتائجك',
-      'زيارات متجرك، أعلى منتجاتك تفاعلاً، ومقارنة أدائك بالسوق',
+      'زيارات متجرك، أعلى عروضك تفاعلاً، ومقارنة أدائك بالسوق',
     ),
     (
       Icons.campaign_outlined,
       'صل لمتابعيك',
-      'أرسل عروضك مباشرة لمن يتابع متجرك، وانشر مقاطع تعرّف بمنتجاتك',
+      'أرسل عروضك مباشرة لمن يتابع متجرك، وانشر مقاطع تعرّف بها',
     ),
   ];
 
@@ -216,7 +216,7 @@ class _LoginPageState extends State<LoginPage>
             items: role == 'merchant'
                 ? const [
                     NavItem('الرئيسية', Icons.dashboard, MerchantHomePage()),
-                    NavItem('منتجاتي', Icons.inventory_2, ProductsPage()),
+                    NavItem('عروضي', Icons.inventory_2, ProductsPage()),
                     NavItem('الريلز', Icons.video_library, ManageReelsPage()),
                     NavItem('التقارير', Icons.bar_chart, MerchantReportsPage()),
                     NavItem('رسائل المتابعين', Icons.campaign, MerchantPromoPage()),
@@ -232,15 +232,15 @@ class _LoginPageState extends State<LoginPage>
               NavItem('إدارة العملاء', Icons.people, AdminUsersScreen()),
               NavItem('إدارة التجار', Icons.storefront, AdminMerchantsScreen()),
               NavItem('التجار الجدد', Icons.fiber_new_outlined, NewMerchantsScreen()),
-              NavItem('إدارة المنتجات', Icons.inventory, AdminProductsScreen()),
+              NavItem('إدارة العروض', Icons.inventory, AdminProductsScreen()),
               NavItem('تحليلات العملاء', Icons.analytics, AdminAnalyticsUsersScreen()),
               NavItem('تصنيفات المتاجر', Icons.storefront, AdminAnalyticsMerchantCategoriesScreen()),
-              NavItem('تصنيفات المنتجات', Icons.inventory_2, AdminAnalyticsProductCategoriesScreen()),
+              NavItem('تصنيفات العروض', Icons.inventory_2, AdminAnalyticsProductCategoriesScreen()),
               NavItem('الإشعارات', Icons.notifications, AdminNotificationsScreen()),
               NavItem('النشرة الأسبوعية', Icons.campaign, AdminNewsletterScreen()),
               NavItem('أكواد الخصم', Icons.local_offer, DiscountCodesScreen()),
               NavItem('التجار', Icons.store, AdminAnalyticsMerchantsScreen()),
-              NavItem('المنتجات', Icons.shopping_bag, AdminAnalyticsProductsScreen()),
+              NavItem('العروض', Icons.shopping_bag, AdminAnalyticsProductsScreen()),
               NavItem('البلاغات', Icons.flag, AdminReportsScreen()),
               NavItem('الزيارات', Icons.trending_up, AdminAnalyticsVisitsScreen()),
               NavItem('البنرات', Icons.ad_units, AdminBannersScreen()),

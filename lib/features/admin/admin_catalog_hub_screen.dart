@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'admin_products_screen.dart';
 import 'categories_page.dart';
 
-/// قسم المنتجات والتصنيفات
+/// قسم العروض والتصنيفات
 class AdminCatalogHubScreen extends StatefulWidget {
   const AdminCatalogHubScreen({super.key});
 
@@ -56,7 +56,7 @@ class _AdminCatalogHubScreenState extends State<AdminCatalogHubScreen> {
                       final tabs = Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _tabChip(0, 'المنتجات', Icons.inventory_2_outlined),
+                          _tabChip(0, 'العروض', Icons.inventory_2_outlined),
                           const SizedBox(width: 10),
                           _tabChip(1, 'التصنيفات', Icons.category_outlined),
                         ],
@@ -117,7 +117,7 @@ class _AdminCatalogHubScreenState extends State<AdminCatalogHubScreen> {
         style: const TextStyle(fontFamily: 'Cairo', fontSize: 13),
         decoration: InputDecoration(
           hintText: _tab == 0
-              ? 'ابحث باسم المنتج أو التاجر'
+              ? 'ابحث باسم العرض أو التاجر'
               : 'ابحث عن تصنيف',
           hintStyle: TextStyle(
               fontFamily: 'Cairo',

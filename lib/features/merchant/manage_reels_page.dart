@@ -26,7 +26,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
 
   String get _merchantId => supabase.auth.currentUser?.id ?? "";
 
-  /// أسماء منتجات التاجر: المعرّف -> الاسم
+  /// أسماء عروض التاجر: المعرّف -> الاسم
   final Map<String, String> _productNames = {};
 
   @override
@@ -37,7 +37,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
     _loadProductNames();
   }
 
-  /// يجلب أسماء المنتجات لعرضها على البطاقات وفي نافذة التعديل
+  /// يجلب أسماء العروض لعرضها على البطاقات وفي نافذة التعديل
   Future<void> _loadProductNames() async {
     try {
       final res = await supabase
@@ -100,7 +100,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
     }
   }
 
-  // ✅ مضاف: جلب منتجات التاجر
+  // ✅ مضاف: جلب عروض التاجر
   Future<List<Map<String, dynamic>>> _fetchMerchantProducts() async {
     try {
       final res = await supabase
@@ -469,7 +469,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                             const SizedBox(width: 3),
                             Flexible(
                               child: Text(
-                                productName ?? "مرتبط بمنتج",
+                                productName ?? "مرتبط بعرض",
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -556,7 +556,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
     );
   }
 
-  /// تعديل عنوان ووصف الريلز والمنتج المرتبط
+  /// تعديل عنوان ووصف الريلز والعرض المرتبط
   void _showEditReelDialog(ReelModel reel) {
     final titleCtrl = TextEditingController(text: reel.title ?? '');
     final descCtrl = TextEditingController(text: reel.description ?? '');
@@ -609,14 +609,14 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                     style: const TextStyle(
                         fontFamily: 'Cairo', color: Colors.black87),
                     decoration: const InputDecoration(
-                      labelText: "المنتج المرتبط",
+                      labelText: "العرض المرتبط",
                       labelStyle: TextStyle(fontFamily: 'Cairo'),
                       border: OutlineInputBorder(),
                     ),
                     items: [
                       const DropdownMenuItem<String?>(
                         value: null,
-                        child: Text("بدون منتج",
+                        child: Text("بدون عرض",
                             style: TextStyle(fontFamily: 'Cairo')),
                       ),
                       ..._productNames.entries.map(
@@ -711,7 +711,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
               _buildTextField(descController, "وصف قصير", false, maxLines: 2),
               const SizedBox(height: 10),
 
-              // ✅ مضاف: Dropdown لاختيار المنتج
+              // ✅ مضاف: Dropdown لاختيار العرض
               FutureBuilder<List<Map<String, dynamic>>>(
                 future: _fetchMerchantProducts(),
                 builder: (context, snapshot) {
@@ -728,7 +728,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                       child: DropdownButton<String?>(
                         isExpanded: true,
                         value: selectedProductId,
-                        hint: const Text("ربط بمنتج (اختياري)",
+                        hint: const Text("ربط بعرض (اختياري)",
                             style: TextStyle(
                                 fontFamily: 'Cairo',
                                 fontSize: 13,
@@ -736,7 +736,7 @@ class _ManageReelsPageState extends State<ManageReelsPage> {
                         items: [
                           const DropdownMenuItem<String?>(
                             value: null,
-                            child: Text("بدون ربط بمنتج",
+                            child: Text("بدون ربط بعرض",
                                 style: TextStyle(
                                     fontFamily: 'Cairo', fontSize: 13)),
                           ),

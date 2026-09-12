@@ -30,7 +30,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
   final Map<int, int> _dailyVisits = {};
   int _followersCount = 0;
 
-  // إحصائيات المنتجات
+  // إحصائيات العروض
   int _productViews = 0;
   int _productLikes = 0;
   int _productSaves = 0;
@@ -42,7 +42,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
   int _reelShares = 0;
   int _reelComments = 0;
 
-  // أكثر المنتجات مشاهدة
+  // أكثر العروض مشاهدة
   List<Map<String, dynamic>> _topProducts = [];
 
   // أكثر الريلز مشاهدة
@@ -265,7 +265,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
       _productDetailMap['views'] = viewCounts.entries.map((e) {
         final info = viewNames[e.key];
         return {
-          'name': info?['name'] ?? 'منتج',
+          'name': info?['name'] ?? 'عرض',
           'image_url': info?['image_url'] ?? '',
           'count': e.value,
           'label': 'مشاهدة',
@@ -288,7 +288,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
       _productDetailMap['likes'] = likeCounts.entries.map((e) {
         final info = likeNames[e.key];
         return {
-          'name': info?['name'] ?? 'منتج',
+          'name': info?['name'] ?? 'عرض',
           'image_url': info?['image_url'] ?? '',
           'count': e.value,
           'label': 'إعجاب',
@@ -311,7 +311,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
       _productDetailMap['saves'] = saveCounts.entries.map((e) {
         final info = saveNames[e.key];
         return {
-          'name': info?['name'] ?? 'منتج',
+          'name': info?['name'] ?? 'عرض',
           'image_url': info?['image_url'] ?? '',
           'count': e.value,
           'label': 'حفظ',
@@ -334,7 +334,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
       _productDetailMap['shares'] = shareCounts.entries.map((e) {
         final info = shareNames[e.key];
         return {
-          'name': info?['name'] ?? 'منتج',
+          'name': info?['name'] ?? 'عرض',
           'image_url': info?['image_url'] ?? '',
           'count': e.value,
           'label': 'مشاركة',
@@ -510,7 +510,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
       _topProducts = sorted.take(5).map((e) {
         final info = names[e.key];
         return {
-          'name': info?['name'] ?? 'منتج',
+          'name': info?['name'] ?? 'عرض',
           'image_url': info?['image_url'] ?? '',
           'views': e.value,
         };
@@ -799,7 +799,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                                 ),
                                 _buildSummaryCard(
                                   icon: Icons.inventory_2_rounded,
-                                  label: "تفاعلات المنتجات",
+                                  label: "تفاعلات العروض",
                                   value: _totalProductInteractions,
                                   color: Colors.orange,
                                   isDark: isDark,
@@ -864,7 +864,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                             builder: (context, c) {
                               final twoCols = c.maxWidth >= 820;
                               final left = _chartCard(
-                                title: "تفاعلات المنتجات",
+                                title: "تفاعلات العروض",
                                 icon: Icons.bar_chart_rounded,
                                 color: Colors.orange,
                                 isDark: isDark,
@@ -900,7 +900,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                           const SizedBox(height: 16),
 
                           _chartCard(
-                            title: "أعلى المنتجات مشاهدة",
+                            title: "أعلى العروض مشاهدة",
                             icon: Icons.leaderboard_rounded,
                             color: Colors.blue,
                             isDark: isDark,
@@ -909,9 +909,9 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                           ),
                           const SizedBox(height: 24),
 
-                          // ✅ باقة بريميوم فقط: تفاصيل المنتجات والريلز
+                          // ✅ باقة بريميوم فقط: تفاصيل العروض والريلز
                           if (_hasDetailedReports) ...[
-                            _buildSectionTitle("إحصائيات المنتجات",
+                            _buildSectionTitle("إحصائيات العروض",
                                 Icons.inventory_2_rounded, Colors.orange),
                             const SizedBox(height: 12),
                             LayoutBuilder(
@@ -931,42 +931,42 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                                   children: [
                                 _buildStatCard(
                                     icon: Icons.remove_red_eye_rounded,
-                                    label: "مشاهدات المنتجات",
+                                    label: "مشاهدات العروض",
                                     value: _productViews,
                                     color: Colors.orange,
                                     isDark: isDark,
                                     onTap: () => _showDetailSheet(
-                                        "مشاهدات المنتجات",
+                                        "مشاهدات العروض",
                                         _productDetailMap['views'] ?? [],
                                         Colors.orange)),
                                 _buildStatCard(
                                     icon: Icons.favorite_rounded,
-                                    label: "إعجابات المنتجات",
+                                    label: "إعجابات العروض",
                                     value: _productLikes,
                                     color: Colors.red,
                                     isDark: isDark,
                                     onTap: () => _showDetailSheet(
-                                        "إعجابات المنتجات",
+                                        "إعجابات العروض",
                                         _productDetailMap['likes'] ?? [],
                                         Colors.red)),
                                 _buildStatCard(
                                     icon: Icons.bookmark_rounded,
-                                    label: "حفظ المنتجات",
+                                    label: "حفظ العروض",
                                     value: _productSaves,
                                     color: Colors.purple,
                                     isDark: isDark,
                                     onTap: () => _showDetailSheet(
-                                        "حفظ المنتجات",
+                                        "حفظ العروض",
                                         _productDetailMap['saves'] ?? [],
                                         Colors.purple)),
                                 _buildStatCard(
                                     icon: Icons.share_rounded,
-                                    label: "مشاركات المنتجات",
+                                    label: "مشاركات العروض",
                                     value: _productShares,
                                     color: Colors.teal,
                                     isDark: isDark,
                                     onTap: () => _showDetailSheet(
-                                        "مشاركات المنتجات",
+                                        "مشاركات العروض",
                                         _productDetailMap['shares'] ?? [],
                                         Colors.teal)),
                                   ]
@@ -978,7 +978,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
                             ),
                             const SizedBox(height: 24),
                             if (_topProducts.isNotEmpty) ...[
-                              _buildSectionTitle("أكثر المنتجات مشاهدة",
+                              _buildSectionTitle("أكثر العروض مشاهدة",
                                   Icons.trending_up_rounded, Colors.orange),
                               const SizedBox(height: 12),
                               _buildTopList(
@@ -1087,7 +1087,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
 
     final rows = [
       ('زيارات المتجر', v(cur, 'visits'), v(prev, 'visits'), Colors.blue),
-      ('مشاهدات المنتجات', v(cur, 'product_views'),
+      ('مشاهدات العروض', v(cur, 'product_views'),
           v(prev, 'product_views'), Colors.orange),
       ('متابعون جدد', v(cur, 'new_followers'),
           v(prev, 'new_followers'), Colors.teal),
@@ -1589,7 +1589,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
     );
   }
 
-  /// أعمدة تقارن تفاعلات المنتجات
+  /// أعمدة تقارن تفاعلات العروض
   Widget _productBarChart(bool isDark) {
     final values = [
       _productViews.toDouble(),
@@ -1748,7 +1748,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
     );
   }
 
-  /// أعمدة أفقية لأعلى المنتجات مشاهدة
+  /// أعمدة أفقية لأعلى العروض مشاهدة
   Widget _topProductsChart(bool isDark) {
     final items = _topProducts.take(5).toList();
     if (items.isEmpty) {
@@ -1767,7 +1767,7 @@ class _MerchantReportsPageState extends State<MerchantReportsPage> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: items.map((e) {
-        final name = (e['name'] ?? 'منتج').toString();
+        final name = (e['name'] ?? 'عرض').toString();
         final count = ((e['count'] ?? 0) as num).toDouble();
         final ratio = maxV == 0 ? 0.0 : count / maxV;
 

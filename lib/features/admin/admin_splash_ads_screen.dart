@@ -1129,7 +1129,7 @@ class _AdminSplashAdsScreenState extends State<AdminSplashAdsScreen> {
                         const SizedBox(width: 5),
                         Text(
                           a['target_type'] == 'product'
-                              ? 'يفتح منتجاً'
+                              ? 'يفتح عرضاً'
                               : 'يفتح المتجر',
                           style: TextStyle(
                               fontFamily: 'Cairo',

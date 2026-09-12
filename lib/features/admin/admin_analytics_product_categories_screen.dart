@@ -111,7 +111,7 @@ class _AdminAnalyticsProductCategoriesScreenState
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: _buildSummaryCard(
-                                          "منتجات",
+                                          "عروض",
                                           "${allProducts.length}",
                                           Colors.orange,
                                           Icons.inventory_2_rounded,

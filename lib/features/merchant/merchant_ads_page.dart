@@ -2206,7 +2206,7 @@ class _BookingSheetState extends State<_BookingSheet> {
       return;
     }
     if (_targetType == 'product' && _productId == null) {
-      setState(() => _error = 'اختر المنتج المستهدف');
+      setState(() => _error = 'اختر العرض المستهدف');
       return;
     }
     if (!_termsAccepted) {
@@ -2427,7 +2427,7 @@ class _BookingSheetState extends State<_BookingSheet> {
                           activeColor: brandRed,
                           contentPadding: EdgeInsets.zero,
                           dense: true,
-                          title: const Text('منتج محدد',
+                          title: const Text('عرض محدد',
                               style: TextStyle(
                                   fontFamily: 'Cairo', fontSize: 13)),
                           onChanged: (v) =>
@@ -2439,7 +2439,7 @@ class _BookingSheetState extends State<_BookingSheet> {
                           DropdownButtonFormField<String>(
                             initialValue: _productId,
                             isExpanded: true,
-                            decoration: _dec('اختر المنتج'),
+                            decoration: _dec('اختر العرض'),
                             items: _products
                                 .map((p) => DropdownMenuItem<String>(
                                       value: p['id'].toString(),
@@ -3014,7 +3014,7 @@ class _SplashBookingSheetState extends State<_SplashBookingSheet> {
       return;
     }
     if (_targetType == 'product' && _productId == null) {
-      setState(() => _error = 'اختر المنتج المستهدف');
+      setState(() => _error = 'اختر العرض المستهدف');
       return;
     }
     if (!_termsAccepted) {
@@ -3232,7 +3232,7 @@ class _SplashBookingSheetState extends State<_SplashBookingSheet> {
                           activeColor: brandRed,
                           contentPadding: EdgeInsets.zero,
                           dense: true,
-                          title: const Text('منتج محدد',
+                          title: const Text('عرض محدد',
                               style: TextStyle(
                                   fontFamily: 'Cairo', fontSize: 13)),
                           onChanged: (v) =>
@@ -3244,7 +3244,7 @@ class _SplashBookingSheetState extends State<_SplashBookingSheet> {
                           DropdownButtonFormField<String>(
                             initialValue: _productId,
                             isExpanded: true,
-                            decoration: _dec('اختر المنتج'),
+                            decoration: _dec('اختر العرض'),
                             items: _products
                                 .map((p) => DropdownMenuItem<String>(
                                       value: p['id'].toString(),
@@ -3723,7 +3723,7 @@ class _AdEditSheetState extends State<_AdEditSheet> {
     if (_busy) return;
 
     if (_targetType == 'product' && _productId == null) {
-      setState(() => _error = 'اختر المنتج المستهدف');
+      setState(() => _error = 'اختر العرض المستهدف');
       return;
     }
 
@@ -3953,7 +3953,7 @@ class _AdEditSheetState extends State<_AdEditSheet> {
                           activeColor: brandRed,
                           contentPadding: EdgeInsets.zero,
                           dense: true,
-                          title: const Text('منتج محدد',
+                          title: const Text('عرض محدد',
                               style: TextStyle(
                                   fontFamily: 'Cairo', fontSize: 13)),
                           onChanged: (v) =>
@@ -3966,7 +3966,7 @@ class _AdEditSheetState extends State<_AdEditSheet> {
                             initialValue: _productId,
                             isExpanded: true,
                             decoration: InputDecoration(
-                              hintText: 'اختر المنتج',
+                              hintText: 'اختر العرض',
                               hintStyle: TextStyle(
                                   fontFamily: 'Cairo',
                                   fontSize: 12,

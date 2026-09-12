@@ -116,12 +116,12 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
 
   int get _remaining => _purchased - _used;
 
-  /// هل المنتج مضاف حالياً؟
+  /// هل العرض مضاف حالياً؟
   bool _isAdded(String productId) => _inCampaign.any((s) =>
       s['product_id'].toString() == productId &&
       s['current_status'] == 'active');
 
-  /// إحصاءات منتج
+  /// إحصاءات عرض
   Map<String, dynamic>? _statsOf(String productId) {
     for (final s in _inCampaign) {
       if (s['product_id'].toString() == productId) return s;
@@ -157,7 +157,7 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
                   Icon(Icons.shopping_cart_outlined,
                       color: brandRed, size: 19),
                   SizedBox(width: 10),
-                  Text('شراء حصة منتجات',
+                  Text('شراء حصة عروض',
                       style: TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 16,
@@ -171,7 +171,7 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'كم منتجاً تريد إضافته للحملة؟',
+                      'كم عرضاً تريد إضافته للحملة؟',
                       style: TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 13,
@@ -215,9 +215,9 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
                       ),
                       child: Column(
                         children: [
-                          _line('رسم المنتج', '${fee.toInt()} ر.س'),
+                          _line('رسم العرض', '${fee.toInt()} ر.س'),
                           const SizedBox(height: 7),
-                          _line('عدد المنتجات', '$count'),
+                          _line('عدد العروض', '$count'),
                           const SizedBox(height: 7),
                           _line('ضريبة القيمة المضافة',
                               '${vat.toStringAsFixed(2)} ر.س'),
@@ -307,7 +307,7 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
                             if (map['ok'] == true) {
                               await _load();
                               _snack(
-                                'اشتريت حصة $count منتج — '
+                                'اشتريت حصة $count عرض — '
                                 'رصيدك ${(map['balance'] as num?)?.toStringAsFixed(2)} ر.س',
                                 Colors.green,
                               );
@@ -542,7 +542,7 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
                 children: [
                   Expanded(
                     child: _headStat(
-                        'منتجاتك في الحملة', '$_used'),
+                        'عروضك في الحملة', '$_used'),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -550,7 +550,7 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _headStat('إجمالي منتجات الحملة',
+                    child: _headStat('إجمالي عروض الحملة',
                         '${c['product_count'] ?? 0}'),
                   ),
                 ],
@@ -599,10 +599,10 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
                     const SizedBox(height: 3),
                     Text(
                       _purchased == 0
-                          ? 'اشترِ حصة لتضيف منتجاتك للحملة'
+                          ? 'اشترِ حصة لتضيف عروضك للحملة'
                           : _remaining <= 0
-                              ? 'نفدت حصتك — اشترِ المزيد أو أزل منتجاً'
-                              : 'يمكنك إضافة $_remaining منتجاً بعد',
+                              ? 'نفدت حصتك — اشترِ المزيد أو أزل عرضاً'
+                              : 'يمكنك إضافة $_remaining عرضاً بعد',
                       style: TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 11.5,
@@ -635,14 +635,14 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
 
         const SizedBox(height: 22),
 
-        Text('منتجاتك',
+        Text('عروضك',
             style: const TextStyle(
                 fontFamily: 'Cairo',
                 fontSize: 16,
                 fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
         Text(
-          'اضغط الزر لإضافة المنتج للحملة أو إزالته',
+          'اضغط الزر لإضافة العرض للحملة أو إزالته',
           style: TextStyle(
               fontFamily: 'Cairo',
               fontSize: 11.5,
@@ -655,7 +655,7 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 40),
             child: Center(
-              child: Text('لا منتجات متاحة',
+              child: Text('لا عروض متاحة',
                   style: TextStyle(
                       fontFamily: 'Cairo',
                       fontSize: 14,

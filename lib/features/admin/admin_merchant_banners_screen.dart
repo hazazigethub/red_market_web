@@ -680,7 +680,7 @@ class _AdminMerchantBannersScreenState
               ),
               const SizedBox(width: 6),
               Text(
-                b['target_type'] == 'product' ? 'يفتح منتجاً' : 'يفتح المتجر',
+                b['target_type'] == 'product' ? 'يفتح عرضاً' : 'يفتح المتجر',
                 style: TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 11,

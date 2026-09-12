@@ -45,7 +45,7 @@ class ReviewData {
       customerId: customerId,
       orderId: orderId,
       productId: productId,
-      title: (map['product_name'] ?? 'منتج').toString(),
+      title: (map['product_name'] ?? 'عرض').toString(),
       comment: (map['comment'] ?? '').toString(),
       rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
       createdAt: DateTime.tryParse((map['created_at'] ?? '').toString()) ??
@@ -578,7 +578,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                       children: [
                         Expanded(
                           child: _tabBtn(
-                            title: "تقييمات المنتجات",
+                            title: "تقييمات العروض",
                             active: _tab == 0,
                             onTap: () => setState(() => _tab = 0),
                             isDark: isDark,
@@ -658,7 +658,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              "خطأ في جلب تقييمات المنتجات:\n${snapshot.error}",
+              "خطأ في جلب تقييمات العروض:\n${snapshot.error}",
               textAlign: TextAlign.center,
               style: const TextStyle(fontFamily: 'Cairo'),
             ),
@@ -679,7 +679,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                 Icon(Icons.star_outline_rounded,
                     size: 80, color: Colors.grey.withValues(alpha: 0.3)),
                 const SizedBox(height: 15),
-                const Text("لا توجد تقييمات منتجات حتى الآن",
+                const Text("لا توجد تقييمات عروض حتى الآن",
                     style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
               ],
             ),

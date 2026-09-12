@@ -1033,7 +1033,7 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
     );
   }
 
-  /// يعرض إحصائيات المتجر المحدد (منتجات · ريلز · زيارات)
+  /// يعرض إحصائيات المتجر المحدد (عروض · ريلز · زيارات)
   Future<void> _showMerchantStats() async {
     final id = widget.merchant['id']?.toString();
     if (id == null) return;
@@ -1058,7 +1058,7 @@ class _MerchantControlScreenState extends State<MerchantControlScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _statRow('المنتجات', (products as List).length),
+                _statRow('العروض', (products as List).length),
                 _statRow('الريلز', (reels as List).length),
                 _statRow('الزيارات', (visits as List).length),
               ],

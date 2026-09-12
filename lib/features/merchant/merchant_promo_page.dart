@@ -255,7 +255,7 @@ class _MerchantPromoPageState extends State<MerchantPromoPage> {
                         children: [
                           _linkChip('none', 'بلا ربط'),
                           const SizedBox(width: 8),
-                          _linkChip('product', 'منتج'),
+                          _linkChip('product', 'عرض'),
                           const SizedBox(width: 8),
                           _linkChip('reel', 'ريلز'),
                         ],
@@ -275,7 +275,7 @@ class _MerchantPromoPageState extends State<MerchantPromoPage> {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none),
                             hintText: _linkType == 'product'
-                                ? "اختر منتجاً"
+                                ? "اختر عرضاً"
                                 : "اختر ريلز",
                             hintStyle: const TextStyle(fontFamily: 'Cairo'),
                             contentPadding: const EdgeInsets.symmetric(

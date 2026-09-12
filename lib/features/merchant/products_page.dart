@@ -18,6 +18,8 @@ class ProductItem {
   String productUrl;
   bool isAvailable;
   String imageUrl;
+  /// صور إضافية — حتى ثلاث بجانب الرئيسية
+  List<String> imagesUrl;
   bool isFlashSale;
   DateTime? flashSaleExpiry;
   DateTime? flashSaleStart;
@@ -33,6 +35,7 @@ class ProductItem {
     required this.productUrl,
     required this.isAvailable,
     required this.imageUrl,
+    this.imagesUrl = const [],
     this.isFlashSale = false,
     this.flashSaleExpiry,
     this.flashSaleStart,
@@ -53,6 +56,11 @@ class ProductItem {
               json['image_url'].toString().trim().length > 10)
           ? json['image_url'].toString()
           : 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png',
+      imagesUrl: (json['images_url'] as List?)
+              ?.map((e) => e.toString())
+              .where((e) => e.trim().length > 10)
+              .toList() ??
+          const [],
       isFlashSale: json['is_flash_sale'] ?? false,
       flashSaleExpiry: json['flash_sale_expiry'] != null
           ? DateTime.parse(json['flash_sale_expiry']).toLocal()
@@ -75,6 +83,7 @@ class ProductItem {
       'product_url': productUrl,
       'is_available': isAvailable,
       'image_url': imageUrl,
+      'images_url': imagesUrl,
       'is_flash_sale': isFlashSale,
       // تُحوَّل لتوقيت عالمي قبل الحفظ — وإلا زادت 3 ساعات
       'flash_sale_expiry': flashSaleExpiry?.toUtc().toIso8601String(),
@@ -111,7 +120,7 @@ class ProductsPage extends StatefulWidget {
 }
 
 class _ProductsPageState extends State<ProductsPage> {
-  // ✅ التبويب الرئيسي: منتجات أو أقسام
+  // ✅ التبويب الرئيسي: عروض أو أقسام
 
   final supabase = Supabase.instance.client;
   final ImagePicker _picker = ImagePicker();
@@ -176,7 +185,7 @@ class _ProductsPageState extends State<ProductsPage> {
         });
       }
     } catch (e) {
-      debugPrint("خطأ في جلب حد المنتجات: $e");
+      debugPrint("خطأ في جلب حد العروض: $e");
     }
   }
 
@@ -220,7 +229,7 @@ class _ProductsPageState extends State<ProductsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text("تم حذف المنتج بنجاح",
+              content: Text("تم حذف العرض بنجاح",
                   style: TextStyle(fontFamily: 'Cairo'))),
         );
       }
@@ -447,7 +456,7 @@ class _ProductsPageState extends State<ProductsPage> {
                       // ✅ شريط الأدوات والتصنيفات
                       _buildFilterTabs(isDark),
 
-                      // ✅ شريط عدد المنتجات
+                      // ✅ شريط عدد العروض
                       if (true)
                         Container(
                           margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -475,7 +484,7 @@ class _ProductsPageState extends State<ProductsPage> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                "المنتجات: ${_productsList.length} / $_productLimit",
+                                "العروض: ${_productsList.length} / $_productLimit",
                                 style: TextStyle(
                                   fontFamily: 'Cairo',
                                   fontSize: 12,
@@ -533,7 +542,7 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
             const SizedBox(height: 24),
             const Text(
-              "منتجاتك موقوفة مؤقتاً",
+              "عروضك موقوفة مؤقتاً",
               style: TextStyle(
                   fontFamily: 'Cairo',
                   fontSize: 20,
@@ -542,7 +551,7 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
             const SizedBox(height: 12),
             const Text(
-              "لا يمكن عرض أو إدارة المنتجات بدون اشتراك فعّال. فعّل باقتك لتظهر منتجاتك للعملاء.",
+              "لا يمكن عرض أو إدارة العروض بدون اشتراك فعّال. فعّل باقتك لتظهر عروضك للعملاء.",
               style: TextStyle(
                   fontFamily: 'Cairo', fontSize: 13, color: Colors.grey),
               textAlign: TextAlign.center,
@@ -585,10 +594,10 @@ class _ProductsPageState extends State<ProductsPage> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
-          _buildFilterTab("الكل", isDark, label: "جميع المنتجات"),
+          _buildFilterTab("الكل", isDark, label: "جميع العروض"),
           _buildActionSquare(
             icon: Icons.add_shopping_cart,
-            label: "إضافة منتج",
+            label: "إضافة عرض",
             onTap: () => _onAddProduct(isDark),
           ),
           _buildActionSquare(
@@ -602,13 +611,13 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  /// يتحقق من الحدود قبل فتح نموذج إضافة منتج
+  /// يتحقق من الحدود قبل فتح نموذج إضافة عرض
   void _onAddProduct(bool isDark) {
     if (_productsList.length >= _productLimit) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "وصلت للحد الأقصى ($_productLimit منتج). رقّ باقتك لإضافة المزيد.",
+            "وصلت للحد الأقصى ($_productLimit عرض). رقّ باقتك لإضافة المزيد.",
             style: const TextStyle(fontFamily: 'Cairo'),
           ),
           backgroundColor: Colors.red,
@@ -620,7 +629,7 @@ class _ProductsPageState extends State<ProductsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            "يجب إضافة تصنيف لمتجرك أولاً قبل إضافة منتجات",
+            "يجب إضافة تصنيف لمتجرك أولاً قبل إضافة عروض",
             style: TextStyle(fontFamily: 'Cairo'),
           ),
           backgroundColor: Colors.red,
@@ -631,7 +640,7 @@ class _ProductsPageState extends State<ProductsPage> {
     _showAddProductForm(isDark);
   }
 
-  /// مربع إجراء (إضافة منتج / إضافة تصنيف)
+  /// مربع إجراء (إضافة عرض / إضافة تصنيف)
   Widget _buildActionSquare({
     required IconData icon,
     required String label,
@@ -757,7 +766,7 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  /// يعيد تسمية التصنيف في كل منتجاته
+  /// يعيد تسمية التصنيف في كل عروضه
   Future<void> _renameCategory(String oldName, String newName) async {
     try {
       final uid = supabase.auth.currentUser?.id;
@@ -798,7 +807,7 @@ class _ProductsPageState extends State<ProductsPage> {
               style: TextStyle(fontFamily: 'Cairo', fontSize: 16)),
           content: Text(
             count > 0
-                ? "لا يمكن حذف التصنيف لأنه يحتوي على $count منتج. انقل المنتجات أو احذفها أولاً."
+                ? "لا يمكن حذف التصنيف لأنه يحتوي على $count عرض. انقل العروض أو احذفها أولاً."
                 : "سيتم حذف التصنيف \"$catName\". هل أنت متأكد؟",
             style: const TextStyle(fontFamily: 'Cairo', fontSize: 13),
           ),
@@ -899,7 +908,7 @@ class _ProductsPageState extends State<ProductsPage> {
             Icon(Icons.inventory_2_outlined,
                 size: 60, color: Colors.grey.withValues(alpha: 0.3)),
             const SizedBox(height: 12),
-            const Text("لا توجد منتجات في هذا القسم حالياً",
+            const Text("لا توجد عروض في هذا القسم حالياً",
                 style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
           ],
         ),
@@ -1090,7 +1099,7 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  /// زر أيقونة صغير يوضع فوق صورة المنتج
+  /// زر أيقونة صغير يوضع فوق صورة العرض
   Widget _cardIconButton({
     required IconData icon,
     required Color color,
@@ -1118,7 +1127,7 @@ class _ProductsPageState extends State<ProductsPage> {
         child: AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          title: const Text("حذف المنتج",
+          title: const Text("حذف العرض",
               style:
                   TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
           content: Text(
@@ -1166,7 +1175,18 @@ class _ProductsPageState extends State<ProductsPage> {
 
     String? storeCategoryValue = productToEdit?.storeCategory;
 
-    XFile? pickedImage;
+    // أربع خانات: الأولى رئيسية والباقي اختيارية
+    // كل خانة إمّا رابط موجود أو ملف مختار حديثاً
+    final List<String?> slotUrls = List<String?>.filled(4, null);
+    final List<XFile?> slotFiles = List<XFile?>.filled(4, null);
+
+    if (productToEdit != null) {
+      slotUrls[0] = productToEdit.imageUrl;
+      for (var i = 0; i < productToEdit.imagesUrl.length && i < 3; i++) {
+        slotUrls[i + 1] = productToEdit.imagesUrl[i];
+      }
+    }
+
     bool isSaving = false;
     String discountType = "fixed";
     bool showError = false;
@@ -1206,47 +1226,147 @@ class _ProductsPageState extends State<ProductsPage> {
                 top: 20),
             child: SingleChildScrollView(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Text("بيانات المنتج",
+                const Text("بيانات العرض",
                     style: TextStyle(
                         fontFamily: 'Cairo',
                         fontWeight: FontWeight.bold,
                         fontSize: 18)),
                 const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () async {
-                    final img = await _picker.pickImage(
-                      source: ImageSource.gallery,
-                      maxWidth: 1024,
-                      imageQuality: 80,
+
+                // ===== أربع خانات صور =====
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(4, (i) {
+                    final file = slotFiles[i];
+                    final url = slotUrls[i];
+                    final hasAny = file != null || url != null;
+
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(left: i < 3 ? 8 : 0),
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () async {
+                                final img = await _picker.pickImage(
+                                  source: ImageSource.gallery,
+                                  maxWidth: 1024,
+                                  imageQuality: 80,
+                                );
+                                if (img != null) {
+                                  setModalState(() {
+                                    slotFiles[i] = img;
+                                    slotUrls[i] = null;
+                                  });
+                                }
+                              },
+                              child: Container(
+                                height: 78,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  border: (showError && i == 0 && !hasAny)
+                                      ? Border.all(
+                                          color: Colors.red, width: 2)
+                                      : (i == 0
+                                          ? Border.all(
+                                              color: brandRed, width: 1.5)
+                                          : null),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    Center(
+                                      child: file != null
+                                          ? const Icon(Icons.check_circle,
+                                              color: Colors.green, size: 30)
+                                          : (url != null
+                                              ? ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          11),
+                                                  child: Image.network(url,
+                                                      fit: BoxFit.cover,
+                                                      width: double.infinity,
+                                                      height: 78),
+                                                )
+                                              : Icon(
+                                                  Icons.add_photo_alternate,
+                                                  color: Colors.grey.shade500,
+                                                  size: 26)),
+                                    ),
+                                    if (hasAny)
+                                      Positioned(
+                                        top: 2,
+                                        left: 2,
+                                        child: GestureDetector(
+                                          onTap: () => setModalState(() {
+                                            slotFiles[i] = null;
+                                            slotUrls[i] = null;
+                                          }),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(2),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.close,
+                                                size: 13, color: brandRed),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              i == 0 ? "الرئيسية" : "صورة ${i + 1}",
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 10,
+                                fontWeight: i == 0
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: i == 0 ? brandRed : Colors.grey,
+                              ),
+                            ),
+                            // تبديل الرئيسية — يظهر للخانات غير الأولى
+                            if (i > 0 && hasAny)
+                              GestureDetector(
+                                onTap: () => setModalState(() {
+                                  final tf = slotFiles[0];
+                                  final tu = slotUrls[0];
+                                  slotFiles[0] = slotFiles[i];
+                                  slotUrls[0] = slotUrls[i];
+                                  slotFiles[i] = tf;
+                                  slotUrls[i] = tu;
+                                }),
+                                child: const Padding(
+                                  padding: EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    "اجعلها رئيسية",
+                                    style: TextStyle(
+                                        fontFamily: 'Cairo',
+                                        fontSize: 9,
+                                        color: brandRed,
+                                        decoration: TextDecoration.underline),
+                                  ),
+                                ),
+                              )
+                            else
+                              const SizedBox(height: 13),
+                          ],
+                        ),
+                      ),
                     );
-                    if (img != null) setModalState(() => pickedImage = img);
-                  },
-                  child: Container(
-                    height: 120,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        border: (showError &&
-                                pickedImage == null &&
-                                productToEdit == null)
-                            ? Border.all(color: Colors.red, width: 2)
-                            : null,
-                        borderRadius: BorderRadius.circular(15)),
-                    child: pickedImage != null
-                        ? const Icon(Icons.check_circle,
-                            color: Colors.green, size: 50)
-                        : (productToEdit != null
-                            ? Image.network(productToEdit.imageUrl,
-                                fit: BoxFit.contain)
-                            : const Icon(Icons.add_a_photo,
-                                color: Colors.grey)),
-                  ),
+                  }),
                 ),
+
                 const SizedBox(height: 10),
-                _buildInput(nameController, "اسم المنتج", Icons.shopping_bag,
+                _buildInput(nameController, "اسم العرض", Icons.shopping_bag,
                     isDark, showError),
                 _buildInputMultiline(
-                    descController, "وصف المنتج", Icons.description, isDark),
+                    descController, "وصف العرض", Icons.description, isDark),
                 const SizedBox(height: 10),
                 const Text(
                   "* القسم الداخلي للمتجر (إلزامي)",
@@ -1424,7 +1544,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.bold)),
                           subtitle: const Text(
-                              'يُخفى المنتج حتى موعده، ثم يظهر 24 ساعة',
+                              'يُخفى العرض حتى موعده، ثم يظهر 24 ساعة',
                               style: TextStyle(
                                   fontFamily: 'Cairo', fontSize: 11.5)),
                           onChanged: (v) {
@@ -1581,7 +1701,7 @@ class _ProductsPageState extends State<ProductsPage> {
                           Icons.auto_fix_high, isDark, showError,
                           isNumber: true, readOnly: discountType == "percent")),
                 ]),
-                _buildInput(urlController, "رابط المنتج (متجر خارجي)",
+                _buildInput(urlController, "رابط العرض (متجر خارجي)",
                     Icons.link, isDark, showError),
                 const SizedBox(height: 10),
                 SizedBox(
@@ -1599,20 +1719,20 @@ class _ProductsPageState extends State<ProductsPage> {
                                   priceController.text.isEmpty ||
                                   selectedCategoryId == null ||
                                   storeCategoryValue == null ||
-                                  (pickedImage == null &&
-                                      productToEdit == null)) {
+                                  (slotFiles[0] == null &&
+                                      slotUrls[0] == null)) {
                                 setModalState(() => showError = true);
                                 ScaffoldMessenger.of(sheetContext).showSnackBar(
                                   const SnackBar(
                                     content:
-                                        Text("يرجى إكمال البيانات ورفع صورة"),
+                                        Text("يرجى إكمال البيانات ورفع الصورة الرئيسية"),
                                     backgroundColor: brandRed,
                                   ),
                                 );
                                 return;
                               }
 
-                              // ✅ المنصة للعروض فقط — لا منتج بلا تخفيض
+                              // ✅ المنصة للعروض فقط — لا عرض بلا تخفيض
                               final oldP =
                                   double.tryParse(oldPriceController.text);
                               final newP =
@@ -1644,16 +1764,33 @@ class _ProductsPageState extends State<ProductsPage> {
                                 return;
                               }
                               setModalState(() => isSaving = true);
-                              String finalUrl = productToEdit?.imageUrl ?? "";
-                              if (pickedImage != null) {
-                                final newUrl = await _uploadImage(pickedImage!);
-                                if (newUrl != null)
-                                  finalUrl = newUrl;
-                                else {
-                                  setModalState(() => isSaving = false);
-                                  return;
+
+                              // رفع الخانات الأربع بالترتيب — الأولى رئيسية
+                              final List<String> resolved = [];
+                              bool uploadFailed = false;
+
+                              for (var i = 0; i < 4; i++) {
+                                if (slotFiles[i] != null) {
+                                  final url =
+                                      await _uploadImage(slotFiles[i]!);
+                                  if (url == null) {
+                                    uploadFailed = true;
+                                    break;
+                                  }
+                                  resolved.add(url);
+                                } else if (slotUrls[i] != null) {
+                                  resolved.add(slotUrls[i]!);
                                 }
                               }
+
+                              if (uploadFailed || resolved.isEmpty) {
+                                setModalState(() => isSaving = false);
+                                return;
+                              }
+
+                              final String finalUrl = resolved.first;
+                              final List<String> finalExtras =
+                                  resolved.skip(1).toList();
                               await _upsertProduct(
                                   ProductItem(
                                     id: productToEdit?.id ?? "",
@@ -1669,6 +1806,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                     isAvailable:
                                         productToEdit?.isAvailable ?? true,
                                     imageUrl: finalUrl,
+                                    imagesUrl: finalExtras,
                                     productUrl: urlController.text,
                                     isFlashSale: isFlashSale,
                                     flashSaleExpiry: flashSaleExpiry,
@@ -1679,7 +1817,7 @@ class _ProductsPageState extends State<ProductsPage> {
                             },
                       child: isSaving
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text("حفظ المنتج",
+                          : const Text("حفظ العرض",
                               style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,

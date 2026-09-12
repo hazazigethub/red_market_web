@@ -56,7 +56,7 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
                   fontWeight: FontWeight.bold,
                   color: brandColor)),
           content: const Text(
-            "أهلاً بك في رد ماركت! لتفعيل متجرك وعرض منتجاتك أمام العملاء، "
+            "أهلاً بك في رد ماركت! لتفعيل متجرك وإظهار عروضك أمام العملاء، "
             "يرجى رفع شعار المتجر وإضافة رابطه.",
             style: TextStyle(fontFamily: 'Cairo', fontSize: 14),
           ),

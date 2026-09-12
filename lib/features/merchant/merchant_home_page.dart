@@ -41,7 +41,7 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
     _loadCampaign();
   }
 
-  /// يجلب الحملة النشطة وعدد منتجات التاجر فيها
+  /// يجلب الحملة النشطة وعدد عروض التاجر فيها
   Future<void> _loadCampaign() async {
     try {
       final res = await Supabase.instance.client.rpc('get_active_campaign');
@@ -109,7 +109,7 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
   }
 
   static const _sections = <Map<String, dynamic>>[
-    {'label': 'منتجاتي', 'icon': Icons.inventory_2_outlined},
+    {'label': 'عروضي', 'icon': Icons.inventory_2_outlined},
     {'label': 'الريلز', 'icon': Icons.video_library_outlined},
     {'label': 'التقارير', 'icon': Icons.bar_chart_outlined},
     {'label': 'رسائل المتابعين', 'icon': Icons.campaign_outlined},
@@ -256,8 +256,8 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
 
             Text(
               joined
-                  ? 'لديك $_campaignProducts منتج في الحملة — أضف المزيد لزيادة ظهورك'
-                  : 'اعرض منتجاتك في صفحة الحملة أمام كل زوّار المنصة',
+                  ? 'لديك $_campaignProducts عرض في الحملة — أضف المزيد لزيادة ظهورك'
+                  : 'اعرض ما لديك في صفحة الحملة أمام كل زوّار المنصة',
               style: TextStyle(
                 fontSize: 13,
                 height: 1.9,
@@ -273,7 +273,7 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
                     size: 15, color: Colors.white.withValues(alpha: 0.8)),
                 const SizedBox(width: 7),
                 Text(
-                  '$total منتج في الحملة',
+                  '$total عرض في الحملة',
                   style: TextStyle(
                     fontSize: 11.5,
                     color: Colors.white.withValues(alpha: 0.8),
@@ -291,7 +291,7 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        joined ? 'إدارة منتجاتي' : 'شارك الآن',
+                        joined ? 'إدارة عروضي' : 'شارك الآن',
                         style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.bold,
@@ -442,7 +442,7 @@ class _MerchantHomePageState extends State<MerchantHomePage> {
                   final w = (c.maxWidth - gap * (cols - 1)) / cols;
 
                   final stats = [
-                    _stat('منتجاتي', _count('products', 'merchant_id')),
+                    _stat('عروضي', _count('products', 'merchant_id')),
                     _stat('الريلز', _count('reels', 'merchant_id')),
                     _stat('زيارات متجري',
                         _count('analytics_visits', 'merchant_id')),

@@ -284,7 +284,7 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
                       ),
                       const SizedBox(height: 9),
                       Text(
-                        'انضم إلى رد ماركت واعرض عروضك أمام آلاف العملاء',
+                        'انضم إلى رد ماركت واعرض ما لديك أمام آلاف العملاء',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,

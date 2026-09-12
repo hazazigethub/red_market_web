@@ -125,7 +125,7 @@ class _MerchantCancelSubscriptionPageState
             constraints: const BoxConstraints(maxWidth: 420),
             child: Text(
               'سيبقى اشتراكك فعّالاً حتى ${_fmt(_sub?['expires_at'])}، '
-              'ثم تختفي منتجاتك عن العملاء ولن يُجدَّد تلقائياً.',
+              'ثم تختفي عروضك عن العملاء ولن يُجدَّد تلقائياً.',
               style: const TextStyle(
                   fontFamily: 'Cairo', fontSize: 13.5, height: 1.9),
             ),
@@ -203,7 +203,7 @@ class _MerchantCancelSubscriptionPageState
                 ],
               ),
               content: Text(
-                'أُلغي اشتراكك واختفت منتجاتك عن العملاء.\n'
+                'أُلغي اشتراكك واختفت عروضك عن العملاء.\n'
                 'ستتم معالجة استرداد مبلغك خلال 48 ساعة.',
                 style: const TextStyle(
                     fontFamily: 'Cairo', fontSize: 13.5, height: 1.9),
@@ -371,7 +371,7 @@ class _MerchantCancelSubscriptionPageState
               const SizedBox(height: 12),
               ...const [
                 'يبقى اشتراكك فعّالاً حتى نهاية المدة المدفوعة',
-                'تختفي منتجاتك ومقاطعك عن العملاء بعدها',
+                'تختفي عروضك ومقاطعك عن العملاء بعدها',
                 'تبقى بياناتك محفوظة ويمكنك الاشتراك مجدداً',
                 'لا استرداد للمبلغ المدفوع عن المدة المتبقية',
               ].map((p) => Padding(
@@ -432,7 +432,7 @@ class _MerchantCancelSubscriptionPageState
                       const SizedBox(height: 8),
                       Text(
                         'مدة الاسترداد $_refundWindow أيام من تاريخ الاشتراك. '
-                        'عند الاسترداد يُلغى اشتراكك فوراً وتختفي منتجاتك.',
+                        'عند الاسترداد يُلغى اشتراكك فوراً وتختفي عروضك.',
                         style: TextStyle(
                             fontFamily: 'Cairo',
                             fontSize: 11.5,

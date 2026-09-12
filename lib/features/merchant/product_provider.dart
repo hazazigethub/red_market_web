@@ -1,8 +1,8 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:red_market_core/red_market_core.dart'; // ✅ استيراد الموديل لضمان قراءة وقت التجهيز
 
-// ✅ مزود لجلب قائمة المنتجات الخاصة بالتاجر الحالي من السيرفر
+// ✅ مزود لجلب قائمة العروض الخاصة بالتاجر الحالي من السيرفر
 // تم تحويله ليستخدم ProductModel بدلاً من Map لضمان ظهور وقت التجهيز
 final merchantProductsProvider =
     FutureProvider<List<ProductModel>>((ref) async {
@@ -27,7 +27,7 @@ final merchantProductsProvider =
         .toList();
   } catch (e) {
     // في حال حدوث خطأ في الاتصال بالسيرفر
-    throw Exception('حدث خطأ أثناء جلب المنتجات: $e');
+    throw Exception('حدث خطأ أثناء جلب العروض: $e');
   }
 });
 

@@ -35,7 +35,7 @@ class _StorePreviewPageState extends State<StorePreviewPage> {
           .eq('id', widget.merchantId)
           .single();
 
-      // 2. جلب منتجات هذا التاجر (لاستخراج الأقسام منها)
+      // 2. جلب عروض هذا التاجر (لاستخراج الأقسام منها)
       final productsRes = await supabase
           .from('products')
           .select()
@@ -49,7 +49,7 @@ class _StorePreviewPageState extends State<StorePreviewPage> {
               .map((e) => ProductItem.fromJson(e))
               .toList();
 
-          // 3. استخراج الأقسام الفريدة من قائمة المنتجات المجلوبة
+          // 3. استخراج الأقسام الفريدة من قائمة العروض المجلوبة
           _categories = _products
               .map((p) => p.storeCategory)
               .where((c) => c.isNotEmpty)
@@ -288,7 +288,7 @@ class _StorePreviewPageState extends State<StorePreviewPage> {
         child: Padding(
           padding: EdgeInsets.only(top: 50),
           child: Center(
-              child: Text("لا توجد منتجات في هذا القسم",
+              child: Text("لا توجد عروض في هذا القسم",
                   style: TextStyle(fontFamily: 'Cairo'))),
         ),
       );

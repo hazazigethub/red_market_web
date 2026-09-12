@@ -210,7 +210,7 @@ class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
                       style:
                           const TextStyle(fontFamily: 'Cairo', fontSize: 13.5),
                       decoration:
-                          _dec('رسم المنتج الواحد', Icons.payments_outlined),
+                          _dec('رسم العرض الواحد', Icons.payments_outlined),
                     ),
                     const SizedBox(height: 16),
 
@@ -876,12 +876,12 @@ class _AdminCampaignsScreenState extends State<AdminCampaignsScreen> {
 
           Row(
             children: [
-              _stat(Icons.inventory_2_outlined, '$products منتج'),
+              _stat(Icons.inventory_2_outlined, '$products عرض'),
               const SizedBox(width: 18),
               _stat(Icons.storefront_outlined, '$merchants تاجر'),
               const SizedBox(width: 18),
               _stat(Icons.payments_outlined,
-                  '${(c['entry_fee'] as num?)?.toInt() ?? 5} ر.س للمنتج'),
+                  '${(c['entry_fee'] as num?)?.toInt() ?? 5} ر.س للعرض'),
               const Spacer(),
               Text(
                 '${revenue.toStringAsFixed(2)} ر.س',

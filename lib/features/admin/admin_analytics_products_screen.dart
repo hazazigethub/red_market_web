@@ -50,7 +50,7 @@ class _AdminAnalyticsProductsScreenState
     final now = DateTime.now();
     final twentyFourHoursAgo = now.subtract(const Duration(hours: 24));
 
-    // ✅ جلب كل المنتجات
+    // ✅ جلب كل العروض
     final List products = await fetchAllRows('products',
         columns:
             'id, name, image_url, category, is_available, is_banned, likes_count, created_at');
@@ -62,15 +62,15 @@ class _AdminAnalyticsProductsScreenState
       return createdAt.isAfter(twentyFourHoursAgo);
     }).length;
 
-    // ✅ منتجات فعالة
+    // ✅ عروض فعالة
     int activeProducts =
         products.where((p) => p['is_available'] == true).length;
 
-    // ✅ منتجات غير فعالة
+    // ✅ عروض غير فعالة
     int inactiveProducts =
         products.where((p) => p['is_available'] == false).length;
 
-    // ✅ منتجات محظورة
+    // ✅ عروض محظورة
     int bannedProducts = products.where((p) => p['is_banned'] == true).length;
 
     // ✅ الأكثر زيارة = الأكثر إعجاباً مع فلتر زمني
@@ -140,7 +140,7 @@ class _AdminAnalyticsProductsScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeaderStat("إجمالي منتجات المنصة", "${data['total']}",
+                  _buildHeaderStat("إجمالي عروض المنصة", "${data['total']}",
                       Colors.orange, Icons.inventory_2),
                   const SizedBox(height: 20),
                   const Text("تحليل المخزون",
@@ -162,7 +162,7 @@ class _AdminAnalyticsProductsScreenState
                       const SizedBox(width: 10),
                       _buildInfoCard(
                           context,
-                          "منتجات فعالة",
+                          "عروض فعالة",
                           "${data['activeProducts']}",
                           Colors.green,
                           Icons.check_circle_outline),
@@ -171,7 +171,7 @@ class _AdminAnalyticsProductsScreenState
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      // ✅ كرت منتجات غير فعالة
+                      // ✅ كرت عروض غير فعالة
                       _buildInfoCard(
                           context,
                           "غير فعالة",
@@ -179,7 +179,7 @@ class _AdminAnalyticsProductsScreenState
                           Colors.orange,
                           Icons.remove_circle_outline),
                       const SizedBox(width: 10),
-                      // ✅ كرت منتجات محظورة
+                      // ✅ كرت عروض محظورة
                       _buildInfoCard(
                           context,
                           "محظورة",
@@ -401,7 +401,7 @@ class _AdminAnalyticsProductsScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(p['name'] ?? 'منتج',
+                Text(p['name'] ?? 'عرض',
                     style: const TextStyle(
                         fontFamily: 'Cairo',
                         fontSize: 12,

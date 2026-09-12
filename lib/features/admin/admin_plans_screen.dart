@@ -368,7 +368,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
 
           _line('النوع', type.isEmpty ? '—' : type),
           const SizedBox(height: 7),
-          _line('حد المنتجات', '${plan['product_limit'] ?? 0}'),
+          _line('حد العروض', '${plan['product_limit'] ?? 0}'),
           const SizedBox(height: 7),
           _line('حد الريلز', '${plan['reels_limit'] ?? 0}'),
           const SizedBox(height: 7),
@@ -654,7 +654,7 @@ class _PlanFormState extends State<_PlanForm> {
                           Row(
                             children: [
                               Expanded(
-                                  child: _field(_products, 'حد المنتجات',
+                                  child: _field(_products, 'حد العروض',
                                       number: true)),
                               const SizedBox(width: 12),
                               Expanded(

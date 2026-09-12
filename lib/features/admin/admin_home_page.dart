@@ -41,7 +41,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   static const _sections = <Map<String, dynamic>>[
     {'label': 'التقرير المالي', 'icon': Icons.payments_outlined},
     {'label': 'إدارة العملاء والتجار', 'icon': Icons.groups_outlined},
-    {'label': 'المنتجات والتصنيفات', 'icon': Icons.inventory_2_outlined},
+    {'label': 'العروض والتصنيفات', 'icon': Icons.inventory_2_outlined},
     {'label': 'الباقات وأكواد الخصم', 'icon': Icons.card_membership_outlined},
     {'label': 'طلبات الاسترداد', 'icon': Icons.replay_circle_filled_outlined},
     {'label': 'التواصل والدعم', 'icon': Icons.support_agent_outlined},
@@ -158,7 +158,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   final stats = [
                     _stat('العملاء', _count('profiles', 'role', 'customer')),
                     _stat('التجار', _count('profiles', 'role', 'merchant')),
-                    _stat('المنتجات', _count('products')),
+                    _stat('العروض', _count('products')),
                     _stat('البلاغات', _count('reports', 'status', 'pending')),
                     _stat('بانتظار الفحص',
                         _count('merchants', 'is_verified', false)),

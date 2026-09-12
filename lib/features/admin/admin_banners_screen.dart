@@ -222,7 +222,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
                 _infoRow(Icons.storefront, "متجر مرتبط",
                     banner['merchant_id'].toString()),
               if (banner['product_id'] != null)
-                _infoRow(Icons.shopping_bag, "منتج مرتبط",
+                _infoRow(Icons.shopping_bag, "عرض مرتبط",
                     banner['product_id'].toString()),
               if (banner['category_id'] != null)
                 _infoRow(Icons.category, "تصنيف مرتبط",
@@ -746,7 +746,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
                   ],
                 ),
 
-                // ✅ اختيار المنتج
+                // ✅ اختيار العرض
                 if (selectedMerchantId != null)
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: supabase
@@ -759,7 +759,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 15),
-                          const Text("اختر المنتج (اختياري):",
+                          const Text("اختر العرض (اختياري):",
                               style: TextStyle(
                                   fontFamily: 'Cairo',
                                   fontSize: 12,
@@ -776,7 +776,7 @@ class _AdminBannersScreenState extends State<AdminBannersScreen> {
                               child: DropdownButton<String>(
                                 isExpanded: true,
                                 value: selectedProductId,
-                                hint: const Text("ربط بمنتج محدد...",
+                                hint: const Text("ربط بعرض محدد...",
                                     style: TextStyle(
                                         fontFamily: 'Cairo', fontSize: 13)),
                                 items: products

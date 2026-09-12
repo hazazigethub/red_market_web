@@ -20,7 +20,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
     defaultValue: 'http://localhost:3000',
   );
 
-  /// يفتح صفحة المنتج في الموقع بتبويب جديد
+  /// يفتح صفحة العرض في الموقع بتبويب جديد
   Future<void> _openProductPage(dynamic productId) async {
     final url = Uri.parse('$_siteUrl/product/$productId');
     try {
@@ -30,7 +30,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('تعذر فتح صفحة المنتج',
+            content: Text('تعذر فتح صفحة العرض',
                 style: TextStyle(fontFamily: 'Cairo')),
             backgroundColor: Colors.red,
           ),
@@ -98,7 +98,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                           .map((r) => r['target_id'].toString())
                           .toSet();
 
-                      // فلترة البلاغات: فقط المنتجات التي عليها بلاغ وغير محظورة حالياً
+                      // فلترة البلاغات: فقط العروض التي عليها بلاغ وغير محظورة حالياً
                       final int reportedCount = allProducts
                           .where((p) =>
                               reportedProductIds.contains(p['id'].toString()) &&
@@ -109,7 +109,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                       List<Map<String, dynamic>> displayedProducts = [];
 
                       if (_showOnlyReported) {
-                        // عرض المنتجات المُبلغ عنها والتي لم تُحظر بعد
+                        // عرض العروض المُبلغ عنها والتي لم تُحظر بعد
                         displayedProducts = allProducts
                             .where((p) =>
                                 reportedProductIds
@@ -118,7 +118,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                                     p['is_banned'] == null))
                             .toList();
                       } else if (_showOnlyBanned) {
-                        // عرض المنتجات المحظورة فقط
+                        // عرض العروض المحظورة فقط
                         displayedProducts = allProducts
                             .where((p) => p['is_banned'] == true)
                             .toList();
@@ -134,7 +134,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                         padding: const EdgeInsets.all(20),
                         children: [
                           if (!_showOnlyReported && !_showOnlyBanned) ...[
-                            _buildSummaryCard("إجمالي المنتجات", "$totalCount",
+                            _buildSummaryCard("إجمالي العروض", "$totalCount",
                                 Colors.purple, Icons.inventory_2),
                             const SizedBox(height: 15),
                             Row(
@@ -152,7 +152,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                               ],
                             ),
                             const SizedBox(height: 10),
-                            _statItem("بلاغات المنتجات", "$reportedCount",
+                            _statItem("بلاغات العروض", "$reportedCount",
                                 Colors.red, Icons.report_gmailerrorred, () {
                               setState(() {
                                 _showOnlyReported = true;
@@ -178,7 +178,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                               const Center(
                                 child: Padding(
                                   padding: EdgeInsets.only(top: 20),
-                                  child: Text("لا توجد منتجات في هذه القائمة",
+                                  child: Text("لا توجد عروض في هذه القائمة",
                                       style: TextStyle(
                                           fontFamily: 'Cairo',
                                           color: Colors.grey)),
@@ -202,7 +202,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                               child: Padding(
                                 padding: EdgeInsets.only(top: 30),
                                 child: Text(
-                                    "ابحث عن منتج أو اختر تصنيفاً للمعاينة",
+                                    "ابحث عن عرض أو اختر تصنيفاً للمعاينة",
                                     style: TextStyle(
                                         fontFamily: 'Cairo',
                                         color: Colors.grey,
@@ -327,7 +327,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                     color: Colors.grey),
           ),
           title: Text(
-            p['name'] ?? 'منتج غير معروف',
+            p['name'] ?? 'عرض غير معروف',
             style: const TextStyle(
                 fontFamily: 'Cairo',
                 fontSize: 14,
@@ -353,7 +353,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                         .from('products')
                         .update({'is_banned': false}).eq('id', p['id']);
 
-                    // تحديث كافة البلاغات المتعلقة بهذا المنتج لتصبح resolved
+                    // تحديث كافة البلاغات المتعلقة بهذا العرض لتصبح resolved
                     await supabase
                         .from('reports')
                         .update({'status': 'resolved'})
@@ -373,7 +373,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                         content: Text(
                           isBanned
                               ? "تم إلغاء الحظر وإغلاق البلاغات"
-                              : "تم حظر المنتج بنجاح",
+                              : "تم حظر العرض بنجاح",
                           style: const TextStyle(fontFamily: 'Cairo'),
                         ),
                         backgroundColor: isBanned ? Colors.green : Colors.red,
@@ -495,7 +495,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                       ),
                       icon: const Icon(Icons.gavel_rounded, size: 18),
                       label: const Text(
-                        "مراجعة المنتج واتخاذ قرار",
+                        "مراجعة العرض واتخاذ قرار",
                         style: TextStyle(
                             fontFamily: 'Cairo',
                             fontSize: 12,

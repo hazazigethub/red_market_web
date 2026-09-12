@@ -152,7 +152,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
               _dialogAction(ctx, Icons.open_in_new_rounded, "تصفّح النشرة",
                   'https://redmarket.sa/newsletter/$nlId')
             else if (pId != null)
-              _dialogAction(ctx, Icons.shopping_bag_rounded, "عرض المنتج",
+              _dialogAction(ctx, Icons.shopping_bag_rounded, "فتح العرض",
                   'https://redmarket.sa/product/$pId')
             else if (rId != null)
               _dialogAction(ctx, Icons.play_circle_fill_rounded,
