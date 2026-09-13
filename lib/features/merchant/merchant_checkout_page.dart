@@ -75,6 +75,10 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
     return due < 0 ? 0 : due;
   }
 
+  /// لا مستحقّ ⇒ لا حاجة لبوابة الدفع
+  /// وحين تُرفع الأسعار في قاعدة البيانات يعود المسار للبوابة تلقائياً
+  bool get _isFree => _finalPrice <= 0;
+
   @override
   void dispose() {
     _codeCtrl.dispose();
@@ -476,11 +480,16 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
 
                     // ===== الدفع =====
                     ElevatedButton.icon(
-                      // لتفعيل الدفع: استبدل null بـ _completePayment
-                      onPressed: null,
-                      icon: const Icon(Icons.lock_outline_rounded, size: 18),
-                      label: const Text('إتمام الدفع',
-                          style: TextStyle(
+                      // مجاني ⇒ يعمل · بمقابل ⇒ ينتظر بوابة الدفع
+                      onPressed:
+                          (_isFree && !_paying) ? _completePayment : null,
+                      icon: Icon(
+                          _isFree
+                              ? Icons.check_circle_outline_rounded
+                              : Icons.lock_outline_rounded,
+                          size: 18),
+                      label: Text(_isFree ? 'تفعيل الباقة' : 'إتمام الدفع',
+                          style: const TextStyle(
                               fontFamily: 'Cairo',
                               fontWeight: FontWeight.bold,
                               fontSize: 15)),
@@ -496,7 +505,11 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
                     const SizedBox(height: 10),
                     Center(
                       child: Text(
-                        'بوابة الدفع قيد الربط — تواصل مع الإدارة لتفعيل اشتراكك',
+                        _isFree
+                            ? 'فترة تأسيس مجانية — الاشتراكات ستبدأ لاحقاً '
+                                'وستُبلَّغ قبلها بوقت كافٍ'
+                            : 'بوابة الدفع قيد الربط — تواصل مع الإدارة '
+                                'لتفعيل اشتراكك',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontFamily: 'Cairo',
