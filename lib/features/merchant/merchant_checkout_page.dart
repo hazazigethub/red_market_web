@@ -351,10 +351,12 @@ class _MerchantCheckoutPageState extends State<MerchantCheckoutPage> {
                                       fontWeight: FontWeight.bold)),
                               const Spacer(),
                               Text(
-                                '${_finalPrice.toStringAsFixed(2)} ر.س',
-                                style: const TextStyle(
+                                _isFree
+                                    ? 'مجاني — فترة التأسيس'
+                                    : '${_finalPrice.toStringAsFixed(2)} ر.س',
+                                style: TextStyle(
                                     fontFamily: 'Cairo',
-                                    fontSize: 20,
+                                    fontSize: _isFree ? 15 : 20,
                                     fontWeight: FontWeight.bold,
                                     color: brandRed),
                               ),

@@ -532,28 +532,54 @@ class _MerchantSubscriptionsPageState
                             ],
                           ),
                         const SizedBox(height: 5),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text(
-                              "$currentPrice",
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w900,
-                                fontFamily: 'Cairo',
-                                color: brandRed,
+                        // سعر صفر ⇒ عرض لا خطأ في النظام
+                        if (currentPrice <= 0)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "مجاني",
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  fontFamily: 'Cairo',
+                                  color: brandRed,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Image.asset(
-                              'assets/images/sar_symbol.png',
-                              height: 22,
-                              width: 22,
-                              color: isDark ? Colors.white70 : Colors.black54,
-                            ),
-                          ],
-                        ),
+                              Text(
+                                "فترة التأسيس",
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontFamily: 'Cairo',
+                                  fontWeight: FontWeight.bold,
+                                  color: brandRed,
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                "$currentPrice",
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  fontFamily: 'Cairo',
+                                  color: brandRed,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Image.asset(
+                                'assets/images/sar_symbol.png',
+                                height: 22,
+                                width: 22,
+                                color: isDark ? Colors.white70 : Colors.black54,
+                              ),
+                            ],
+                          ),
                       ],
                     ),
 

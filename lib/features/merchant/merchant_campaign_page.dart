@@ -215,7 +215,8 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
                       ),
                       child: Column(
                         children: [
-                          _line('رسم العرض', '${fee.toInt()} ر.س'),
+                          _line('رسم العرض',
+                              fee <= 0 ? 'مجاني' : '${fee.toInt()} ر.س'),
                           const SizedBox(height: 7),
                           _line('عدد العروض', '$count'),
                           const SizedBox(height: 7),
@@ -234,7 +235,10 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.bold)),
                               const Spacer(),
-                              Text('${total.toStringAsFixed(2)} ر.س',
+                              Text(
+                                  total <= 0
+                                      ? 'مجاني — فترة التأسيس'
+                                      : '${total.toStringAsFixed(2)} ر.س',
                                   style: const TextStyle(
                                       fontFamily: 'Cairo',
                                       fontSize: 16,
@@ -765,7 +769,10 @@ class _MerchantCampaignPageState extends State<MerchantCampaignPage> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Text('${price.toStringAsFixed(0)} ر.س',
+                    Text(
+                        price <= 0
+                            ? 'مجاني'
+                            : '${price.toStringAsFixed(0)} ر.س',
                         style: const TextStyle(
                             fontFamily: 'Cairo',
                             fontSize: 12,
