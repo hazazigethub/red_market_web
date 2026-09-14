@@ -548,7 +548,7 @@ class _MerchantSubscriptionsPageState
                               ),
                               Text(
                                 "فترة التأسيس",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 15,
                                   fontFamily: 'Cairo',
                                   fontWeight: FontWeight.bold,

@@ -2531,15 +2531,19 @@ class _BookingSheetState extends State<_BookingSheet> {
                           ),
                           child: Column(
                             children: [
-                              _priceLine('سعر البنر', '$_unitPrice ر.س'),
-                              const SizedBox(height: 8),
-                              _priceLine('عدد البنرات', '$_slots'),
-                              const SizedBox(height: 8),
-                              _priceLine(
-                                  'المجموع', '$subtotal ر.س'),
-                              const SizedBox(height: 8),
-                              _priceLine('ضريبة القيمة المضافة 15%',
-                                  '${vat.toStringAsFixed(2)} ر.س'),
+                              // فترة تأسيس مجانية ⇒ لا تفصيل أسعار
+                              if (total <= 0) ...[
+                                _priceLine('عدد البنرات', '$_slots'),
+                              ] else ...[
+                                _priceLine('سعر البنر', '$_unitPrice ر.س'),
+                                const SizedBox(height: 8),
+                                _priceLine('عدد البنرات', '$_slots'),
+                                const SizedBox(height: 8),
+                                _priceLine('المجموع', '$subtotal ر.س'),
+                                const SizedBox(height: 8),
+                                _priceLine('ضريبة القيمة المضافة 15%',
+                                    '${vat.toStringAsFixed(2)} ر.س'),
+                              ],
                               const Padding(
                                 padding:
                                     EdgeInsets.symmetric(vertical: 10),
@@ -2555,22 +2559,25 @@ class _BookingSheetState extends State<_BookingSheet> {
                                           fontWeight: FontWeight.bold)),
                                   const Spacer(),
                                   Text(
-                                    '${total.toStringAsFixed(2)} ر.س',
-                                    style: const TextStyle(
+                                    total <= 0
+                                        ? 'مجاني — فترة التأسيس'
+                                        : '${total.toStringAsFixed(2)} ر.س',
+                                    style: TextStyle(
                                         fontFamily: 'Cairo',
-                                        fontSize: 17,
+                                        fontSize: total <= 0 ? 14 : 17,
                                         fontWeight: FontWeight.bold,
                                         color: brandRed),
                                   ),
                                 ],
                               ),
-                              Text(
-                                'الخصم يُحتسب عند تأكيد الشراء',
-                                style: TextStyle(
-                                    fontFamily: 'Cairo',
-                                    fontSize: 10,
-                                    color: Colors.grey.shade500),
-                              ),
+                              if (total > 0)
+                                Text(
+                                  'الخصم يُحتسب عند تأكيد الشراء',
+                                  style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 10,
+                                      color: Colors.grey.shade500),
+                                ),
 
                               // ===== الرصيد =====
                               const Padding(
@@ -3284,11 +3291,14 @@ class _SplashBookingSheetState extends State<_SplashBookingSheet> {
                           ),
                           child: Column(
                             children: [
-                              _priceLine('سعر اليوم',
-                                  '${widget.price} ر.س'),
-                              const SizedBox(height: 8),
-                              _priceLine('ضريبة القيمة المضافة 15%',
-                                  '${vat.toStringAsFixed(2)} ر.س'),
+                              // فترة تأسيس مجانية ⇒ لا تفصيل أسعار
+                              if (total > 0) ...[
+                                _priceLine('سعر اليوم',
+                                    '${widget.price} ر.س'),
+                                const SizedBox(height: 8),
+                                _priceLine('ضريبة القيمة المضافة 15%',
+                                    '${vat.toStringAsFixed(2)} ر.س'),
+                              ],
                               const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 10),
                                 child: Divider(
@@ -3303,10 +3313,12 @@ class _SplashBookingSheetState extends State<_SplashBookingSheet> {
                                           fontWeight: FontWeight.bold)),
                                   const Spacer(),
                                   Text(
-                                    '${total.toStringAsFixed(2)} ر.س',
-                                    style: const TextStyle(
+                                    total <= 0
+                                        ? 'مجاني — فترة التأسيس'
+                                        : '${total.toStringAsFixed(2)} ر.س',
+                                    style: TextStyle(
                                         fontFamily: 'Cairo',
-                                        fontSize: 17,
+                                        fontSize: total <= 0 ? 14 : 17,
                                         fontWeight: FontWeight.bold,
                                         color: brandRed),
                                   ),

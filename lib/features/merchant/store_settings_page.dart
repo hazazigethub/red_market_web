@@ -31,6 +31,8 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
   String? _freelanceNumber;
   bool _isLoading = true;
   bool _isEditing = false;
+  /// إظهار الرمز داخل بطاقة الإعدادات
+  bool _obscurePassword = true;
 
   static const Color brandColor = Color(0xFFD32027);
   static const Color primaryBlue = Color(0xFF2196F3);
@@ -537,7 +539,7 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
           TextField(
             controller: controller,
             enabled: _isEditing,
-            obscureText: isPass,
+            obscureText: isPass && _obscurePassword,
             textAlign: TextAlign.center,
             keyboardType: keyboard,
             style: TextStyle(
@@ -548,6 +550,22 @@ class _StoreSettingsPageState extends State<StoreSettingsPage> {
             decoration:
                 const InputDecoration(isDense: true, border: InputBorder.none),
           ),
+          // مخفي ⇒ عين مشطوبة · ظاهر ⇒ عين
+          if (isPass)
+            InkWell(
+              onTap: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  size: 17,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ),
         ],
       ),
     );

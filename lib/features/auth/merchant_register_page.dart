@@ -26,6 +26,8 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
   final _crNumberController = TextEditingController();
 
   bool _isTermsAccepted = false;
+  /// إظهار كلمتي المرور معاً — فالغرض مقارنة ما كُتب
+  bool _obscurePassword = true;
   bool _isLoading = false;
   String? _selectedStoreCategory;
   Uint8List? _crImageBytes;
@@ -365,13 +367,15 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
                                 children: [
                                   _field(_passwordController, 'كلمة المرور',
                                       Icons.lock_outline,
-                                      obscure: true),
+                                      obscure: _obscurePassword,
+                                      suffix: _eyeButton()),
                                   const SizedBox(height: 14),
                                   _field(
                                       _confirmPasswordController,
                                       'تأكيد كلمة المرور',
                                       Icons.lock_reset_rounded,
-                                      obscure: true),
+                                      obscure: _obscurePassword,
+                                      suffix: _eyeButton()),
                                 ],
                               ),
                             ],
@@ -701,11 +705,12 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
   }
 
   /// تنسيق موحّد للحقول
-  InputDecoration _decoration(String label, IconData icon) {
+  InputDecoration _decoration(String label, IconData icon, {Widget? suffix}) {
     return InputDecoration(
       labelText: label,
       labelStyle: TextStyle(fontSize: 13.5, color: Colors.grey.shade600),
       prefixIcon: Icon(icon, size: 20, color: Colors.grey.shade500),
+      suffixIcon: suffix,
       filled: true,
       fillColor: const Color(0xFFF7F8FA),
       enabledBorder: OutlineInputBorder(
@@ -754,13 +759,29 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
     );
   }
 
+  /// مخفي ⇒ عين مشطوبة · ظاهر ⇒ عين
+  Widget _eyeButton() {
+    return IconButton(
+      onPressed: () =>
+          setState(() => _obscurePassword = !_obscurePassword),
+      tooltip: _obscurePassword ? 'إظهار كلمة المرور' : 'إخفاء كلمة المرور',
+      icon: Icon(
+        _obscurePassword
+            ? Icons.visibility_off_outlined
+            : Icons.visibility_outlined,
+        size: 19,
+        color: Colors.grey.shade500,
+      ),
+    );
+  }
+
   Widget _field(TextEditingController c, String label, IconData icon,
-      {bool obscure = false, TextInputType? keyboard}) {
+      {bool obscure = false, TextInputType? keyboard, Widget? suffix}) {
     return TextFormField(
       controller: c,
       obscureText: obscure,
       keyboardType: keyboard,
-      decoration: _decoration(label, icon),
+      decoration: _decoration(label, icon, suffix: suffix),
       validator: (v) =>
           (v == null || v.trim().isEmpty) ? 'هذا الحقل مطلوب' : null,
     );
