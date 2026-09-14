@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'otp_verification_page.dart';
 import 'package:red_market_core/red_market_core.dart';
 import '../merchant/terms_page.dart';
 
@@ -140,120 +141,149 @@ class _MerchantRegisterPageState extends State<MerchantRegisterPage> {
           _emailController.text.trim().toLowerCase();
       final String password = _passwordController.text.trim();
 
-      // 1) إنشاء الحساب أولاً — فالرفع يتطلب مستخدماً مسجّلاً
-      final response = await supabase.auth.signUp(
+      // فحص مسبق — فالتسجيل المكرّر يفشل صامتاً في Supabase
+      final avail = await supabase.rpc(
+        'check_signup_availability',
+        params: {'p_email': email, 'p_phone': cleanPhone},
+      ) as Map<String, dynamic>;
+
+      if (avail['email_taken'] == true) {
+        _showError('هذا البريد مسجّل مسبقاً — سجّل دخولك أو استعد كلمة المرور');
+        return;
+      }
+      if (avail['phone_taken'] == true) {
+        _showError('رقم الجوال مسجّل بحساب آخر — سجّل دخولك أو استخدم رقماً غيره');
+        return;
+      }
+
+      // 1) إنشاء الحساب — البيانات في metadata فلا جلسة قبل التأكيد
+      await supabase.auth.signUp(
         email: email,
         password: password,
         data: {
           'role': 'merchant',
           'full_name': _ownerNameController.text.trim(),
+          'phone_number': cleanPhone,
         },
       );
 
-      final user = response.user;
-      if (user == null) throw 'تعذر إنشاء الحساب';
-
-      // 2) رفع صورة السجل التجاري داخل مجلد المستخدم
-      final ext = (_crImageName ?? 'cr.jpg').split('.').last;
-      final fileName =
-          '${user.id}/cr_${DateTime.now().millisecondsSinceEpoch}.$ext';
-      await supabase.storage.from('merchants_docs').uploadBinary(
-            fileName,
-            _crImageBytes!,
-            fileOptions: FileOptions(
-                contentType: _crImageMime ?? 'image/jpeg', upsert: true),
-          );
-      final imageUrl =
-          supabase.storage.from('merchants_docs').getPublicUrl(fileName);
-
-      // رفع شهادة الضريبة إن أرفقها
-      String? vatUrl;
-      if (_vatImageBytes != null) {
-        try {
-          final vExt = (_vatImageName ?? 'vat.jpg').split('.').last;
-          final vName =
-              '${user.id}/vat_${DateTime.now().millisecondsSinceEpoch}.$vExt';
-          await supabase.storage.from('merchants_docs').uploadBinary(
-                vName,
-                _vatImageBytes!,
-                fileOptions: FileOptions(
-                    contentType: _vatImageMime ?? 'image/jpeg',
-                    upsert: true),
-              );
-          vatUrl =
-              supabase.storage.from('merchants_docs').getPublicUrl(vName);
-        } catch (e) {
-          debugPrint('VAT upload error: $e');
-        }
-      }
-
-      // 3) نسخة الشروط المقبولة
-      int latestTermsVersion = 0;
-      try {
-        final termsData = await supabase
-            .from('terms_content')
-            .select('version')
-            .eq('type', 'merchant')
-            .maybeSingle();
-        latestTermsVersion = (termsData?['version'] as num?)?.toInt() ?? 0;
-      } catch (_) {}
-
-      // 4) بيانات الملف الشخصي
-      await supabase.from('profiles').upsert({
-        'id': user.id,
-        'full_name': _ownerNameController.text.trim(),
-        'phone_number': cleanPhone,
-        'email_contact': _emailController.text.trim(),
-        'accepted_terms_version': latestTermsVersion,
-      });
-
-      // 5) بيانات المتجر
-      await supabase.from('merchants').upsert({
-        'id': user.id,
-        'owner_id': user.id,
-        'store_name': _nameController.text.trim(),
-        'phone_number': cleanPhone,
-        'email_contact': _emailController.text.trim(),
-        'owner_name': _ownerNameController.text.trim(),
-        'cr_number': _isFreelance ? null : _crNumberController.text.trim(),
-        'freelance_license_number':
-            _isFreelance ? _freelanceController.text.trim() : null,
-        'vat_number': _vatNumberController.text.trim().isEmpty
-            ? null
-            : _vatNumberController.text.trim(),
-        'vat_certificate_url': vatUrl,
-        'cr_image_url': imageUrl,
-        'store_category_id': _selectedStoreCategory,
-        'is_subscription_active': false,
-        'is_banned': false,
-        'is_permanent_ban': false,
-      });
-
-      // ✅ تحقق: لا يُعتبر التسجيل ناجحاً إلا بوجود صف المتجر
-      final check = await supabase
-          .from('merchants')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
-
-      if (check == null) {
-        throw 'تعذر إنشاء المتجر. تواصل مع الدعم الفني قبل محاولة التسجيل مجدداً.';
-      }
-
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('تم إنشاء حساب التاجر بنجاح — سجّل الدخول للمتابعة'),
-            backgroundColor: Color(0xFF4CAF50)),
+
+      // 2) الرفع وكتابة البيانات تُؤجَّل لما بعد التحقّق — فهي تتطلب جلسة
+      final done = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OtpVerificationPage(
+            title: 'تأكيد بريدك',
+            subtitle: 'أرسلنا رمزاً من ستة أرقام إلى',
+            email: email,
+            successMessage:
+                'تم إنشاء حساب التاجر بنجاح — سجّل الدخول للمتابعة',
+            onVerified: () => _completeMerchantSetup(cleanPhone, email),
+          ),
+        ),
       );
-      await supabase.auth.signOut();
-      if (mounted) Navigator.of(context).pop();
+
+      if (done == true) {
+        await supabase.auth.signOut();
+        if (mounted) Navigator.of(context).pop();
+      }
     } on AuthException catch (e) {
       _showError('خطأ في التسجيل: ${e.message}');
     } catch (e) {
       _showError('حدث خطأ: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// يُنفَّذ بعد تأكيد البريد — فالرفع والكتابة يتطلبان جلسة
+  Future<void> _completeMerchantSetup(String cleanPhone, String email) async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    if (user == null) throw 'انتهت الجلسة، حاول التسجيل مجدداً';
+
+    // رفع السجل التجاري داخل مجلد المستخدم
+    final ext = (_crImageName ?? 'cr.jpg').split('.').last;
+    final fileName =
+        '${user.id}/cr_${DateTime.now().millisecondsSinceEpoch}.$ext';
+    await supabase.storage.from('merchants_docs').uploadBinary(
+          fileName,
+          _crImageBytes!,
+          fileOptions: FileOptions(
+              contentType: _crImageMime ?? 'image/jpeg', upsert: true),
+        );
+    final imageUrl =
+        supabase.storage.from('merchants_docs').getPublicUrl(fileName);
+
+    // شهادة الضريبة إن أرفقها
+    String? vatUrl;
+    if (_vatImageBytes != null) {
+      try {
+        final vExt = (_vatImageName ?? 'vat.jpg').split('.').last;
+        final vName =
+            '${user.id}/vat_${DateTime.now().millisecondsSinceEpoch}.$vExt';
+        await supabase.storage.from('merchants_docs').uploadBinary(
+              vName,
+              _vatImageBytes!,
+              fileOptions: FileOptions(
+                  contentType: _vatImageMime ?? 'image/jpeg', upsert: true),
+            );
+        vatUrl = supabase.storage.from('merchants_docs').getPublicUrl(vName);
+      } catch (e) {
+        debugPrint('VAT upload error: $e');
+      }
+    }
+
+    // نسخة الشروط المقبولة
+    int latestTermsVersion = 0;
+    try {
+      final termsData = await supabase
+          .from('terms_content')
+          .select('version')
+          .eq('type', 'merchant')
+          .maybeSingle();
+      latestTermsVersion = (termsData?['version'] as num?)?.toInt() ?? 0;
+    } catch (_) {}
+
+    // الصفّ أنشأه المشغّل عند التسجيل — فنُحدّثه لا نُدرجه
+    await supabase.from('profiles').update({
+      'full_name': _ownerNameController.text.trim(),
+      'phone_number': cleanPhone,
+      'email_contact': email,
+      'accepted_terms_version': latestTermsVersion,
+    }).eq('id', user.id);
+
+    await supabase.from('merchants').upsert({
+      'id': user.id,
+      'owner_id': user.id,
+      'store_name': _nameController.text.trim(),
+      'phone_number': cleanPhone,
+      'email_contact': email,
+      'owner_name': _ownerNameController.text.trim(),
+      'cr_number': _isFreelance ? null : _crNumberController.text.trim(),
+      'freelance_license_number':
+          _isFreelance ? _freelanceController.text.trim() : null,
+      'vat_number': _vatNumberController.text.trim().isEmpty
+          ? null
+          : _vatNumberController.text.trim(),
+      'vat_certificate_url': vatUrl,
+      'cr_image_url': imageUrl,
+      'store_category_id': _selectedStoreCategory,
+      'is_subscription_active': false,
+      'is_banned': false,
+      'is_permanent_ban': false,
+    });
+
+    // لا يُعتبر التسجيل ناجحاً إلا بوجود صف المتجر
+    final check = await supabase
+        .from('merchants')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (check == null) {
+      throw 'تعذر إنشاء المتجر. تواصل مع الدعم الفني قبل محاولة التسجيل مجدداً.';
     }
   }
 
